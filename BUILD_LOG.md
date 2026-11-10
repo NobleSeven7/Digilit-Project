@@ -51,12 +51,14 @@ browser. Result of the run on the built app: 8 of 8 passed. Screenshots are in
 | 5 | Fragile item, motorbike carrier | Rejected (compatibility) | Usman Tariq rejected, compatibility failed | Pass |
 | 6 | Two carriers pass all rules | Higher score first | Bilal (75), Sana (60), Usman (56) | Pass |
 | 7 | Wrong delivery OTP | Payment stays in escrow | "PKR 500 stays in escrow", status Held in escrow | Pass |
-| 8 | Correct delivery OTP | PKR 500 released; row added to Google Sheets | PKR 500 released to carrier; delivery record handed to the webhook sender | Pass (app side) |
+| 8 | Correct delivery OTP | PKR 500 released; row added to Google Sheets | PKR 500 released to carrier; `delivery` row with "Released to carrier" added to Google Sheets | Pass |
 
-Note on test 8: with no webhook URL set, the test confirms the app releases
-the payment and hands the delivery record to the webhook sender (visible in
-the Admin sync log). The row in Google Sheets itself can only be confirmed
-once the team's Make.com scenario is connected.
+Note on test 8: the automated run has no webhook URL, so it confirms the
+payment release and that the delivery record is handed to the webhook sender.
+The Google Sheets half was confirmed by hand on 10 Nov 2026 with the team's
+live Make.com scenario: one Islamabad → Lahore 5 kg delivery produced a
+`shipment` row, a `match` row (PKR 500, "Held in escrow") and a `delivery`
+row (PKR 500, "Released to carrier", with the delivery time).
 
 ## Decisions taken from the proposal
 
@@ -107,3 +109,9 @@ once the team's Make.com scenario is connected.
   order, blank where they do not apply. Checked by capturing what the browser
   sends for a shipment, a match and a delivery (21 columns each), then re-ran
   all 8 tests (8 of 8 passed).
+- **Match and delivery rows did not reach Google Sheets** during the first
+  live test, although the app's sync log showed them as sent. Cause: the
+  Make.com scenario was switched off, so Make queued the records instead of
+  running them. No code change: switching the scenario on processed the queue
+  and both rows appeared. (They landed in the Sheet out of order; the SentAt
+  column shows the real order.)
