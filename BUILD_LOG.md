@@ -99,3 +99,11 @@ once the team's Make.com scenario is connected.
 - **First push to GitHub refused (HTTP 403).** Cause: the Claude GitHub App
   did not have access to the repository at that moment. Work continued in
   local commits, and a later push of all commits succeeded.
+- **Make.com only learned 13 of the 21 Sheet columns.** Cause: each event
+  sent only its own fields, and Make learned the field list from the first
+  sample (a shipment), so journey, match and delivery fields such as
+  `carrierName` and `escrow` could not be mapped to Google Sheets. Fixed in
+  `src/lib/webhook.js`: every record now sends all 21 columns in a fixed
+  order, blank where they do not apply. Checked by capturing what the browser
+  sends for a shipment, a match and a delivery (21 columns each), then re-ran
+  all 8 tests (8 of 8 passed).

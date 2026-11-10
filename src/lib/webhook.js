@@ -7,6 +7,24 @@ const LOG_KEY = 'raastashare-sync-log-v1'
 // Vite reads VITE_WEBHOOK_URL from the .env.local file when the app starts.
 const WEBHOOK_URL = (import.meta.env.VITE_WEBHOOK_URL || '').trim()
 
+// Every record sends ALL of these columns, in this order, so Make.com learns
+// the full list from the first sample and Google Sheets columns line up.
+// Columns that do not apply to an event are sent as empty text.
+export const SHEET_COLUMNS = [
+  'event', 'sentAt', 'shipmentId', 'deliveryId', 'journeyId', 'senderName',
+  'carrierName', 'origin', 'destination', 'weightKg', 'itemType', 'deadline',
+  'departure', 'vehicleType', 'spareKg', 'price', 'status', 'escrow',
+  'eligibleCarriers', 'matchingMs', 'deliveredAt',
+]
+
+// Turn one record into a row with every column filled in (blank if missing).
+export function toSheetRow(event, record) {
+  const full = { event, sentAt: new Date().toISOString(), ...record }
+  const row = {}
+  for (const column of SHEET_COLUMNS) row[column] = full[column] ?? ''
+  return row
+}
+
 export function isWebhookConfigured() {
   return WEBHOOK_URL !== ''
 }
@@ -42,7 +60,7 @@ export async function sendToWebhook(event, record, summary) {
     await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event, sentAt: new Date().toISOString(), ...record }),
+      body: JSON.stringify(toSheetRow(event, record)),
     })
     addToSyncLog(event, summary, 'Sent to Make.com')
   } catch {
