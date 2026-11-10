@@ -1,0 +1,9 @@
+# Downloaded packages (recreated by "npm install")
+node_modules
+# Production build output (recreated by "npm run build")
+dist
+# Private settings such as the Make.com webhook URL - never commit this
+.env.local
+# Local AI-assistant skills and browser-test leftovers
+.claude
+.playwright-cli

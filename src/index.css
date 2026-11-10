@@ -1,0 +1,63 @@
+/* Load Tailwind CSS. */
+@import "tailwindcss";
+
+/* ---- Brand design tokens --------------------------------------------
+   Defining a colour here creates Tailwind classes for it automatically,
+   e.g. --color-brand gives us bg-brand, text-brand and border-brand.   */
+@theme {
+  --color-brand: #0B6B43;        /* motorway-sign green: main brand colour */
+  --color-brand-dark: #084F32;   /* pressed / hover state */
+  --color-brand-tint: #E3F1E9;   /* soft green background */
+  --color-ink: #12241B;          /* main text */
+  --color-muted: #55665C;        /* secondary text */
+  --color-paper: #F5F8F4;        /* page background */
+  --color-line: #D3DDD6;         /* borders */
+  --color-hold: #E0A100;         /* road-marking amber: payment held, warnings */
+  --color-hold-ink: #7A5600;     /* amber dark enough to read as text */
+  --color-hold-tint: #FBF1D3;
+  --color-fail: #C4372C;         /* signal red: failed rule, dispute */
+  --color-fail-tint: #FBE6E3;
+
+  --font-display: "Bricolage Grotesque", "Segoe UI", sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
+}
+
+/* ---- Base styles ---------------------------------------------------- */
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+h1, h2, h3 {
+  font-family: var(--font-display);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+/* Clear keyboard-focus ring on everything clickable (accessibility). */
+:focus-visible {
+  outline: 3px solid var(--color-hold);
+  outline-offset: 2px;
+}
+
+/* ---- Reusable building blocks (used all over the pages) ------------- */
+@layer components {
+  .card { @apply rounded-xl border border-line bg-white p-4 sm:p-5; }
+
+  .btn {
+    @apply inline-flex min-h-12 cursor-pointer items-center justify-center rounded-lg
+           px-5 py-2.5 text-center font-bold transition-colors
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary { @apply bg-brand text-white hover:bg-brand-dark; }
+  .btn-secondary { @apply border-2 border-brand bg-white text-brand hover:bg-brand-tint; }
+  .btn-danger { @apply border-2 border-fail bg-white text-fail hover:bg-fail-tint; }
+
+  .label { @apply mb-1 block font-bold; }
+  .field {
+    @apply block min-h-12 w-full rounded-lg border border-muted/60 bg-white px-3 py-2
+           text-ink;
+  }
+  .hint { @apply mt-1 text-sm text-muted; }
+}
