@@ -97,4 +97,5 @@ once the team's Make.com scenario is connected.
   page. Cause: the label was missing from the red list in `StatusBadge.jsx`.
   Fixed by adding it; rebuilt and re-ran all 8 tests.
 - **First push to GitHub refused (HTTP 403).** Cause: the Claude GitHub App
-  did not have access to the repository. Work continued in local commits.
+  did not have access to the repository at that moment. Work continued in
+  local commits, and a later push of all commits succeeded.
