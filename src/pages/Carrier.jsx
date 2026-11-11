@@ -1,5 +1,5 @@
 // Carrier page: post a journey with spare capacity.
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CITIES, VEHICLES, VEHICLE_TYPES, DEMO_CARRIERS, STATUS } from '../data/constants.js'
 import { findMatches } from '../lib/matching.js'
 import { sendToWebhook } from '../lib/webhook.js'
@@ -16,6 +16,15 @@ export default function Carrier({ state, save }) {
   const [spareKg, setSpareKg] = useState('10')
   const [error, setError] = useState('')
   const [posted, setPosted] = useState(null) // the journey just posted, for the confirmation
+  const confirmation = useRef(null) // points at the "Journey posted" box
+
+  // After posting, scroll the confirmation into view. On a phone it would
+  // otherwise sit above the screen, and people tap "Post journey" again.
+  useEffect(() => {
+    if (posted && confirmation.current) {
+      confirmation.current.scrollIntoView({ block: 'start' })
+    }
+  }, [posted])
 
   const vehicle = VEHICLES[vehicleType]
   const spare = Number(spareKg)
@@ -29,6 +38,15 @@ export default function Carrier({ state, save }) {
       return setError(`A ${vehicleType} can carry up to ${vehicle.maxKg} kg.`)
     }
     if (new Date(departure) <= new Date()) return setError('The departure time must be in the future.')
+
+    // Stop the same journey being posted twice (e.g. tapping the button again).
+    const alreadyPosted = state.journeys.some((j) =>
+      j.status === 'Open' && j.carrierName === carrierName && j.origin === origin &&
+      j.destination === destination && j.departure === departure &&
+      j.vehicleType === vehicleType && j.spareKg === spare)
+    if (alreadyPosted) {
+      return setError('This journey is already posted. Change a detail to post a different one.')
+    }
     setError('')
 
     const journey = {
@@ -67,7 +85,8 @@ export default function Carrier({ state, save }) {
 
       {/* Confirmation shown after posting */}
       {posted && (
-        <div role="status" className="card mb-6 border-brand bg-brand-tint" data-testid="journey-posted">
+        <div ref={confirmation} role="status" data-testid="journey-posted"
+          className="card mb-6 scroll-mt-4 border-brand bg-brand-tint">
           <h2 className="text-xl font-bold text-brand">Journey posted</h2>
           <div className="mt-3 max-w-md">
             <RouteLine origin={posted.journey.origin} destination={posted.journey.destination} />
