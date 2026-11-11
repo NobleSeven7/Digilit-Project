@@ -10,6 +10,20 @@ import { formatPKR, dayAt, makeId } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 
 // The sender confirms the parcel contains none of these.
+// Shows how many checklist lines are ticked. Amber while incomplete, green when done.
+function CheckCounter({ count, total }) {
+  const done = count === total
+  return (
+    <p data-testid="checklist-count"
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold ${
+        done ? 'bg-brand text-white' : 'bg-hold-tint text-hold-ink'
+      }`}>
+      {done && <span aria-hidden="true">✓</span>}
+      {count} of {total} checks ticked
+    </p>
+  )
+}
+
 const PROHIBITED = [
   'No weapons, ammunition or explosives',
   'No illegal drugs, alcohol or tobacco in bulk',
@@ -31,6 +45,7 @@ export default function Sender({ state, save }) {
 
   const weight = Number(weightKg)
   const allTicked = ticked.every(Boolean)
+  const tickedCount = ticked.filter(Boolean).length
 
   // Tick or untick one checklist line.
   function toggle(index) {
@@ -86,8 +101,8 @@ export default function Sender({ state, save }) {
 
       <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1fr_20rem]" noValidate>
         <div className="space-y-6">
-          <fieldset className="card space-y-4">
-            <legend className="font-display text-xl font-bold">Parcel details</legend>
+          <div role="group" aria-labelledby="parcel-heading" className="card space-y-4">
+            <h2 id="parcel-heading" className="text-xl font-bold">Parcel details</h2>
 
             <div>
               <label className="label" htmlFor="senderName">Posting as</label>
@@ -137,11 +152,14 @@ export default function Sender({ state, save }) {
                 onChange={(e) => setDeadline(e.target.value)} />
               <p className="hint">The carrier must depart before this time.</p>
             </div>
-          </fieldset>
+          </div>
 
-          <fieldset className="card">
-            <legend className="font-display text-xl font-bold">Prohibited-items checklist</legend>
-            <p className="text-muted">Tick each line to confirm what is not in your parcel.</p>
+          <div role="group" aria-labelledby="checklist-heading" className="card">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 id="checklist-heading" className="text-xl font-bold">Prohibited-items checklist</h2>
+              <CheckCounter count={tickedCount} total={PROHIBITED.length} />
+            </div>
+            <p className="mt-1 text-muted">Tick each line to confirm what is not in your parcel.</p>
             <div className="mt-3 space-y-1">
               {PROHIBITED.map((text, index) => (
                 <label key={text} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-2 hover:bg-brand-tint">
@@ -151,11 +169,11 @@ export default function Sender({ state, save }) {
                 </label>
               ))}
             </div>
-          </fieldset>
+          </div>
         </div>
 
         {/* Price summary + submit button */}
-        <aside className="card h-fit space-y-3 lg:sticky lg:top-4">
+        <aside className="card h-fit space-y-3 self-start lg:sticky lg:top-4">
           <h2 className="text-xl font-bold">Your price</h2>
           <p className="font-display text-4xl font-bold text-brand" data-testid="price">
             {formatPKR(weight > 0 ? calculatePrice(weight) : 0)}
@@ -168,11 +186,9 @@ export default function Sender({ state, save }) {
           {error && (
             <p role="alert" className="rounded-lg bg-fail-tint px-3 py-2 font-bold text-fail">{error}</p>
           )}
-          {!allTicked && (
-            <p className="text-sm text-hold-ink">
-              Tick all {PROHIBITED.length} checklist lines to post.
-            </p>
-          )}
+          <div aria-live="polite">
+            <CheckCounter count={tickedCount} total={PROHIBITED.length} />
+          </div>
 
           <button type="submit" className="btn btn-primary w-full" disabled={!allTicked}
             data-testid="post-shipment">

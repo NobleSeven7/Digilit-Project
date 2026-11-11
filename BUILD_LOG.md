@@ -115,3 +115,38 @@ row (PKR 500, "Released to carrier", with the delivery time).
   running them. No code change: switching the scenario on processed the queue
   and both rows appeared. (They landed in the Sheet out of order; the SentAt
   column shows the real order.)
+
+## Stage 4: design polish pass
+
+Visual changes only. No matching rules, scores, prices, statuses or test
+steps were changed (`src/lib`, `src/data` and `tests/run-tests.cjs` are
+untouched). All 8 tests re-run afterwards: 8 of 8 passed. Before and after
+screenshots are in `test-screenshots/design-pass/` (made by
+`tests/design-shots.cjs`).
+
+- **Body font:** Atkinson Hyperlegible draws a slashed zero, so "1,000"
+  looked like "1,θθθ". Switched the body font to Lexend (plain zeros, also
+  designed for easy reading). Headings stay in Bricolage Grotesque.
+- **Send page:** "Parcel details" and "Prohibited-items checklist" are now
+  normal headings inside their cards instead of sitting on the border.
+  A "0 of 5 checks ticked" counter (amber, turning green with a ✓ when all
+  five are ticked) replaces the old hint. The disabled Post button is grey
+  with a dashed outline instead of faded green. The price card now sits at
+  the top of its column.
+- **Delivery tracker:** completed steps and road are green, the current step
+  is amber (red during a dispute), and upcoming steps are grey.
+- **Home:** inner hero border removed; three fact tiles on the right
+  (PKR 500 vs PKR 1,000, under 1 minute to match, 3 steps instead of 8).
+  The sender and carrier choices have an icon, an arrow and a hover lift.
+  "What it costs" is a side-by-side comparison with bars drawn to scale and
+  a "Save 50%" badge. The steps section is renamed "How it works" so it no
+  longer repeats the tile.
+- **Matches:** eligible carriers show a row of ✓ chips with a "See details"
+  toggle for the full rule results and score breakdown. Not-eligible
+  carriers keep the full rule boxes. Every carrier has a vehicle icon, and
+  scores have a small bar.
+- **Navigation:** the current page is a white tab with an amber underline;
+  on phones, the header shows the current page name.
+- **Fixed during the pass:** "Under 1 minute" wrapped in its tile (widened
+  the tile column), and tracker labels nearly touched at phone width
+  (smaller labels on phones only).

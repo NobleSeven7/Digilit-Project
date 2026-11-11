@@ -19,6 +19,10 @@ const REACHED = {
   [DELIVERY.DELIVERED]: 4,
   [DELIVERY.DISPUTED]: 2,
 }
+// Statuses where one step is "in progress" (highlighted on the tracker).
+const STILL_MOVING = [
+  DELIVERY.AWAITING_ACCEPT, DELIVERY.AWAITING_PICKUP, DELIVERY.IN_TRANSIT, DELIVERY.DISPUTED,
+]
 
 // A box that shows a code on screen, standing in for an SMS.
 function CodeBox({ label, code, testId }) {
@@ -189,7 +193,9 @@ export default function Delivery({ state, save, id }) {
           {/* Progress along the route */}
           <section className="card">
             <RouteLine origin={shipment.origin} destination={shipment.destination}
-              stops={STOPS} reached={REACHED[delivery.status] ?? 0} />
+              stops={STOPS} reached={REACHED[delivery.status] ?? 0}
+              showCurrent={STILL_MOVING.includes(delivery.status)}
+              problem={delivery.status === DELIVERY.DISPUTED} />
             <p className="mt-4 text-muted">
               {shipment.weightKg} kg {shipment.itemType.toLowerCase()} from {shipment.senderName},
               carried by {journey.carrierName} ({journey.vehicleType}), departing {formatDateTime(journey.departure)}.

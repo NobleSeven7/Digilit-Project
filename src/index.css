@@ -19,7 +19,7 @@
   --color-fail-tint: #FBE6E3;
 
   --font-display: "Bricolage Grotesque", "Segoe UI", sans-serif;
-  --font-body: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
+  --font-body: "Lexend", "Segoe UI", sans-serif;
 }
 
 /* ---- Base styles ---------------------------------------------------- */
@@ -27,8 +27,8 @@ body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-body);
-  font-size: 1.0625rem;
-  line-height: 1.5;
+  font-size: 1rem;
+  line-height: 1.55;
 }
 h1, h2, h3 {
   font-family: var(--font-display);
@@ -47,12 +47,17 @@ h1, h2, h3 {
 
   .btn {
     @apply inline-flex min-h-12 cursor-pointer items-center justify-center rounded-lg
-           px-5 py-2.5 text-center font-bold transition-colors
-           disabled:cursor-not-allowed disabled:opacity-50;
+           px-5 py-2.5 text-center font-bold transition-colors;
   }
-  .btn-primary { @apply bg-brand text-white hover:bg-brand-dark; }
-  .btn-secondary { @apply border-2 border-brand bg-white text-brand hover:bg-brand-tint; }
-  .btn-danger { @apply border-2 border-fail bg-white text-fail hover:bg-fail-tint; }
+  /* "enabled:" means the hover colour only applies while the button can be pressed. */
+  .btn-primary { @apply bg-brand text-white enabled:hover:bg-brand-dark; }
+  .btn-secondary { @apply border-2 border-brand bg-white text-brand enabled:hover:bg-brand-tint; }
+  .btn-danger { @apply border-2 border-fail bg-white text-fail enabled:hover:bg-fail-tint; }
+  /* A button that cannot be pressed yet: grey with a dashed outline, so it
+     reads as "not ready" instead of a faded version of the real button. */
+  .btn:disabled {
+    @apply cursor-not-allowed border-2 border-dashed border-muted/50 bg-paper text-muted;
+  }
 
   .label { @apply mb-1 block font-bold; }
   .field {

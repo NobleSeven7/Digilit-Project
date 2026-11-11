@@ -25,21 +25,33 @@ function Logo() {
 }
 
 export default function Layout({ currentPage, onReset, children }) {
+  // Name of the page we are on (shown in the phone header, where there is no top menu).
+  const current = NAV_ITEMS.find((item) => item.page === currentPage)
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Header */}
       <header className="bg-brand">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
           <Logo />
-          {/* Desktop navigation (hidden on phones) */}
+          {/* Phones: show which page you are on */}
+          {current && (
+            <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-brand md:hidden">
+              {current.label}
+            </span>
+          )}
+          {/* Desktop navigation (hidden on phones). The current page is a white tab
+              with an amber underline; the others are plain white text. */}
           <nav aria-label="Main" className="hidden gap-1 md:flex">
             {NAV_ITEMS.map((item) => (
               <a
                 key={item.page}
                 href={`#/${item.page}`}
                 aria-current={currentPage === item.page ? 'page' : undefined}
-                className={`rounded-lg px-3 py-2 font-bold ${
-                  currentPage === item.page ? 'bg-white text-brand' : 'text-white hover:bg-brand-dark'
+                className={`rounded-lg border-b-4 px-3 py-1.5 font-bold ${
+                  currentPage === item.page
+                    ? 'border-hold bg-white text-brand'
+                    : 'border-transparent text-white/85 hover:bg-brand-dark hover:text-white'
                 }`}
               >
                 {item.label}
