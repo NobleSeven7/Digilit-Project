@@ -46,6 +46,20 @@ them to Google Sheets and sends the email alerts):
 3. Stop and restart `npm run dev`.
 
 `.env.local` is listed in `.gitignore`, so the webhook URL is never uploaded.
+
+### Optional: connect the live site to Make.com
+
+The live GitHub Pages site gets the webhook URL from a repository secret:
+
+1. On GitHub, open the repository's **Settings → Secrets and variables → Actions**.
+2. Click **New repository secret**, name it `VITE_WEBHOOK_URL`, paste the
+   webhook URL as the value, and click **Add secret**.
+3. Open the **Actions** tab, choose **Deploy to GitHub Pages**, and click
+   **Run workflow** (or push any change to `main`).
+
+The URL is never stored in the code, but it is built into the public website,
+so anyone who inspects the site could find it and send rows to the Sheet. If
+that happens, create a new webhook in Make.com and update the secret.
 The app sends one JSON record per event, with an `event` field of `shipment`,
 `journey`, `match`, `delivery` or `dispute`. The Admin page has a sync log that
 shows what was sent.

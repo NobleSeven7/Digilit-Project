@@ -150,3 +150,17 @@ screenshots are in `test-screenshots/design-pass/` (made by
 - **Fixed during the pass:** "Under 1 minute" wrapped in its tile (widened
   the tile column), and tracker labels nearly touched at phone width
   (smaller labels on phones only).
+
+## Stage 5: connect the live site to Make.com
+
+- **Checked:** the live site was not connected. The deploy workflow built the
+  app without `VITE_WEBHOOK_URL`, and `.env.local` is never uploaded, so the
+  live site kept every record on the visitor's device.
+- **Changed:** `.github/workflows/deploy.yml` now passes a repository secret
+  named `VITE_WEBHOOK_URL` to the build. The URL is never in the code; if the
+  secret is not set, the site works offline as before. Checked locally that a
+  build with the variable contains the URL and a build without it does not.
+- **Trade-off (team decision):** the URL is built into the public website
+  code, so anyone inspecting the site could find it and send rows to the
+  Sheet. Accepted for a class demo; the fix if it is misused is a new webhook
+  URL in Make.com and an updated secret.
