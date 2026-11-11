@@ -208,3 +208,10 @@ Make.com fills. Link: https://datastudio.google.com/reporting/416cf872-9063-463b
   route, departure, vehicle and spare kg) is refused with a message.
   Checked on a phone-sized screen: six taps add one journey, changing a
   detail allows a new one. All 8 tests re-run: 8 of 8 passed.
+- **Sheet times looked 5 hours early.** The `SentAt` and `DeliveredAt`
+  columns were sent in UTC (ending in `Z`), while the team and tester read
+  them as Pakistan time. Changed `src/lib/webhook.js` to send both in
+  Pakistan time (Asia/Karachi), written like `2026-11-11 14:42:31`, whatever
+  time zone the visitor's device uses. Checked by capturing the records for a
+  full delivery: at 09:42 UTC the app sent 14:42. Rows sent before this
+  change stay in UTC. All 8 tests re-run: 8 of 8 passed.

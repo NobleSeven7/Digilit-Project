@@ -2,6 +2,8 @@
 // and sends the email alerts. If no webhook URL is set, the app still works:
 // the record is simply kept on this device and noted in the sync log.
 
+import { toPakistanTime } from './format.js'
+
 const LOG_KEY = 'raastashare-sync-log-v1'
 
 // Vite reads VITE_WEBHOOK_URL from the .env.local file when the app starts.
@@ -19,7 +21,9 @@ export const SHEET_COLUMNS = [
 
 // Turn one record into a row with every column filled in (blank if missing).
 export function toSheetRow(event, record) {
-  const full = { event, sentAt: new Date().toISOString(), ...record }
+  const full = { event, ...record, sentAt: toPakistanTime(new Date()) }
+  // Times go to the Sheet in Pakistan time, not UTC.
+  if (full.deliveredAt) full.deliveredAt = toPakistanTime(full.deliveredAt)
   const row = {}
   for (const column of SHEET_COLUMNS) row[column] = full[column] ?? ''
   return row
