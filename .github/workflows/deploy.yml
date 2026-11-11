@@ -26,6 +26,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          # The Make.com webhook URL comes from a repository secret named
+          # VITE_WEBHOOK_URL (Settings > Secrets and variables > Actions).
+          # It is never stored in the code. If the secret is missing, this is
+          # empty and the live site works offline, like before.
+          VITE_WEBHOOK_URL: ${{ secrets.VITE_WEBHOOK_URL }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
