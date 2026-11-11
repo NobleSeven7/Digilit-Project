@@ -164,3 +164,7 @@ screenshots are in `test-screenshots/design-pass/` (made by
   code, so anyone inspecting the site could find it and send rows to the
   Sheet. Accepted for a class demo; the fix if it is misused is a new webhook
   URL in Make.com and an updated secret.
+- **Confirmed on the live site (11 Nov 2026):** after the team added the
+  `VITE_WEBHOOK_URL` secret and the site redeployed, a delivery completed on
+  the live GitHub Pages link (carrier Usman Tariq) showed "Sent to Make.com"
+  in the Admin sync log, and its row appeared in the Google Sheet.
