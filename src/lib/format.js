@@ -32,3 +32,11 @@ export function dayAt(daysFromToday, hour, minute = 0) {
 export function makeId(prefix) {
   return `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`
 }
+
+// A moment in time -> Pakistan time as text, e.g. "2026-11-11 12:34:58".
+// Used for the Google Sheets log so the times match the clock in Pakistan,
+// whatever time zone the visitor's device is set to.
+// (The 'sv-SE' style is used only because it writes dates as YYYY-MM-DD.)
+export function toPakistanTime(value) {
+  return new Date(value).toLocaleString('sv-SE', { timeZone: 'Asia/Karachi' })
+}
