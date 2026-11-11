@@ -190,3 +190,21 @@ Make.com fills. Link: https://datastudio.google.com/reporting/416cf872-9063-463b
 - The dashboard numbers differ from the in-app Dashboard on purpose: the
   app's sample data lives only in the browser, while the Sheet only holds
   records sent after Make.com was connected.
+
+## Stage 7: tester feedback
+
+- **Report: "the Looker Studio dashboard stopped updating".** Not an app
+  fault. The tester's rows were all in the Google Sheet; Looker Studio was
+  showing its saved copy of the data, which a browser reload does not
+  replace. Fix: the report owner clicks "Refresh data", and the data source's
+  "Data freshness" is set to the shortest time offered. The in-app Dashboard
+  and the Looker Studio dashboard also count different things (the app
+  includes its sample data), so their numbers are not expected to match.
+- **Found in the tester's Sheet rows: the same journey posted six times in
+  five seconds.** Cause: after "Post journey" the form stayed on screen and
+  the confirmation appeared at the top of the page, out of view on a phone,
+  so the button was tapped again. Fixed in `src/pages/Carrier.jsx`: the page
+  scrolls to the confirmation, and an identical open journey (same carrier,
+  route, departure, vehicle and spare kg) is refused with a message.
+  Checked on a phone-sized screen: six taps add one journey, changing a
+  detail allows a new one. All 8 tests re-run: 8 of 8 passed.
