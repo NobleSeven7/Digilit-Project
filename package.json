@@ -10,8 +10,8 @@
     "test:e2e": "node tests/run-tests.cjs"
   },
   "dependencies": {
-    "@fontsource/atkinson-hyperlegible": "^5.3.0",
     "@fontsource/bricolage-grotesque": "^5.3.0",
+    "@fontsource/lexend": "^5.3.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

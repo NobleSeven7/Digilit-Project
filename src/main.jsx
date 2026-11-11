@@ -5,8 +5,9 @@ import { createRoot } from 'react-dom/client'
 // Fonts are bundled with the app (not loaded from the internet), so they work offline.
 import '@fontsource/bricolage-grotesque/600.css'
 import '@fontsource/bricolage-grotesque/700.css'
-import '@fontsource/atkinson-hyperlegible/400.css'
-import '@fontsource/atkinson-hyperlegible/700.css'
+// Lexend: a body font designed for easy reading, with plain zeros (0, not a slashed 0).
+import '@fontsource/lexend/400.css'
+import '@fontsource/lexend/700.css'
 
 import './index.css'
 import App from './App.jsx'

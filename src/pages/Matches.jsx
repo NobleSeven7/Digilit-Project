@@ -9,11 +9,42 @@ import PageHeader from '../components/PageHeader.jsx'
 import RouteLine from '../components/RouteLine.jsx'
 import RuleCheck from '../components/RuleCheck.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
+import { VehicleIcon } from '../components/Icons.jsx'
+
+// The score out of 100, with a small bar that fills to the same amount.
+function ScoreBadge({ total }) {
+  const rounded = Math.round(total)
+  return (
+    <div className="text-right">
+      <p className="font-display text-4xl font-bold leading-none text-brand" data-testid="score">
+        {rounded}
+        <span className="text-lg text-muted"> / 100</span>
+      </p>
+      <div className="ml-auto mt-2 h-2 w-28 rounded-full bg-brand-tint" role="img"
+        aria-label={`Score ${rounded} out of 100`}>
+        <div className="h-2 rounded-full bg-brand" style={{ width: `${Math.min(100, total)}%` }} />
+      </div>
+    </div>
+  )
+}
+
+// A compact "passed" chip for one rule (used on eligible carriers).
+function PassChip({ rule }) {
+  return (
+    <li data-rule={rule.key} data-pass={rule.pass}
+      className="inline-flex items-center gap-1.5 rounded-full bg-brand-tint px-3 py-1 text-sm font-bold text-brand">
+      <span aria-hidden="true">✓</span>
+      {rule.label}
+      <span className="sr-only">: Pass</span>
+    </li>
+  )
+}
 
 // One carrier card. "rank" is set only for eligible carriers.
 function CarrierCard({ result, rank, shipment, declined, canRequest, onRequest }) {
   const { journey, rules, eligible, score } = result
   const usedPercent = Math.round((shipment.weightKg / journey.spareKg) * 100)
+  const showChips = eligible && !declined // passed everything: keep it compact
 
   return (
     <li
@@ -23,42 +54,58 @@ function CarrierCard({ result, rank, shipment, declined, canRequest, onRequest }
       className={`card ${rank === 1 ? 'border-2 border-brand' : ''}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          {rank && (
-            <p className="font-bold text-brand">
-              {rank === 1 ? 'Best match' : `Option ${rank}`}
+        <div className="flex min-w-0 items-start gap-3">
+          {/* Vehicle icon */}
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand"
+            title={journey.vehicleType}>
+            <VehicleIcon type={journey.vehicleType} />
+          </span>
+          <div className="min-w-0">
+            {rank && (
+              <p className="text-sm font-bold text-brand">
+                {rank === 1 ? 'Best match' : `Option ${rank}`}
+              </p>
+            )}
+            <h3 className="text-xl font-bold">{journey.carrierName}</h3>
+            <p className="text-sm text-muted">
+              {journey.vehicleType}, {journey.spareKg} kg spare, departs {formatDateTime(journey.departure)}
             </p>
-          )}
-          <h3 className="text-xl font-bold">{journey.carrierName}</h3>
-          <p className="text-muted">
-            {journey.vehicleType}, {journey.spareKg} kg spare, departs {formatDateTime(journey.departure)}
-          </p>
+          </div>
         </div>
 
         {/* Score out of 100 (eligible carriers only) */}
-        {score && (
-          <div className="text-right">
-            <p className="font-display text-4xl font-bold text-brand" data-testid="score">
-              {Math.round(score.total)}
-              <span className="text-lg text-muted"> / 100</span>
-            </p>
-          </div>
-        )}
+        {score && <ScoreBadge total={score.total} />}
         {!eligible && <StatusBadge status="Not eligible" />}
         {declined && <StatusBadge status={DELIVERY.DECLINED} />}
       </div>
 
-      {/* The four rule results */}
-      <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-        {rules.map((rule) => <RuleCheck key={rule.key} rule={rule} />)}
-      </ul>
-
-      {/* How the score was calculated */}
-      {score && (
-        <p className="mt-3 text-sm text-muted">
-          Score: time buffer {score.timeBuffer} + capacity fit {Math.round(score.capacityFit * 10) / 10}{' '}
-          (50 × {shipment.weightKg} kg ÷ {journey.spareKg} kg). Uses {usedPercent}% of this carrier's spare space.
-        </p>
+      {showChips ? (
+        <>
+          {/* Passed all four rules: one row of chips, details on request */}
+          <ul aria-label="Rule checks" className="mt-4 flex flex-wrap gap-2">
+            {rules.map((rule) => <PassChip key={rule.key} rule={rule} />)}
+          </ul>
+          <details className="group mt-3">
+            <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1.5 rounded-lg font-bold text-brand
+                                [&::-webkit-details-marker]:hidden">
+              <span className="group-open:hidden">See details</span>
+              <span className="hidden group-open:inline">Hide details</span>
+              <span aria-hidden="true" className="transition-transform group-open:rotate-180 motion-reduce:transition-none">▾</span>
+            </summary>
+            <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+              {rules.map((rule) => <RuleCheck key={rule.key} rule={rule} />)}
+            </ul>
+            <p className="mt-3 text-sm text-muted">
+              Score: time buffer {score.timeBuffer} + capacity fit {Math.round(score.capacityFit * 10) / 10}{' '}
+              (50 × {shipment.weightKg} kg ÷ {journey.spareKg} kg). Uses {usedPercent}% of this carrier's spare space.
+            </p>
+          </details>
+        </>
+      ) : (
+        /* Not eligible (or declined): show every rule in full so the reason is clear */
+        <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+          {rules.map((rule) => <RuleCheck key={rule.key} rule={rule} />)}
+        </ul>
       )}
 
       {eligible && !declined && canRequest && (
