@@ -168,3 +168,25 @@ screenshots are in `test-screenshots/design-pass/` (made by
   `VITE_WEBHOOK_URL` secret and the site redeployed, a delivery completed on
   the live GitHub Pages link (carrier Usman Tariq) showed "Sent to Make.com"
   in the Admin sync log, and its row appeared in the Google Sheet.
+
+## Stage 6: Looker Studio dashboard
+
+Built by the team in Looker Studio, connected to the same Google Sheet that
+Make.com fills. Link: https://datastudio.google.com/reporting/416cf872-9063-463b-a6c6-ff4e7b29649d
+
+- **Metrics** (calculated fields, matching the proposal's impact metrics):
+  - Total shipments: `SUM(CASE WHEN Event = "shipment" THEN 1 ELSE 0 END)`
+  - Matches: `SUM(CASE WHEN Event = "match" THEN 1 ELSE 0 END)`
+  - Average matching time: `AVG(MatchingMs)` (only shipment rows have a value)
+  - Cost saved: `SUM(CASE WHEN Event = "delivery" THEN 1000 - Price ELSE 0 END)`
+- **Charts:** four scorecards, records by event type (bar chart), and a
+  completed-deliveries table filtered to `Event = delivery`.
+- **First check:** 11 rows in the Sheet (4 shipments, 4 matches,
+  3 deliveries) gave cost saved PKR 1,500 = 3 × (1,000 − 500), as expected.
+- **Fixed during setup:** the deliveries table merged two deliveries with the
+  same sender, carrier and route into one row and showed their prices added
+  together (PKR 1,000). Adding `DeliveredAt` as a dimension gives each
+  delivery its own row.
+- The dashboard numbers differ from the in-app Dashboard on purpose: the
+  app's sample data lives only in the browser, while the Sheet only holds
+  records sent after Make.com was connected.
