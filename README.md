@@ -11,6 +11,15 @@ released to the carrier only after delivery is confirmed.
 Example from our proposal: a 5 kg parcel from Islamabad to Lahore costs
 PKR 500 (PKR 200 base + PKR 60 per kg), about half of a PKR 1,000 courier.
 
+## Live links
+
+- **App:** https://nobleseven7.github.io/Digilit-Project/
+- **Looker Studio dashboard:** https://datastudio.google.com/reporting/416cf872-9063-463b-a6c6-ff4e7b29649d
+
+The live app sends its records to Make.com, which writes them to Google
+Sheets; the dashboard reads that Sheet. The dashboard refreshes about every
+15 minutes.
+
 ## Team
 
 | Member | Role |
@@ -95,7 +104,7 @@ Carriers that pass are ranked by a score out of 100:
 | Matching engine | Real | Rule filter and score in `src/lib/matching.js` |
 | Data storage | Real, local | Saved in the browser's localStorage so the demo works offline |
 | Make.com / Google Sheets / email | Real when connected | The app posts to the webhook URL in `.env.local`; the Make.com scenario and Sheet are set up separately |
-| Looker Studio dashboard | Separate | Reads the Google Sheet; the in-app Dashboard shows the same metrics from local data |
+| Looker Studio dashboard | Real | Reads the Google Sheet (link above); the in-app Dashboard shows the same metrics from this device's data |
 | User accounts | Simulated | Pre-loaded demo profiles instead of a login |
 | OTP codes | Simulated | Random 4-digit codes shown on screen instead of SMS |
 | Payment | Simulated | Escrow is a status tracked in the app; no real money or wallet |
