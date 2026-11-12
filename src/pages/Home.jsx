@@ -3,7 +3,7 @@ import { BASE_FEE, FEE_PER_KG, COURIER_FEE } from '../data/constants.js'
 import { calculatePrice, savingPercent } from '../lib/pricing.js'
 import { formatPKR } from '../lib/format.js'
 import { ParcelIcon, CarIcon } from '../components/Icons.jsx'
-import RouteMap from '../components/RouteMap.jsx'
+import RouteWeb from '../components/RouteWeb.jsx'
 
 // The demo case from the proposal.
 const DEMO_KG = 5
@@ -62,8 +62,10 @@ export default function Home() {
   return (
     <div className="space-y-8">
       {/* Hero, in the green of a motorway sign */}
-      <section className="rounded-2xl bg-brand px-5 py-8 text-white sm:px-10 sm:py-12">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-center lg:gap-10">
+      <section className="relative overflow-hidden rounded-2xl bg-brand px-5 py-8 text-white sm:px-10 sm:py-12">
+        {/* Faint web of routes behind everything in the hero */}
+        <RouteWeb />
+        <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-center lg:gap-10">
           <div>
             <h1 className="max-w-2xl text-4xl font-bold sm:text-5xl lg:text-6xl">
               Send it with someone already going that way
@@ -82,11 +84,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* The Islamabad to Lahore route, drawn as a map */}
-          <RouteMap />
-
-          {/* Three facts from the proposal's impact targets, across the bottom */}
-          <ul aria-label="RaastaShare at a glance" className="grid gap-3 sm:grid-cols-3 lg:col-span-2">
+          {/* Three facts from the proposal's impact targets */}
+          <ul aria-label="RaastaShare at a glance" className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
             <StatTile value={formatPKR(calculatePrice(DEMO_KG))} text={`vs ${formatPKR(COURIER_FEE)} by courier`} />
             <StatTile value="Under 1 minute" text="to find a match" />
             <StatTile value="3 steps" text="instead of 8 calls and messages" />
