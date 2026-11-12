@@ -86,8 +86,8 @@ export default function Carrier({ state, save }) {
       {/* Confirmation shown after posting */}
       {posted && (
         <div ref={confirmation} role="status" data-testid="journey-posted"
-          className="card mb-6 scroll-mt-4 border-brand bg-brand-tint">
-          <h2 className="text-xl font-bold text-brand">Journey posted</h2>
+          className="card mb-6 scroll-mt-4 border-brand-ink bg-brand-tint">
+          <h2 className="text-xl font-bold text-brand-ink">Journey posted</h2>
           <div className="mt-3 max-w-md">
             <RouteLine origin={posted.journey.origin} destination={posted.journey.destination} />
           </div>

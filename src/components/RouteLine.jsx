@@ -39,12 +39,12 @@ function Tracker({ stops, reached, showCurrent, problem }) {
         )}
 
         {stops.map((stop, i) => {
-          let look = 'border-2 border-line bg-white text-muted' // upcoming
-          if (i <= lastDone) look = 'border-2 border-brand bg-brand text-white' // done
+          let look = 'border-2 border-line bg-surface text-muted' // upcoming
+          if (i <= lastDone) look = 'border-2 border-brand-ink bg-brand text-white' // done
           if (i === current) {
             look = problem
-              ? 'border-[3px] border-fail bg-white text-fail ring-4 ring-fail/20'
-              : 'border-[3px] border-hold bg-white text-hold-ink ring-4 ring-hold/25'
+              ? 'border-[3px] border-fail bg-surface text-fail ring-4 ring-fail/20'
+              : 'border-[3px] border-hold bg-surface text-hold-ink ring-4 ring-hold/25'
           }
           return (
             <span key={stop} style={{ left: position(i, count) }}
@@ -98,8 +98,8 @@ export default function RouteLine({ origin, destination, stops, reached = 0, sho
         /* Plain route: a green road with a dashed centre line and two end stops */
         <div className="relative mt-2 h-4 rounded-full bg-brand" aria-hidden="true">
           <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-white/70" />
-          <span className="absolute left-0 top-0 size-4 rounded-full border-[3px] border-brand bg-white" />
-          <span className="absolute right-0 top-0 size-4 rounded-full border-[3px] border-brand bg-white" />
+          <span className="absolute left-0 top-0 size-4 rounded-full border-[3px] border-brand-ink bg-surface" />
+          <span className="absolute right-0 top-0 size-4 rounded-full border-[3px] border-brand-ink bg-surface" />
         </div>
       )}
     </div>

@@ -13,18 +13,18 @@ const DEMO_KG = 5
 function ChoiceCard({ href, testId, icon, title, text }) {
   return (
     <a href={href} data-testid={testId}
-      className="group flex items-center gap-4 rounded-xl bg-white p-4 text-ink shadow-[0_2px_0_rgba(8,79,50,0.35)]
+      className="group flex items-center gap-4 rounded-xl bg-surface p-4 text-ink shadow-[0_2px_0_rgba(8,79,50,0.35)]
                  transition duration-150 hover:-translate-y-1 hover:shadow-[0_14px_24px_-12px_rgba(8,79,50,0.75)]
                  focus-visible:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-5">
-      <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand">
+      <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand-ink">
         {icon}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block whitespace-nowrap font-display text-xl font-bold text-brand">{title}</span>
+        <span className="block whitespace-nowrap font-display text-xl font-bold text-brand-ink">{title}</span>
         <span className="mt-0.5 block text-sm text-muted">{text}</span>
       </span>
       <span aria-hidden="true"
-        className="text-2xl font-bold text-brand transition-transform group-hover:translate-x-1 motion-reduce:transition-none">
+        className="text-2xl font-bold text-brand-ink transition-transform group-hover:translate-x-1 motion-reduce:transition-none">
         →
       </span>
     </a>
@@ -51,7 +51,7 @@ const STEPS = [
 // A numbered stop that sits on the "How it works" road.
 function StepStop({ number, className }) {
   return (
-    <span className={`absolute flex size-8 items-center justify-center rounded-full border-4 border-brand-dark bg-white text-sm font-bold text-brand-dark ${className}`}>
+    <span className={`absolute flex size-8 items-center justify-center rounded-full border-4 border-brand-ink bg-surface text-sm font-bold text-brand-ink ${className}`}>
       {number}
     </span>
   )
@@ -61,12 +61,12 @@ function StepStop({ number, className }) {
 function PriceColumn({ name, price, note, highlight }) {
   const width = `${(price / COURIER_FEE) * 100}%`
   return (
-    <div className={`rounded-lg p-4 ${highlight ? 'border-2 border-brand bg-brand-tint' : 'border border-line'}`}>
-      <p className={`font-bold ${highlight ? 'text-brand' : 'text-muted'}`}>{name}</p>
-      <p className={`mt-1 font-display text-3xl font-bold ${highlight ? 'text-brand' : 'text-ink'}`}>
+    <div className={`rounded-lg p-4 ${highlight ? 'border-2 border-brand-ink bg-brand-tint' : 'border border-line'}`}>
+      <p className={`font-bold ${highlight ? 'text-brand-ink' : 'text-muted'}`}>{name}</p>
+      <p className={`mt-1 font-display text-3xl font-bold ${highlight ? 'text-brand-ink' : 'text-ink'}`}>
         {formatPKR(price)}
       </p>
-      <div className="mt-3 h-2.5 rounded-full bg-white" aria-hidden="true">
+      <div className="mt-3 h-2.5 rounded-full bg-surface" aria-hidden="true">
         <div className={`h-2.5 rounded-full ${highlight ? 'bg-brand' : 'bg-muted/50'}`} style={{ width }} />
       </div>
       <p className="mt-2 text-sm text-muted">{note}</p>

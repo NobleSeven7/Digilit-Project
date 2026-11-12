@@ -7,7 +7,7 @@ const BAD = ['Not eligible', STATUS.DISPUTED, STATUS.CANCELLED, STATUS.FLAGGED, 
 
 export default function StatusBadge({ status }) {
   let colours = 'bg-hold-tint text-hold-ink border-hold' // default: amber = waiting
-  if (GOOD.includes(status)) colours = 'bg-brand-tint text-brand border-brand'
+  if (GOOD.includes(status)) colours = 'bg-brand-tint text-brand-ink border-brand-ink'
   if (BAD.includes(status)) colours = 'bg-fail-tint text-fail border-fail'
 
   return (
