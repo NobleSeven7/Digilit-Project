@@ -266,3 +266,13 @@ In its place the hero has a faint background web of routes.
 - The three fact tiles are back on the right of the hero.
 - Home page only; no logic changed. All 8 tests re-run: 8 of 8 passed.
   Screenshots: `test-screenshots/design-pass/route-web-hero-*.png`.
+
+## Stage 11: "How it works" as a road
+
+The three "How it works" cards on the Home page became one road with three
+numbered stops (Submit, Accept, Verify), in the same style as the route line
+used across the app. The road runs left to right on wide screens and top to
+bottom on phones. The idea of putting steps on a single line came from a
+reference design the team looked at; the drawing and colours are our own.
+Home page only; no logic changed. All 8 tests re-run: 8 of 8 passed.
+Screenshots: `test-screenshots/design-pass/how-it-works-road-*.png`.

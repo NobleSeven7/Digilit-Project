@@ -41,6 +41,22 @@ function StatTile({ value, text }) {
   )
 }
 
+// The three steps of a delivery, in order (from the proposal: Submit, Accept, Verify).
+const STEPS = [
+  ['Submit', 'Post the parcel or the journey. Matching runs straight away.'],
+  ['Accept', 'Sender and carrier both accept. The fee moves into escrow.'],
+  ['Verify', 'One-time codes confirm pickup and delivery, then the carrier is paid.'],
+]
+
+// A numbered stop that sits on the "How it works" road.
+function StepStop({ number, className }) {
+  return (
+    <span className={`absolute flex size-8 items-center justify-center rounded-full border-4 border-brand-dark bg-white text-sm font-bold text-brand-dark ${className}`}>
+      {number}
+    </span>
+  )
+}
+
 // One side of the price comparison, with a bar showing the price to scale.
 function PriceColumn({ name, price, note, highlight }) {
   const width = `${(price / COURIER_FEE) * 100}%`
@@ -93,20 +109,36 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How it works: three real steps, in order */}
+      {/* How it works: the three steps as stops along one road */}
       <section>
         <h2 className="text-2xl font-bold">How it works</h2>
-        <ol className="mt-4 grid gap-4 sm:grid-cols-3">
-          {[
-            ['Submit', 'Post the parcel or the journey. Matching runs straight away.'],
-            ['Accept', 'Sender and carrier both accept. The fee moves into escrow.'],
-            ['Verify', 'One-time codes confirm pickup and delivery, then the carrier is paid.'],
-          ].map(([title, text], index) => (
-            <li key={title} className="card">
-              <span className="flex size-8 items-center justify-center rounded-full bg-brand font-bold text-white">
-                {index + 1}
+
+        {/* Wide screens: the road runs left to right */}
+        <ol className="mt-5 hidden sm:grid sm:grid-cols-3" data-testid="steps-road">
+          {STEPS.map(([title, text], index) => (
+            <li key={title}>
+              <h3 className="text-xl font-bold">{title}</h3>
+              <div className={`relative my-4 h-3 bg-brand ${index === 0 ? 'rounded-l-full' : ''} ${
+                index === STEPS.length - 1 ? 'rounded-r-full' : ''}`}>
+                <span aria-hidden="true"
+                  className="absolute inset-x-2 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-white/70" />
+                <StepStop number={index + 1} className="left-0 top-1/2 -translate-y-1/2" />
+              </div>
+              <p className="pr-8 text-muted">{text}</p>
+            </li>
+          ))}
+        </ol>
+
+        {/* Phones: the same road runs top to bottom */}
+        <ol className="mt-5 sm:hidden">
+          {STEPS.map(([title, text], index) => (
+            <li key={title} className="relative pb-6 pl-12 last:pb-1">
+              <span aria-hidden="true" className={`absolute inset-y-0 left-2.5 w-3 bg-brand ${
+                index === 0 ? 'rounded-t-full' : ''} ${index === STEPS.length - 1 ? 'rounded-b-full' : ''}`}>
+                <span className="absolute inset-y-2 left-1/2 -translate-x-1/2 border-l-2 border-dashed border-white/70" />
               </span>
-              <h3 className="mt-3 text-xl font-bold">{title}</h3>
+              <StepStop number={index + 1} className="left-0 top-0" />
+              <h3 className="text-xl font-bold">{title}</h3>
               <p className="mt-1 text-muted">{text}</p>
             </li>
           ))}
