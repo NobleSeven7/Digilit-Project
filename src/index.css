@@ -7,6 +7,7 @@
 @theme {
   --color-brand: #0B6B43;        /* motorway-sign green: main brand colour */
   --color-brand-dark: #084F32;   /* pressed / hover state */
+  --color-brand-light: #23805A;  /* faint route lines on the green hero */
   --color-brand-tint: #E3F1E9;   /* soft green background */
   --color-ink: #12241B;          /* main text */
   --color-muted: #55665C;        /* secondary text */
@@ -67,24 +68,9 @@ h1, h2, h3 {
   .hint { @apply mt-1 text-sm text-muted; }
 }
 
-/* ---- Home page route map: the amber parcel dot ------------------------
-   The dot follows the road path once when the page opens, then rests at
-   Lahore. Hidden in browsers that cannot move things along a path. */
-.route-parcel { display: none; }
-@supports (offset-path: path("M0 0")) {
-  .route-parcel {
-    display: inline;
-    offset-path: path("M60 40 V110 L130 180 H220 L260 220 V320");
-    offset-rotate: 0deg;
-    offset-distance: 100%;
-    animation: ride-route 5s ease-in-out 0.4s 1 backwards;
-  }
-}
-@keyframes ride-route {
-  from { offset-distance: 0%; }
-  to { offset-distance: 100%; }
-}
-/* People who ask for less motion see the parcel already delivered. */
-@media (prefers-reduced-motion: reduce) {
-  .route-parcel { animation: none; }
+/* ---- Home page hero: the faint web of routes --------------------------
+   The web fades out towards the left, where the headline sits, so the
+   text stays easy to read. */
+.route-web {
+  mask-image: linear-gradient(to right, rgb(0 0 0 / 0.35), black 65%);
 }

@@ -251,3 +251,18 @@ route we support.
   road with a trip time; the 8 same-city picks show no road and a prompt).
   Fixed during the change: a clipped "Lahore" label and the demo route
   running through the "Rawalpindi" label. All 8 tests re-run: 8 of 8 passed.
+
+## Stage 10: web of routes on the Home page
+
+Team decision: the hand-drawn Islamabad to Lahore motorway map from Stage 8
+is removed from the Home page (the Send page's city map now covers routes).
+In its place the hero has a faint background web of routes.
+
+- New `src/components/RouteWeb.jsx`: seven transit-map style lines with
+  stops, drawn in a green slightly lighter than the hero and faded towards
+  the headline so the text stays readable. Decoration only: it does not show
+  real roads and is hidden from screen readers.
+- Removed `src/components/RouteMap.jsx` and its moving-dot animation.
+- The three fact tiles are back on the right of the hero.
+- Home page only; no logic changed. All 8 tests re-run: 8 of 8 passed.
+  Screenshots: `test-screenshots/design-pass/route-web-hero-*.png`.
