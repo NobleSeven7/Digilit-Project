@@ -232,3 +232,22 @@ We kept RaastaShare's own design and added the idea in our own style.
   wrapped onto two lines in the narrower column; they now stay on one line.
 - Visual change to the Home page only; no logic changed. All 8 tests re-run:
   8 of 8 passed. Screenshots: `test-screenshots/design-pass/route-hero-*.png`.
+
+## Stage 9: route map on the Send page
+
+A team suggestion: show a map while the sender picks a route, for every
+route we support.
+
+- New `src/components/CityMap.jsx`: the eight cities placed roughly where
+  they are in Pakistan. The chosen From and To cities are highlighted and
+  joined by a green road, and the caption gives the approximate trip time
+  from the existing route table. It sits beside the From and To pickers on
+  the Send page (below them on phones).
+- It is a picture, not a maps service: positions are approximate, lines are
+  straight, and Rawalpindi is nudged away from Islamabad so they do not
+  overlap. Matching still uses exact city names, as in the proposal.
+- The hand-drawn Islamabad to Lahore motorway map stays on the Home page.
+- Checked all 64 From/To combinations in the browser (56 routes draw one
+  road with a trip time; the 8 same-city picks show no road and a prompt).
+  Fixed during the change: a clipped "Lahore" label and the demo route
+  running through the "Rawalpindi" label. All 8 tests re-run: 8 of 8 passed.

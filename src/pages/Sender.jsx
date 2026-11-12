@@ -8,6 +8,7 @@ import { sendToWebhook } from '../lib/webhook.js'
 import { goTo } from '../lib/navigation.js'
 import { formatPKR, dayAt, makeId } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
+import CityMap from '../components/CityMap.jsx'
 
 // The sender confirms the parcel contains none of these.
 // Shows how many checklist lines are ticked. Amber while incomplete, green when done.
@@ -113,21 +114,25 @@ export default function Sender({ state, save }) {
               <p className="hint">Demo profiles stand in for a real login.</p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="label" htmlFor="origin">From</label>
-                <select id="origin" className="field" value={origin}
-                  onChange={(e) => setOrigin(e.target.value)}>
-                  {CITIES.map((city) => <option key={city}>{city}</option>)}
-                </select>
+            {/* Route: the two city pickers, with a map that draws the chosen route */}
+            <div className="grid gap-4 sm:grid-cols-2 sm:items-center">
+              <div className="space-y-4">
+                <div>
+                  <label className="label" htmlFor="origin">From</label>
+                  <select id="origin" className="field" value={origin}
+                    onChange={(e) => setOrigin(e.target.value)}>
+                    {CITIES.map((city) => <option key={city}>{city}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label" htmlFor="destination">To</label>
+                  <select id="destination" className="field" value={destination}
+                    onChange={(e) => setDestination(e.target.value)}>
+                    {CITIES.map((city) => <option key={city}>{city}</option>)}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="label" htmlFor="destination">To</label>
-                <select id="destination" className="field" value={destination}
-                  onChange={(e) => setDestination(e.target.value)}>
-                  {CITIES.map((city) => <option key={city}>{city}</option>)}
-                </select>
-              </div>
+              <CityMap origin={origin} destination={destination} />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
