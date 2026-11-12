@@ -276,3 +276,17 @@ bottom on phones. The idea of putting steps on a single line came from a
 reference design the team looked at; the drawing and colours are our own.
 Home page only; no logic changed. All 8 tests re-run: 8 of 8 passed.
 Screenshots: `test-screenshots/design-pass/how-it-works-road-*.png`.
+
+## Stage 12: phone dark mode
+
+- **Report from a team phone:** the Home page looked near-black with bright
+  green route lines and dark cards. Cause: the app has one (light) colour
+  theme and did not say so, so the phone's browser, in dark mode, recoloured
+  the page automatically.
+- **Change:** `index.html` and `src/index.css` now declare
+  `color-scheme: only light`, the standard way to ask browsers not to apply
+  an automatic dark theme.
+- **Not verified here:** the forced dark theme could not be reproduced in the
+  test browser, so this needs checking on the phone that showed it. Some
+  browsers' "force dark" settings ignore the request; if so, the fix would be
+  a real dark theme. All 8 tests re-run: 8 of 8 passed.
