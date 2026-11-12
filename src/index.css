@@ -24,6 +24,11 @@
 }
 
 /* ---- Base styles ---------------------------------------------------- */
+/* The app is designed for light colours only. Without this, some phones in
+   dark mode recolour the page themselves and the greens come out wrong. */
+:root {
+  color-scheme: only light;
+}
 body {
   background: var(--color-paper);
   color: var(--color-ink);
