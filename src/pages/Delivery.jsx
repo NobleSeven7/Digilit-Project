@@ -205,7 +205,7 @@ export default function Delivery({ state, save, id }) {
           {/* Result of the last action */}
           {message && (
             <p role="alert" data-testid="delivery-message"
-              className={`rounded-lg px-4 py-3 font-bold ${message.ok ? 'bg-brand-tint text-brand' : 'bg-fail-tint text-fail'}`}>
+              className={`rounded-lg px-4 py-3 font-bold ${message.ok ? 'bg-brand-tint text-brand-ink' : 'bg-fail-tint text-fail'}`}>
               {message.text}
             </p>
           )}
@@ -272,8 +272,8 @@ export default function Delivery({ state, save, id }) {
 
           {/* Finished states */}
           {delivery.status === DELIVERY.DELIVERED && (
-            <section className="card border-brand bg-brand-tint" data-testid="step-done">
-              <h2 className="text-xl font-bold text-brand">Delivered and paid</h2>
+            <section className="card border-brand-ink bg-brand-tint" data-testid="step-done">
+              <h2 className="text-xl font-bold text-brand-ink">Delivered and paid</h2>
               <p className="mt-1">
                 {amount} was released to {journey.carrierName}
                 {delivery.deliveredAt ? ` on ${formatDateTime(delivery.deliveredAt)}` : ''}.
@@ -313,7 +313,7 @@ export default function Delivery({ state, save, id }) {
         {/* Escrow panel */}
         <aside className="card h-fit" data-testid="escrow-panel">
           <h2 className="text-xl font-bold">Escrow</h2>
-          <p className="mt-2 font-display text-4xl font-bold text-brand">{amount}</p>
+          <p className="mt-2 font-display text-4xl font-bold text-brand-ink">{amount}</p>
           <p className="mt-2" data-testid="escrow-status"><StatusBadge status={delivery.escrow} /></p>
           <p className="mt-3 text-sm text-muted">
             Simulated payment. The fee is held when both sides accept and released only

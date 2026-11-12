@@ -180,7 +180,7 @@ export default function Sender({ state, save }) {
         {/* Price summary + submit button */}
         <aside className="card h-fit space-y-3 self-start lg:sticky lg:top-4">
           <h2 className="text-xl font-bold">Your price</h2>
-          <p className="font-display text-4xl font-bold text-brand" data-testid="price">
+          <p className="font-display text-4xl font-bold text-brand-ink" data-testid="price">
             {formatPKR(weight > 0 ? calculatePrice(weight) : 0)}
           </p>
           <p className="text-sm text-muted">

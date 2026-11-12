@@ -1,6 +1,10 @@
 // The frame around every page: header with navigation, a bottom tab bar
 // on phones, and a footer with the "Reset demo data" button.
 
+import { useState } from 'react'
+import { getTheme, saveTheme } from '../lib/theme.js'
+import { SunIcon, MoonIcon } from './Icons.jsx'
+
 const NAV_ITEMS = [
   { page: 'sender', label: 'Send' },
   { page: 'carrier', label: 'Carry' },
@@ -24,6 +28,25 @@ function Logo() {
   )
 }
 
+// The light / dark switch. It shows the icon of the theme you would switch TO.
+function ThemeSwitch() {
+  const [theme, setTheme] = useState(getTheme)
+  const next = theme === 'dark' ? 'light' : 'dark'
+
+  function handleClick() {
+    saveTheme(next)
+    setTheme(next)
+  }
+
+  return (
+    <button type="button" onClick={handleClick} data-testid="theme-switch"
+      aria-label={`Switch to ${next} theme`} title={`Switch to ${next} theme`}
+      className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-lg text-white hover:bg-brand-dark">
+      {next === 'dark' ? <MoonIcon size={22} /> : <SunIcon size={22} />}
+    </button>
+  )
+}
+
 export default function Layout({ currentPage, onReset, children }) {
   // Name of the page we are on (shown in the phone header, where there is no top menu).
   const current = NAV_ITEMS.find((item) => item.page === currentPage)
@@ -35,14 +58,17 @@ export default function Layout({ currentPage, onReset, children }) {
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
           <Logo />
           {/* Phones: show which page you are on */}
-          {current && (
-            <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-brand md:hidden">
-              {current.label}
-            </span>
-          )}
+          <div className="flex items-center gap-2 md:order-last">
+            {current && (
+              <span className="rounded-full bg-surface px-3 py-1 text-sm font-bold text-brand-ink md:hidden">
+                {current.label}
+              </span>
+            )}
+            <ThemeSwitch />
+          </div>
           {/* Desktop navigation (hidden on phones). The current page is a white tab
               with an amber underline; the others are plain white text. */}
-          <nav aria-label="Main" className="hidden gap-1 md:flex">
+          <nav aria-label="Main" className="hidden gap-1 md:ml-auto md:flex">
             {NAV_ITEMS.map((item) => (
               <a
                 key={item.page}
@@ -50,7 +76,7 @@ export default function Layout({ currentPage, onReset, children }) {
                 aria-current={currentPage === item.page ? 'page' : undefined}
                 className={`rounded-lg border-b-4 px-3 py-1.5 font-bold ${
                   currentPage === item.page
-                    ? 'border-hold bg-white text-brand'
+                    ? 'border-hold bg-surface text-brand-ink'
                     : 'border-transparent text-white/85 hover:bg-brand-dark hover:text-white'
                 }`}
               >
@@ -78,14 +104,14 @@ export default function Layout({ currentPage, onReset, children }) {
       </footer>
 
       {/* Phone navigation: a tab bar fixed to the bottom of the screen */}
-      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-10 flex border-t border-line bg-white md:hidden">
+      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-10 flex border-t border-line bg-surface md:hidden">
         {NAV_ITEMS.map((item) => (
           <a
             key={item.page}
             href={`#/${item.page}`}
             aria-current={currentPage === item.page ? 'page' : undefined}
             className={`flex min-h-14 flex-1 items-center justify-center border-t-4 text-xs font-bold ${
-              currentPage === item.page ? 'border-brand text-brand' : 'border-transparent text-muted'
+              currentPage === item.page ? 'border-brand-ink text-brand-ink' : 'border-transparent text-muted'
             }`}
           >
             {item.label}

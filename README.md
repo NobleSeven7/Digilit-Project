@@ -85,6 +85,9 @@ shows what was sent.
 | Admin | Flagged, unmatched and disputed requests for human review |
 | Dashboard | Total shipments, matches, average matching time, cost saved |
 
+The app has a light and a dark theme. It follows your device's setting, and
+the sun / moon button in the header switches between them.
+
 ## Matching rules
 
 A carrier must pass all four rules: **route** (same origin and destination),

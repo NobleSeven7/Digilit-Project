@@ -16,7 +16,7 @@ function ScoreBadge({ total }) {
   const rounded = Math.round(total)
   return (
     <div className="text-right">
-      <p className="font-display text-4xl font-bold leading-none text-brand" data-testid="score">
+      <p className="font-display text-4xl font-bold leading-none text-brand-ink" data-testid="score">
         {rounded}
         <span className="text-lg text-muted"> / 100</span>
       </p>
@@ -32,7 +32,7 @@ function ScoreBadge({ total }) {
 function PassChip({ rule }) {
   return (
     <li data-rule={rule.key} data-pass={rule.pass}
-      className="inline-flex items-center gap-1.5 rounded-full bg-brand-tint px-3 py-1 text-sm font-bold text-brand">
+      className="inline-flex items-center gap-1.5 rounded-full bg-brand-tint px-3 py-1 text-sm font-bold text-brand-ink">
       <span aria-hidden="true">✓</span>
       {rule.label}
       <span className="sr-only">: Pass</span>
@@ -51,18 +51,18 @@ function CarrierCard({ result, rank, shipment, declined, canRequest, onRequest }
       data-testid="carrier-card"
       data-carrier={journey.carrierName}
       data-eligible={eligible && !declined}
-      className={`card ${rank === 1 ? 'border-2 border-brand' : ''}`}
+      className={`card ${rank === 1 ? 'border-2 border-brand-ink' : ''}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
           {/* Vehicle icon */}
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand"
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand-ink"
             title={journey.vehicleType}>
             <VehicleIcon type={journey.vehicleType} />
           </span>
           <div className="min-w-0">
             {rank && (
-              <p className="text-sm font-bold text-brand">
+              <p className="text-sm font-bold text-brand-ink">
                 {rank === 1 ? 'Best match' : `Option ${rank}`}
               </p>
             )}
@@ -86,7 +86,7 @@ function CarrierCard({ result, rank, shipment, declined, canRequest, onRequest }
             {rules.map((rule) => <PassChip key={rule.key} rule={rule} />)}
           </ul>
           <details className="group mt-3">
-            <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1.5 rounded-lg font-bold text-brand
+            <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1.5 rounded-lg font-bold text-brand-ink
                                 [&::-webkit-details-marker]:hidden">
               <span className="group-open:hidden">See details</span>
               <span className="hidden group-open:inline">Hide details</span>

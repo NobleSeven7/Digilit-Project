@@ -47,8 +47,8 @@ export default function CityMap({ origin, destination }) {
           const gap = chosen ? 16 : 11
           return (
             <g key={name}>
-              <circle cx={place.x} cy={place.y} r={chosen ? 9 : 5} fill="white"
-                stroke={chosen ? 'var(--color-brand-dark)' : 'var(--color-muted)'}
+              <circle cx={place.x} cy={place.y} r={chosen ? 9 : 5} fill="var(--color-surface)"
+                stroke={chosen ? 'var(--color-brand-ink)' : 'var(--color-muted)'}
                 strokeWidth={chosen ? 4 : 2} />
               {/* The white outline keeps a name readable where the road passes behind it */}
               <text x={place.side === 'left' ? place.x - gap : place.x + gap} y={place.y + 5}

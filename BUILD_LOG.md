@@ -290,3 +290,28 @@ Screenshots: `test-screenshots/design-pass/how-it-works-road-*.png`.
   test browser, so this needs checking on the phone that showed it. Some
   browsers' "force dark" settings ignore the request; if so, the fix would be
   a real dark theme. All 8 tests re-run: 8 of 8 passed.
+
+## Stage 13: dark theme
+
+The phone from Stage 12 uses Samsung Internet, which kept forcing its own
+dark colours. Team decision: give the app a real dark theme instead of
+opting out. This replaces the "light only" declaration from Stage 12.
+
+- **How it works:** every colour in the app is a named token in
+  `src/index.css`. The dark theme gives the same names dark values under
+  `<html data-theme="dark">`, so no page needed its own dark styles.
+- **Two new tokens** made that possible: `surface` (cards, fields, menus;
+  was plain white) and `brand-ink` (green used for text and outlines, which
+  must be lighter on a dark background than the green used for fills).
+- **Choosing the theme** (`src/lib/theme.js`): the app follows the device's
+  light or dark setting. A sun / moon button in the header switches theme,
+  and the choice is remembered in the browser. A small script in
+  `index.html` applies the theme before the page is drawn.
+- **Checked in the browser:** a device in dark mode opens the app dark, a
+  device in light mode opens it light, the switch changes theme, and the
+  choice survives a reload. All seven pages were reviewed in the dark theme
+  on phone and desktop sizes. The light theme's colours are unchanged.
+  All 8 tests re-run: 8 of 8 passed.
+- **Not verified here:** Samsung Internet itself. The dark theme should stop
+  it applying its own colours, but that needs confirming on the phone.
+  Screenshots: `test-screenshots/design-pass/dark-*.png`.

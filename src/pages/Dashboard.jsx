@@ -9,7 +9,7 @@ function Metric({ label, value, note, testId }) {
   return (
     <div className="card">
       <p className="font-bold text-muted">{label}</p>
-      <p className="mt-1 font-display text-4xl font-bold text-brand" data-testid={testId}>{value}</p>
+      <p className="mt-1 font-display text-4xl font-bold text-brand-ink" data-testid={testId}>{value}</p>
       <p className="mt-2 text-sm text-muted">{note}</p>
     </div>
   )
@@ -89,7 +89,7 @@ export default function Dashboard({ state }) {
 
         <section className="card">
           <h2 className="text-xl font-bold">Spare capacity used</h2>
-          <p className="mt-2 font-display text-4xl font-bold text-brand">{averageUtilisation}%</p>
+          <p className="mt-2 font-display text-4xl font-bold text-brand-ink">{averageUtilisation}%</p>
           <p className="mt-2 text-muted">
             Average share of a matched carrier's spare space that the parcel fills
             (parcel kg ÷ spare kg). The proposal's target is 40 to 60%.
