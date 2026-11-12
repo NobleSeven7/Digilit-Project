@@ -215,3 +215,20 @@ Make.com fills. Link: https://datastudio.google.com/reporting/416cf872-9063-463b
   time zone the visitor's device uses. Checked by capturing the records for a
   full delivery: at 09:42 UTC the app sent 14:42. Rows sent before this
   change stay in UTC. All 8 tests re-run: 8 of 8 passed.
+
+## Stage 8: Home page route map
+
+A team member liked a reference site that used a transit map as its hero.
+We kept RaastaShare's own design and added the idea in our own style.
+
+- New `src/components/RouteMap.jsx`: the Islamabad to Lahore motorway drawn
+  as a route map (green road, dashed centre line, seven stops), in a white
+  card on the right of the Home hero. An amber "parcel" dot rides the route
+  once when the page opens and rests at Lahore; it does not move for people
+  who have asked their device for reduced motion.
+- The headline is larger on wide screens, and the three fact tiles moved
+  from the right of the hero to a row across its bottom.
+- Fixed during the change: the "I am a sender / I am a carrier" titles
+  wrapped onto two lines in the narrower column; they now stay on one line.
+- Visual change to the Home page only; no logic changed. All 8 tests re-run:
+  8 of 8 passed. Screenshots: `test-screenshots/design-pass/route-hero-*.png`.
