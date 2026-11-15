@@ -12,7 +12,7 @@
   --color-route-3: #A3D2BC;      /* third route colour on the Home map */
   --color-brand-tint: #E3F1E9;   /* soft green background */
   --color-ink: #12241B;          /* main text */
-  --color-muted: #55665C;        /* secondary text */
+  --color-muted: #3D4C44;        /* secondary text (dark enough to read easily in a thin font) */
   --color-paper: #F5F8F4;        /* page background */
   --color-surface: #FFFFFF;      /* cards, form fields, menus */
   --color-line: #D3DDD6;         /* borders */
@@ -21,6 +21,11 @@
   --color-hold-tint: #FBF1D3;
   --color-fail: #C4372C;         /* signal red: failed rule, dispute */
   --color-fail-tint: #FBE6E3;
+
+  /* Small print is a little larger than Tailwind's defaults (14px and 12px),
+     because Barlow's thin strokes are harder to read at small sizes. */
+  --text-sm: 0.9375rem;
+  --text-xs: 0.8125rem;
 
   --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
   --font-body: "Barlow", "Segoe UI", sans-serif;
@@ -45,7 +50,7 @@
   --color-route-2: #2F9B70;
   --color-route-3: #1F5C44;
   --color-ink: #E7EFEA;
-  --color-muted: #9FB1A7;
+  --color-muted: #B4C4BB;
   --color-paper: #0F1613;
   --color-surface: #18221D;
   --color-line: #2C3A33;

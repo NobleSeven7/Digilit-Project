@@ -354,3 +354,23 @@ menu no longer clips "Dashboard". All 8 tests re-run: 8 of 8 passed, and
 their screenshots were re-taken. The map is a diagram: cities are roughly
 placed and the lines do not follow real roads.
 Screenshots: `test-screenshots/design-pass/redesign-*.png`.
+
+## Stage 15: easier-to-read small text
+
+- **Report from the team:** grey help text (page introductions and the hints
+  under form fields) looked faint after the redesign.
+- **Cause:** the grey did not change, but the new Barlow font has thinner
+  strokes than the old one, so small grey text reads lighter.
+- **Decision:** make the text clearer for everyone instead of adding an
+  accessibility mode, which only helps people who find the switch.
+- **Change** (`src/index.css`): secondary text is a darker grey in the light
+  theme (#3D4C44) and a lighter one in the dark theme (#B4C4BB), and small
+  print is slightly larger (15px and 13px, up from 14px and 12px).
+- **Found while checking:** on narrow phones the header (logo, page name and
+  theme switch) could be wider than the screen when the web fonts had not
+  loaded, making the page scroll sideways. The header is now tighter on
+  narrow screens, and the bottom menu sizes each label to its text.
+- **Checked:** all seven pages at 320px, 360px and 390px wide, with the web
+  fonts and with them blocked: no sideways scrolling and no clipped menu
+  labels. All 8 tests re-run: 8 of 8 passed.
+  Screenshots: `test-screenshots/design-pass/help-text-*.png`.
