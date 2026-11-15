@@ -1,10 +1,11 @@
 // Matches page: ranked carriers for one shipment, and for every carrier
 // the result of each of the four rules, so the decision is transparent.
-import { STATUS, DELIVERY, ESCROW, FLAG_AFTER_HOURS } from '../data/constants.js'
+import { STATUS, DELIVERY, FLAG_AFTER_HOURS } from '../data/constants.js'
 import { findMatches } from '../lib/matching.js'
 import { calculatePrice, calculateSaving } from '../lib/pricing.js'
 import { goTo } from '../lib/navigation.js'
-import { formatPKR, formatDateTime, makeId } from '../lib/format.js'
+import { startDelivery } from '../lib/delivery.js'
+import { formatPKR, formatDateTime } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import RouteLine from '../components/RouteLine.jsx'
 import RuleCheck from '../components/RuleCheck.jsx'
@@ -150,27 +151,8 @@ export default function Matches({ state, save, id }) {
 
   // Sender picks a carrier: create a delivery that both sides must accept.
   function handleRequest(journey) {
-    const newDelivery = {
-      id: makeId('d'),
-      shipmentId: shipment.id,
-      journeyId: journey.id,
-      price,
-      senderAccepted: false,
-      carrierAccepted: false,
-      pickupOtp: null,
-      deliveryOtp: null,
-      wrongAttempts: 0,
-      status: DELIVERY.AWAITING_ACCEPT,
-      escrow: ESCROW.NONE,
-      createdAt: new Date().toISOString(),
-      deliveredAt: null,
-    }
-    save({
-      ...state,
-      deliveries: [...state.deliveries, newDelivery],
-      shipments: state.shipments.map((s) =>
-        s.id === shipment.id ? { ...s, status: STATUS.MATCHED } : s),
-    })
+    const { newState, delivery: newDelivery } = startDelivery(state, shipment, journey)
+    save(newState)
     goTo(`delivery/${newDelivery.id}`)
   }
 
@@ -178,7 +160,8 @@ export default function Matches({ state, save, id }) {
     <div>
       <PageHeader title="Matches">
         Every carrier is checked against four rules. Those that pass all four are
-        ranked by a score out of 100.
+        ranked by a score out of 100. This is the sender's view; carriers see the
+        parcels that fit their journey on the Carry page.
       </PageHeader>
 
       {/* Pick which shipment to look at */}

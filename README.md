@@ -79,8 +79,8 @@ shows what was sent.
 |---|---|
 | Home | Choose a Sender or Carrier profile |
 | Send | Post a shipment, including the prohibited-items checklist |
-| Carry | Post a journey with vehicle type and spare capacity |
-| Matches | Ranked carriers, with a pass or fail for each of the four rules |
+| Carry | Post a journey with vehicle type and spare capacity; see the parcels that fit a journey and offer to carry one |
+| Matches | The sender's view: ranked carriers, with a pass or fail for each of the four rules |
 | Delivery | Accept the match, pickup code, delivery code, escrow release |
 | Admin | Flagged, unmatched and disputed requests for human review |
 | Dashboard | Total shipments, matches, average matching time, cost saved |

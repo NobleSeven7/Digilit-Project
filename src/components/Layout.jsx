@@ -17,8 +17,8 @@ const NAV_ITEMS = [
 // The RaastaShare logo: two stops joined by a road.
 function Logo() {
   return (
-    <a href="#/home" className="flex items-center gap-2 font-display text-2xl font-bold text-white">
-      <svg width="36" height="20" viewBox="0 0 36 20" aria-hidden="true">
+    <a href="#/home" className="flex min-w-0 items-center gap-2 font-display text-xl font-bold text-white sm:text-2xl">
+      <svg width="36" height="20" viewBox="0 0 36 20" aria-hidden="true" className="shrink-0">
         <path d="M6 10h24" stroke="white" strokeWidth="3" strokeDasharray="4 3" />
         <circle cx="6" cy="10" r="5" fill="white" />
         <circle cx="30" cy="10" r="5" fill="white" />
@@ -55,10 +55,10 @@ export default function Layout({ currentPage, onReset, children }) {
     <div className="flex min-h-screen flex-col">
       {/* Header */}
       <header className="bg-brand">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3 sm:gap-4">
           <Logo />
           {/* Phones: show which page you are on */}
-          <div className="flex items-center gap-2 md:order-last">
+          <div className="flex shrink-0 items-center gap-1 md:order-last">
             {current && (
               <span className="rounded-full bg-surface px-3 py-1 text-sm font-bold text-brand-ink md:hidden">
                 {current.label}
@@ -104,13 +104,13 @@ export default function Layout({ currentPage, onReset, children }) {
       </footer>
 
       {/* Phone navigation: a tab bar fixed to the bottom of the screen */}
-      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-10 flex border-t border-line bg-surface md:hidden">
+      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-10 flex overflow-hidden border-t border-line bg-surface md:hidden">
         {NAV_ITEMS.map((item) => (
           <a
             key={item.page}
             href={`#/${item.page}`}
             aria-current={currentPage === item.page ? 'page' : undefined}
-            className={`flex min-h-14 flex-1 items-center justify-center border-t-4 text-xs font-bold ${
+            className={`flex min-h-14 min-w-0 flex-auto items-center justify-center border-t-4 px-1 text-xs font-bold ${
               currentPage === item.page ? 'border-brand-ink text-brand-ink' : 'border-transparent text-muted'
             }`}
           >

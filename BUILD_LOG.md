@@ -354,3 +354,51 @@ menu no longer clips "Dashboard". All 8 tests re-run: 8 of 8 passed, and
 their screenshots were re-taken. The map is a diagram: cities are roughly
 placed and the lines do not follow real roads.
 Screenshots: `test-screenshots/design-pass/redesign-*.png`.
+
+## Stage 15: easier-to-read small text
+
+- **Report from the team:** grey help text (page introductions and the hints
+  under form fields) looked faint after the redesign.
+- **Cause:** the grey did not change, but the new Barlow font has thinner
+  strokes than the old one, so small grey text reads lighter.
+- **Decision:** make the text clearer for everyone instead of adding an
+  accessibility mode, which only helps people who find the switch.
+- **Change** (`src/index.css`): secondary text is a darker grey in the light
+  theme (#3D4C44) and a lighter one in the dark theme (#B4C4BB), and small
+  print is slightly larger (15px and 13px, up from 14px and 12px).
+- **Found while checking:** on narrow phones the header (logo, page name and
+  theme switch) could be wider than the screen when the web fonts had not
+  loaded, making the page scroll sideways. The header is now tighter on
+  narrow screens, and the bottom menu sizes each label to its text.
+- **Checked:** all seven pages at 320px, 360px and 390px wide, with the web
+  fonts and with them blocked: no sideways scrolling and no clipped menu
+  labels. All 8 tests re-run: 8 of 8 passed.
+  Screenshots: `test-screenshots/design-pass/help-text-*.png`.
+
+## Stage 16: the carrier's side of matching
+
+- **Report from the team:** after posting a journey, "See matches" took the
+  carrier to the Matches page, which lists carriers for a sender's parcel. A
+  carrier has no use for a list of other carriers.
+- **Cause:** a gap in the design, not a bug. The Matches page was built as
+  the sender's view (as the proposal describes it), and nothing showed the
+  same matching from the carrier's side.
+- **Change:** the Carry page has a new "Parcels for your journey" section
+  (in `src/pages/Carrier.jsx`). For a chosen journey it shows requests
+  senders have already sent, the waiting parcels that pass all four rules
+  (with the fee and how much spare space each uses), and the parcels that do
+  not fit, with the rule that failed. After posting a journey, the button now
+  reads "See parcels for this journey".
+- **New action, "Offer to carry":** the carrier can start a delivery from
+  their side. It creates the same delivery record as a sender's request, with
+  the carrier already marked as accepted; the sender must still accept before
+  the fee moves into escrow. This is an addition to the proposal, which only
+  describes the sender starting a match. The shared code is in
+  `src/lib/delivery.js`.
+- **Unchanged:** the four rules and the score. The carrier view uses the same
+  rule checks as the Matches page.
+- **Checked in the browser:** the offer path (sender still has to accept,
+  then PKR 500 is held), a sender's request appearing under "waiting for your
+  answer", and a newly posted Quetta to Karachi journey showing the waiting
+  parcel on that route. No sideways scrolling at phone width. All 8 tests
+  re-run: 8 of 8 passed.
