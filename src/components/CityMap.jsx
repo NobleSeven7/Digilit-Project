@@ -25,7 +25,7 @@ export default function CityMap({ origin, destination }) {
   const hours = tripHours(origin, destination)
 
   return (
-    <figure className="rounded-lg bg-paper p-3" data-testid="city-map"
+    <figure className="flex h-full flex-col justify-center rounded-lg bg-paper p-3" data-testid="city-map"
       data-route={hasRoute ? `${origin}-${destination}` : ''}>
       <svg viewBox="0 0 385 360" className="mx-auto block w-full max-w-64" role="img"
         aria-label={hasRoute

@@ -121,8 +121,9 @@ export default function Sender({ state, save, profile, setProfile }) {
               Posting as <strong>{senderName}</strong>
             </p>
 
-            {/* Route: the two city pickers, with a map that draws the chosen route */}
-            <div className="grid gap-4 sm:grid-cols-2 sm:items-center">
+            {/* The route and parcel fields on the left, with a map of the chosen route
+                beside them (below them on phones) */}
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-4">
                 <div>
                   <label className="label" htmlFor="origin">From</label>
@@ -138,24 +139,21 @@ export default function Sender({ state, save, profile, setProfile }) {
                     {CITIES.map((city) => <option key={city}>{city}</option>)}
                   </select>
                 </div>
+                <div>
+                  <label className="label" htmlFor="weightKg">Weight (kg)</label>
+                  <input id="weightKg" className="field" type="number" inputMode="decimal"
+                    min="0.5" max="200" step="0.5" value={weightKg}
+                    onChange={(e) => setWeightKg(e.target.value)} />
+                </div>
+                <div>
+                  <label className="label" htmlFor="itemType">Item type</label>
+                  <select id="itemType" className="field" value={itemType}
+                    onChange={(e) => setItemType(e.target.value)}>
+                    {ITEM_TYPES.map((type) => <option key={type}>{type}</option>)}
+                  </select>
+                </div>
               </div>
               <CityMap origin={origin} destination={destination} />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="label" htmlFor="weightKg">Weight (kg)</label>
-                <input id="weightKg" className="field" type="number" inputMode="decimal"
-                  min="0.5" max="200" step="0.5" value={weightKg}
-                  onChange={(e) => setWeightKg(e.target.value)} />
-              </div>
-              <div>
-                <label className="label" htmlFor="itemType">Item type</label>
-                <select id="itemType" className="field" value={itemType}
-                  onChange={(e) => setItemType(e.target.value)}>
-                  {ITEM_TYPES.map((type) => <option key={type}>{type}</option>)}
-                </select>
-              </div>
             </div>
 
             <div>
