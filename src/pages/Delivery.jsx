@@ -52,7 +52,7 @@ function CodeForm({ id, label, buttonText, onSubmit }) {
   )
 }
 
-export default function Delivery({ state, save, id }) {
+export default function Delivery({ state, save, id, profile, setProfile }) {
   // Message shown after an action, e.g. "Wrong code".
   const [message, setMessage] = useState(null) // { ok: true/false, text }
 
@@ -74,6 +74,10 @@ export default function Delivery({ state, save, id }) {
   const shipment = state.shipments.find((s) => s.id === delivery.shipmentId)
   const journey = state.journeys.find((j) => j.id === delivery.journeyId)
   const amount = formatPKR(delivery.price)
+
+  // Is the signed-in demo person one of the two people in this delivery?
+  const isSender = profile.role === 'sender' && profile.name === shipment.senderName
+  const isCarrier = profile.role === 'carrier' && profile.name === journey.carrierName
 
   // Save a changed copy of this delivery (and optionally a new shipment status).
   function update(changes, shipmentChanges) {
@@ -214,26 +218,41 @@ export default function Delivery({ state, save, id }) {
           {delivery.status === DELIVERY.AWAITING_ACCEPT && (
             <section className="card" data-testid="step-accept">
               <h2 className="text-xl font-bold">Accept the match</h2>
-              <p className="mt-1 text-muted">Both people must accept before any money moves.</p>
+              <p className="mt-1 text-muted">
+                Both people must accept before any money moves. You can only answer for the
+                person you are signed in as.
+              </p>
               <div className="mt-4 space-y-3">
+                {/* The sender's row: only the sender can accept here */}
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-paper px-3 py-3">
                   <p><strong>{shipment.senderName}</strong> (sender)</p>
-                  {delivery.senderAccepted
-                    ? <StatusBadge status="Accepted" />
-                    : <button type="button" className="btn btn-primary" data-testid="accept-sender"
-                        onClick={() => handleAccept('sender')}>Accept as sender</button>}
+                  {delivery.senderAccepted ? <StatusBadge status="Accepted" />
+                    : isSender ? (
+                      <button type="button" className="btn btn-primary" data-testid="accept-sender"
+                        onClick={() => handleAccept('sender')}>Accept</button>
+                    ) : (
+                      <button type="button" className="btn btn-secondary" data-testid="switch-to-sender"
+                        onClick={() => setProfile({ role: 'sender', name: shipment.senderName })}>
+                        Switch to {shipment.senderName}
+                      </button>
+                    )}
                 </div>
+                {/* The carrier's row: only the carrier can accept or decline here */}
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-paper px-3 py-3">
                   <p><strong>{journey.carrierName}</strong> (carrier)</p>
-                  {delivery.carrierAccepted
-                    ? <StatusBadge status="Accepted" />
-                    : (
+                  {delivery.carrierAccepted ? <StatusBadge status="Accepted" />
+                    : isCarrier ? (
                       <div className="flex flex-wrap gap-3">
                         <button type="button" className="btn btn-primary" data-testid="accept-carrier"
-                          onClick={() => handleAccept('carrier')}>Accept as carrier</button>
+                          onClick={() => handleAccept('carrier')}>Accept</button>
                         <button type="button" className="btn btn-danger" data-testid="decline-carrier"
                           onClick={handleDecline}>Decline</button>
                       </div>
+                    ) : (
+                      <button type="button" className="btn btn-secondary" data-testid="switch-to-carrier"
+                        onClick={() => setProfile({ role: 'carrier', name: journey.carrierName })}>
+                        Switch to {journey.carrierName}
+                      </button>
                     )}
                 </div>
               </div>

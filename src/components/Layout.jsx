@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import { getTheme, saveTheme } from '../lib/theme.js'
+import { PROFILES, profileKey, findProfile } from '../lib/profile.js'
 import { SunIcon, MoonIcon } from './Icons.jsx'
 
 const NAV_ITEMS = [
@@ -47,7 +48,33 @@ function ThemeSwitch() {
   )
 }
 
-export default function Layout({ currentPage, onReset, children }) {
+// The simulated sign-in: pick which fictional person you are.
+function ProfileBar({ profile, setProfile }) {
+  return (
+    <div className="border-b border-line bg-surface">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2">
+        <label htmlFor="profilePicker" className="text-sm font-bold">Signed in as</label>
+        <select id="profilePicker" data-testid="profile-picker" value={profileKey(profile)}
+          onChange={(e) => setProfile(findProfile(e.target.value))}
+          className="min-h-10 rounded-lg border border-muted/60 bg-surface px-2 py-1 font-bold text-brand-ink">
+          <optgroup label="Senders">
+            {PROFILES.filter((p) => p.role === 'sender').map((p) => (
+              <option key={profileKey(p)} value={profileKey(p)}>{p.name} (sender)</option>
+            ))}
+          </optgroup>
+          <optgroup label="Carriers">
+            {PROFILES.filter((p) => p.role === 'carrier').map((p) => (
+              <option key={profileKey(p)} value={profileKey(p)}>{p.name} (carrier)</option>
+            ))}
+          </optgroup>
+        </select>
+        <span className="hidden text-sm text-muted sm:inline">Demo profile. No password, no real account.</span>
+      </div>
+    </div>
+  )
+}
+
+export default function Layout({ currentPage, onReset, profile, setProfile, children }) {
   // Name of the page we are on (shown in the phone header, where there is no top menu).
   const current = NAV_ITEMS.find((item) => item.page === currentPage)
 
@@ -86,6 +113,8 @@ export default function Layout({ currentPage, onReset, children }) {
           </nav>
         </div>
       </header>
+
+      <ProfileBar profile={profile} setProfile={setProfile} />
 
       {/* Page content. Extra bottom padding on phones leaves room for the tab bar. */}
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:py-8">{children}</main>

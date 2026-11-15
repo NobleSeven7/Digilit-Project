@@ -42,6 +42,8 @@ async function startDelivery(page) {
   await postShipment(page)
   await page.locator('[data-testid="request-carrier"]').first().click()
   await page.click('[data-testid="accept-sender"]')
+  // Sign in as the carrier (simulated) before accepting on their side.
+  await page.click('[data-testid="switch-to-carrier"]')
   await page.click('[data-testid="accept-carrier"]')
   await page.waitForSelector('[data-testid="step-pickup"]')
 }

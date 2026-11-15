@@ -33,6 +33,8 @@ async function main() {
     // Delivery waiting for pickup (tracker: one step done, one current).
     await page.locator('[data-testid="request-carrier"]').first().click()
     await page.click('[data-testid="accept-sender"]')
+    // Sign in as the carrier (simulated) before accepting on their side.
+    await page.click('[data-testid="switch-to-carrier"]')
     await page.click('[data-testid="accept-carrier"]')
     await shot('delivery')
   }

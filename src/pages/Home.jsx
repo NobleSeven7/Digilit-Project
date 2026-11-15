@@ -4,15 +4,16 @@ import { calculatePrice, savingPercent } from '../lib/pricing.js'
 import { formatPKR } from '../lib/format.js'
 import { ParcelIcon, CarIcon, ArrowRightIcon } from '../components/Icons.jsx'
 import HeroMap from '../components/HeroMap.jsx'
+import { firstWithRole } from '../lib/profile.js'
 
 // The demo case from the proposal.
 const DEMO_KG = 5
 
 // One of the two big "who are you?" choices. It is a link that lifts a
 // little when you point at it and presses in when you tap it.
-function ChoiceCard({ href, testId, icon, title, text }) {
+function ChoiceCard({ href, testId, icon, title, text, onClick }) {
   return (
-    <a href={href} data-testid={testId}
+    <a href={href} data-testid={testId} onClick={onClick}
       className="group flex items-center gap-4 rounded-xl border border-line bg-surface p-4 text-ink
                  shadow-[0_1px_2px_rgba(0,0,0,0.06)]
                  transition-[translate,scale,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]
@@ -71,7 +72,13 @@ function PriceRow({ name, note, price, highlight }) {
   )
 }
 
-export default function Home() {
+export default function Home({ profile, setProfile }) {
+  // Choosing a side also signs you in as a demo person with that role
+  // (unless you already have it).
+  const become = (role) => () => {
+    if (profile.role !== role) setProfile(firstWithRole(role))
+  }
+
   return (
     <div className="space-y-16 sm:space-y-24">
       {/* Hero: the headline on the left, the route map as the main picture */}
@@ -87,9 +94,9 @@ export default function Home() {
 
           {/* The two profile choices (simulated accounts: no login needed) */}
           <div className="hero-enter mt-7 grid max-w-md gap-3 [--i:2]">
-            <ChoiceCard href="#/sender" testId="choose-sender" icon={<ParcelIcon size={26} />}
+            <ChoiceCard href="#/sender" testId="choose-sender" icon={<ParcelIcon size={26} />} onClick={become('sender')}
               title="I am a sender" text="Post a parcel and see ranked carriers" />
-            <ChoiceCard href="#/carrier" testId="choose-carrier" icon={<CarIcon size={26} />}
+            <ChoiceCard href="#/carrier" testId="choose-carrier" icon={<CarIcon size={26} />} onClick={become('carrier')}
               title="I am a carrier" text="Post a journey and earn from spare space" />
           </div>
         </div>
@@ -164,8 +171,8 @@ export default function Home() {
           Put a parcel on it, or offer the space in your car.
         </p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-          <a href="#/sender" className="btn btn-primary">Post a parcel</a>
-          <a href="#/carrier" className="btn btn-secondary">Post a journey</a>
+          <a href="#/sender" className="btn btn-primary" onClick={become('sender')}>Post a parcel</a>
+          <a href="#/carrier" className="btn btn-secondary" onClick={become('carrier')}>Post a journey</a>
         </div>
       </section>
     </div>

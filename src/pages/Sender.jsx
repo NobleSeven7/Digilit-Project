@@ -1,13 +1,14 @@
 // Sender page: post a shipment. The sender must tick every line of the
 // prohibited-items checklist before the parcel can be posted.
 import { useState } from 'react'
-import { CITIES, ITEM_TYPES, DEMO_SENDERS, STATUS } from '../data/constants.js'
+import { CITIES, ITEM_TYPES, STATUS } from '../data/constants.js'
 import { findMatches } from '../lib/matching.js'
 import { calculatePrice } from '../lib/pricing.js'
 import { sendToWebhook } from '../lib/webhook.js'
 import { goTo } from '../lib/navigation.js'
 import { formatPKR, dayAt, makeId } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
+import RoleNotice from '../components/RoleNotice.jsx'
 import CityMap from '../components/CityMap.jsx'
 import { CheckIcon } from '../components/Icons.jsx'
 
@@ -34,9 +35,9 @@ const PROHIBITED = [
   'No live animals',
 ]
 
-export default function Sender({ state, save }) {
+export default function Sender({ state, save, profile, setProfile }) {
   // One piece of state per form field.
-  const [senderName, setSenderName] = useState(DEMO_SENDERS[0])
+  const senderName = profile.name // the signed-in demo sender
   const [origin, setOrigin] = useState('Islamabad')
   const [destination, setDestination] = useState('Lahore')
   const [weightKg, setWeightKg] = useState('5')
@@ -94,6 +95,16 @@ export default function Sender({ state, save }) {
     goTo(`matches/${shipment.id}`) // show the ranked results
   }
 
+  // A carrier cannot post a parcel: offer to switch to a sender profile.
+  if (profile.role !== 'sender') {
+    return (
+      <div>
+        <PageHeader title="Post a shipment" />
+        <RoleNotice profile={profile} setProfile={setProfile} needs="sender" action="post a parcel" />
+      </div>
+    )
+  }
+
   return (
     <div>
       <PageHeader title="Post a shipment">
@@ -106,14 +117,9 @@ export default function Sender({ state, save }) {
           <div role="group" aria-labelledby="parcel-heading" className="card space-y-4">
             <h2 id="parcel-heading" className="text-xl font-bold">Parcel details</h2>
 
-            <div>
-              <label className="label" htmlFor="senderName">Posting as</label>
-              <select id="senderName" className="field" value={senderName}
-                onChange={(e) => setSenderName(e.target.value)}>
-                {DEMO_SENDERS.map((name) => <option key={name}>{name}</option>)}
-              </select>
-              <p className="hint">Demo profiles stand in for a real login.</p>
-            </div>
+            <p data-testid="posting-as">
+              Posting as <strong>{senderName}</strong>
+            </p>
 
             {/* Route: the two city pickers, with a map that draws the chosen route */}
             <div className="grid gap-4 sm:grid-cols-2 sm:items-center">
