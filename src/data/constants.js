@@ -83,7 +83,7 @@ export const ESCROW = {
 
 // Fictional demo users (the proposal simulates accounts instead of a real login).
 export const DEMO_SENDERS = ['Ayesha Khan', 'Omar Farooq', 'Zainab Hussain', 'Faisal Mehmood']
-export const DEMO_CARRIERS = ['Bilal Ahmed', 'Sana Malik', 'Usman Tariq', 'Hamza Sheikh', 'Nida Raza']
+export const DEMO_CARRIERS = ['Bilal Ahmed', 'Sana Malik', 'Usman Tariq', 'Hamza Sheikh', 'Nida Raza', 'Imran Qureshi']
 
 // Approximate road-trip durations in hours. ASSUMPTION (not in the proposal):
 // needed only for the "perishables in a car on trips under 6 hours" rule.

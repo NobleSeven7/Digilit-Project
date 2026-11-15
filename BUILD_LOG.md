@@ -402,3 +402,9 @@ Screenshots: `test-screenshots/design-pass/redesign-*.png`.
   answer", and a newly posted Quetta to Karachi journey showing the waiting
   parcel on that route. No sideways scrolling at phone width. All 8 tests
   re-run: 8 of 8 passed.
+- **Follow-up:** the journey list showed every carrier's open journeys.
+  It now shows only the journeys of the carrier chosen under "Posting as",
+  which is how it would work with real accounts. Imran Qureshi, a sample
+  carrier, was added to the "Posting as" list so his journey can be viewed.
+  Checked for four carriers, after posting a second journey, and through the
+  "Offer to carry" path. All 8 tests re-run: 8 of 8 passed.
