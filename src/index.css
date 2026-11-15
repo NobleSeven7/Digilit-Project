@@ -8,7 +8,8 @@
   --color-brand: #0B6B43;        /* motorway-sign green: main brand colour */
   --color-brand-ink: #0B6B43;    /* green used for text and outlines */
   --color-brand-dark: #084F32;   /* pressed / hover state */
-  --color-brand-light: #23805A;  /* faint route lines on the green hero */
+  --color-route-2: #3FA37A;      /* second route colour on the Home map */
+  --color-route-3: #A3D2BC;      /* third route colour on the Home map */
   --color-brand-tint: #E3F1E9;   /* soft green background */
   --color-ink: #12241B;          /* main text */
   --color-muted: #55665C;        /* secondary text */
@@ -21,8 +22,8 @@
   --color-fail: #C4372C;         /* signal red: failed rule, dispute */
   --color-fail-tint: #FBE6E3;
 
-  --font-display: "Bricolage Grotesque", "Segoe UI", sans-serif;
-  --font-body: "Lexend", "Segoe UI", sans-serif;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Barlow", "Segoe UI", sans-serif;
 }
 
 /* ---- Base styles ---------------------------------------------------- */
@@ -41,7 +42,8 @@
   --color-brand-ink: #63D3A2;
   --color-brand-dark: #0A5C3C;
   --color-brand-tint: #16382A;
-  --color-brand-light: #2A9468;
+  --color-route-2: #2F9B70;
+  --color-route-3: #1F5C44;
   --color-ink: #E7EFEA;
   --color-muted: #9FB1A7;
   --color-paper: #0F1613;
@@ -56,13 +58,13 @@ body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-body);
-  font-size: 1rem;
-  line-height: 1.55;
+  font-size: 1.0625rem;
+  line-height: 1.5;
 }
 h1, h2, h3 {
   font-family: var(--font-display);
-  line-height: 1.15;
-  letter-spacing: -0.01em;
+  line-height: 1.05;
+  letter-spacing: 0;
 }
 /* The parts of the page the browser draws also use the brand colours:
    selected text, the typing cursor, checkboxes and the scrollbar. */
@@ -123,16 +125,10 @@ a {
   .hint { @apply mt-1 text-sm text-muted; }
 }
 
-/* ---- Home page hero: the faint web of routes --------------------------
-   The web fades out towards the left, where the headline sits, so the
-   text stays easy to read. */
-.route-web {
-  mask-image: linear-gradient(to right, rgb(0 0 0 / 0.35), black 65%);
-}
-
-/* ---- Home page hero: the one moment of motion ---------------------------
-   When the page opens, the headline, text, route and buttons rise into place
-   one after another, and the parcel tag rides along the road once.
+/* ---- Home page: the one moment of motion --------------------------------
+   When the page opens, the headline, text and buttons rise into place one
+   after another, the routes on the map draw themselves, and the parcel
+   rides from Islamabad to Lahore once.
    Each piece sets --i (0, 1, 2 ...) to say when its turn comes. */
 .hero-enter {
   animation: hero-enter 500ms var(--ease-out) backwards;
@@ -141,15 +137,43 @@ a {
 @keyframes hero-enter {
   from { opacity: 0; transform: translateY(10px); }
 }
-.parcel-ride {
-  transform: translateX(58%);
-  animation: parcel-ride 1600ms var(--ease-in-out) 450ms backwards;
+
+/* Each route is given pathLength="1", so a dash of length 1 is the whole
+   line; sliding the dash in makes the line draw itself. */
+.route-draw {
+  stroke-dasharray: 1;
+  animation: route-draw 1100ms var(--ease-out) backwards;
+  animation-delay: calc(200ms + var(--i, 0) * 130ms);
 }
-@keyframes parcel-ride {
-  from { transform: translateX(0); }
+@keyframes route-draw {
+  from { stroke-dashoffset: 1; }
 }
+.stop-enter {
+  animation: stop-enter 300ms var(--ease-out) backwards;
+  animation-delay: calc(900ms + var(--i, 0) * 45ms);
+}
+@keyframes stop-enter {
+  from { opacity: 0; }
+}
+
+/* The parcel follows the Islamabad to Lahore road once, then rests at Lahore.
+   Hidden in browsers that cannot move things along a path. */
+.map-parcel { display: none; }
+@supports (offset-path: path("M0 0")) {
+  .map-parcel {
+    display: inline;
+    offset-path: path("M220 80 L300 160 H440");
+    offset-rotate: 0deg;
+    offset-distance: 100%;
+    animation: map-parcel 1900ms var(--ease-in-out) 1500ms backwards;
+  }
+}
+@keyframes map-parcel {
+  from { offset-distance: 0%; }
+}
+
 /* People who ask for less motion get the finished picture straight away. */
 @media (prefers-reduced-motion: reduce) {
-  .hero-enter, .parcel-ride { animation: none; }
+  .hero-enter, .route-draw, .stop-enter, .map-parcel { animation: none; }
   .btn { transition: none; }
 }

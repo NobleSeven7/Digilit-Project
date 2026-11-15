@@ -3,11 +3,13 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 // Fonts are bundled with the app (not loaded from the internet), so they work offline.
-import '@fontsource/bricolage-grotesque/600.css'
-import '@fontsource/bricolage-grotesque/700.css'
-// Lexend: a body font designed for easy reading, with plain zeros (0, not a slashed 0).
-import '@fontsource/lexend/400.css'
-import '@fontsource/lexend/700.css'
+// Barlow is modelled on road-sign lettering: the condensed cut is used for
+// headings, the regular cut for everything else. Both have plain zeros.
+import '@fontsource/barlow-condensed/600.css'
+import '@fontsource/barlow-condensed/700.css'
+import '@fontsource/barlow/400.css'
+import '@fontsource/barlow/500.css'
+import '@fontsource/barlow/700.css'
 
 import './index.css'
 import App from './App.jsx'

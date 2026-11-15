@@ -17,7 +17,7 @@ const NAV_ITEMS = [
 // The RaastaShare logo: two stops joined by a road.
 function Logo() {
   return (
-    <a href="#/home" className="flex items-center gap-2 font-display text-xl font-bold text-white">
+    <a href="#/home" className="flex items-center gap-2 font-display text-2xl font-bold text-white">
       <svg width="36" height="20" viewBox="0 0 36 20" aria-hidden="true">
         <path d="M6 10h24" stroke="white" strokeWidth="3" strokeDasharray="4 3" />
         <circle cx="6" cy="10" r="5" fill="white" />
