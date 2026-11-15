@@ -1,21 +1,23 @@
 // Home page: choose whether you are sending a parcel or carrying one.
-import { BASE_FEE, FEE_PER_KG, COURIER_FEE } from '../data/constants.js'
+import { BASE_FEE, FEE_PER_KG, COURIER_FEE, tripHours } from '../data/constants.js'
 import { calculatePrice, savingPercent } from '../lib/pricing.js'
 import { formatPKR } from '../lib/format.js'
-import { ParcelIcon, CarIcon } from '../components/Icons.jsx'
+import { ParcelIcon, CarIcon, ArrowRightIcon } from '../components/Icons.jsx'
 import RouteWeb from '../components/RouteWeb.jsx'
 
 // The demo case from the proposal.
 const DEMO_KG = 5
 
-// One of the two big "who are you?" choices. It is a link, styled as a card
-// that lifts slightly when you point at it, so it clearly reads as clickable.
+// One of the two big "who are you?" choices. It is a link that lifts a
+// little when you point at it and presses in when you tap it.
 function ChoiceCard({ href, testId, icon, title, text }) {
   return (
     <a href={href} data-testid={testId}
-      className="group flex items-center gap-4 rounded-xl bg-surface p-4 text-ink shadow-[0_2px_0_rgba(8,79,50,0.35)]
-                 transition duration-150 hover:-translate-y-1 hover:shadow-[0_14px_24px_-12px_rgba(8,79,50,0.75)]
-                 focus-visible:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-5">
+      className="group flex items-center gap-4 rounded-xl bg-surface p-4 text-ink
+                 shadow-[0_1px_2px_rgba(0,0,0,0.14)]
+                 transition-[translate,scale,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]
+                 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-12px_rgba(0,0,0,0.5)]
+                 active:scale-[0.98] motion-reduce:transition-none sm:p-5">
       <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand-ink">
         {icon}
       </span>
@@ -23,21 +25,48 @@ function ChoiceCard({ href, testId, icon, title, text }) {
         <span className="block whitespace-nowrap font-display text-xl font-bold text-brand-ink">{title}</span>
         <span className="mt-0.5 block text-sm text-muted">{text}</span>
       </span>
-      <span aria-hidden="true"
-        className="text-2xl font-bold text-brand-ink transition-transform group-hover:translate-x-1 motion-reduce:transition-none">
-        →
+      <span className="text-brand-ink transition-[translate] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]
+                       group-hover:translate-x-1 motion-reduce:transition-none">
+        <ArrowRightIcon size={22} />
       </span>
     </a>
   )
 }
 
-// A fact tile on the right of the hero.
-function StatTile({ value, text }) {
+// The hero's centrepiece: the Islamabad to Lahore road running the full
+// width of the hero, with a parcel tag (weight and price) riding along it.
+function HeroRoute() {
   return (
-    <li className="rounded-xl bg-brand-dark px-5 py-4">
-      <p className="font-display text-3xl font-bold leading-none">{value}</p>
-      <p className="mt-1.5 text-white/85">{text}</p>
-    </li>
+    <div className="hero-enter [--i:2]" data-testid="hero-route">
+      <div className="flex items-baseline justify-between gap-3 font-display text-xl font-bold sm:text-2xl">
+        <span>Islamabad</span>
+        <span>Lahore</span>
+      </div>
+
+      <div className="relative mt-2 h-14">
+        {/* The road and its two end stops */}
+        <div aria-hidden="true" className="absolute inset-x-0 top-1/2 h-4 -translate-y-1/2 rounded-full bg-brand-dark">
+          <div className="absolute inset-x-5 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-white/60" />
+        </div>
+        <span aria-hidden="true" className="absolute left-0 top-1/2 size-6 -translate-y-1/2 rounded-full border-[5px] border-white bg-brand-dark" />
+        <span aria-hidden="true" className="absolute right-0 top-1/2 size-6 -translate-y-1/2 rounded-full border-[5px] border-white bg-brand-dark" />
+
+        {/* The parcel tag. The wrapper slides along the road; the tag sits on it. */}
+        <div className="parcel-ride pointer-events-none absolute inset-x-8 top-1/2 -translate-y-1/2">
+          <span className="inline-flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-surface py-1.5 pl-2.5 pr-3.5
+                           text-brand-ink shadow-[0_6px_16px_-6px_rgba(0,0,0,0.55)]">
+            <ParcelIcon size={20} />
+            <span className="text-sm text-muted">{DEMO_KG} kg</span>
+            <strong className="font-display text-lg">{formatPKR(calculatePrice(DEMO_KG))}</strong>
+          </span>
+        </div>
+      </div>
+
+      <p className="mt-1 max-w-2xl text-white/85">
+        A {DEMO_KG} kg parcel rides with a driver already making the trip, about{' '}
+        {tripHours('Islamabad', 'Lahore')} hours by road. A courier charges about {formatPKR(COURIER_FEE)}.
+      </p>
+    </div>
   )
 }
 
@@ -57,64 +86,67 @@ function StepStop({ number, className }) {
   )
 }
 
-// One side of the price comparison, with a bar showing the price to scale.
-function PriceColumn({ name, price, note, highlight }) {
-  const width = `${(price / COURIER_FEE) * 100}%`
+// One line of the price comparison: a name, a price, and a bar drawn to scale.
+function PriceRow({ name, note, price, highlight }) {
   return (
-    <div className={`rounded-lg p-4 ${highlight ? 'border-2 border-brand-ink bg-brand-tint' : 'border border-line'}`}>
-      <p className={`font-bold ${highlight ? 'text-brand-ink' : 'text-muted'}`}>{name}</p>
-      <p className={`mt-1 font-display text-3xl font-bold ${highlight ? 'text-brand-ink' : 'text-ink'}`}>
-        {formatPKR(price)}
-      </p>
-      <div className="mt-3 h-2.5 rounded-full bg-surface" aria-hidden="true">
-        <div className={`h-2.5 rounded-full ${highlight ? 'bg-brand' : 'bg-muted/50'}`} style={{ width }} />
+    <div>
+      <div className="flex items-baseline justify-between gap-4">
+        <dt>
+          <span className={`font-bold ${highlight ? 'text-brand-ink' : ''}`}>{name}</span>
+          <span className="block text-sm text-muted sm:ml-3 sm:inline">{note}</span>
+        </dt>
+        <dd className={`font-display text-2xl font-bold tabular-nums sm:text-3xl ${highlight ? 'text-brand-ink' : ''}`}>
+          {formatPKR(price)}
+        </dd>
       </div>
-      <p className="mt-2 text-sm text-muted">{note}</p>
+      <div className="mt-2 h-3 rounded-full bg-line" aria-hidden="true">
+        <div className={`h-3 rounded-full ${highlight ? 'bg-brand' : 'bg-muted/60'}`}
+          style={{ width: `${(price / COURIER_FEE) * 100}%` }} />
+      </div>
     </div>
   )
 }
 
 export default function Home() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-12 sm:space-y-16">
       {/* Hero, in the green of a motorway sign */}
-      <section className="relative overflow-hidden rounded-2xl bg-brand px-5 py-8 text-white sm:px-10 sm:py-12">
+      <section className="relative overflow-hidden rounded-2xl bg-brand px-5 py-9 text-white sm:px-10 sm:py-14">
         {/* Faint web of routes behind everything in the hero */}
         <RouteWeb />
-        <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-center lg:gap-10">
+
+        <div className="relative space-y-8 sm:space-y-10">
           <div>
-            <h1 className="max-w-2xl text-4xl font-bold sm:text-5xl lg:text-6xl">
+            <h1 className="hero-enter max-w-3xl text-balance text-4xl font-bold [--i:0] sm:text-5xl lg:text-6xl">
               Send it with someone already going that way
             </h1>
-            <p className="mt-4 max-w-xl text-lg text-white/90">
+            <p className="hero-enter mt-4 max-w-xl text-lg text-white/90 [--i:1]">
               RaastaShare matches your parcel with a traveller who has spare space on the
               same intercity route. Payment stays in escrow until delivery is confirmed.
             </p>
-
-            {/* The two profile choices (simulated accounts: no login needed) */}
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              <ChoiceCard href="#/sender" testId="choose-sender" icon={<ParcelIcon size={26} />}
-                title="I am a sender" text="Post a parcel and see ranked carriers" />
-              <ChoiceCard href="#/carrier" testId="choose-carrier" icon={<CarIcon size={26} />}
-                title="I am a carrier" text="Post a journey and earn from spare space" />
-            </div>
           </div>
 
-          {/* Three facts from the proposal's impact targets */}
-          <ul aria-label="RaastaShare at a glance" className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-            <StatTile value={formatPKR(calculatePrice(DEMO_KG))} text={`vs ${formatPKR(COURIER_FEE)} by courier`} />
-            <StatTile value="Under 1 minute" text="to find a match" />
-            <StatTile value="3 steps" text="instead of 8 calls and messages" />
-          </ul>
+          <HeroRoute />
+
+          {/* The two profile choices (simulated accounts: no login needed) */}
+          <div className="hero-enter grid max-w-3xl gap-4 [--i:3] sm:grid-cols-2">
+            <ChoiceCard href="#/sender" testId="choose-sender" icon={<ParcelIcon size={26} />}
+              title="I am a sender" text="Post a parcel and see ranked carriers" />
+            <ChoiceCard href="#/carrier" testId="choose-carrier" icon={<CarIcon size={26} />}
+              title="I am a carrier" text="Post a journey and earn from spare space" />
+          </div>
         </div>
       </section>
 
       {/* How it works: the three steps as stops along one road */}
       <section>
-        <h2 className="text-2xl font-bold">How it works</h2>
+        <h2 className="text-2xl font-bold sm:text-3xl">How it works</h2>
+        <p className="mt-1 max-w-2xl text-muted">
+          Three steps, where phone calls and bargaining took about eight. A match takes under a minute.
+        </p>
 
         {/* Wide screens: the road runs left to right */}
-        <ol className="mt-5 hidden sm:grid sm:grid-cols-3" data-testid="steps-road">
+        <ol className="mt-6 hidden sm:grid sm:grid-cols-3" data-testid="steps-road">
           {STEPS.map(([title, text], index) => (
             <li key={title}>
               <h3 className="text-xl font-bold">{title}</h3>
@@ -130,7 +162,7 @@ export default function Home() {
         </ol>
 
         {/* Phones: the same road runs top to bottom */}
-        <ol className="mt-5 sm:hidden">
+        <ol className="mt-6 sm:hidden">
           {STEPS.map(([title, text], index) => (
             <li key={title} className="relative pb-6 pl-12 last:pb-1">
               <span aria-hidden="true" className={`absolute inset-y-0 left-2.5 w-3 bg-brand ${
@@ -145,22 +177,22 @@ export default function Home() {
         </ol>
       </section>
 
-      {/* Price comparison from the proposal */}
-      <section className="card">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* Price comparison from the proposal: two bars drawn to the same scale */}
+      <section>
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold">What it costs</h2>
-            <p className="text-muted">A {DEMO_KG} kg parcel from Islamabad to Lahore</p>
+            <h2 className="text-2xl font-bold sm:text-3xl">What it costs</h2>
+            <p className="mt-1 text-muted">A {DEMO_KG} kg parcel from Islamabad to Lahore</p>
           </div>
           <span className="rounded-full bg-brand px-4 py-1.5 font-bold text-white" data-testid="saving-badge">
             Save {savingPercent(DEMO_KG)}%
           </span>
         </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <PriceColumn name="Courier" price={COURIER_FEE} note="Typical courier quote" />
-          <PriceColumn name="RaastaShare" price={calculatePrice(DEMO_KG)} highlight
+        <dl className="mt-6 space-y-6">
+          <PriceRow name="Courier" note="Typical courier quote" price={COURIER_FEE} />
+          <PriceRow name="RaastaShare" highlight price={calculatePrice(DEMO_KG)}
             note={`${formatPKR(BASE_FEE)} base + ${formatPKR(FEE_PER_KG)} × ${DEMO_KG} kg`} />
-        </div>
+        </dl>
       </section>
     </div>
   )

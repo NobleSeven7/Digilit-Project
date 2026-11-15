@@ -9,6 +9,7 @@ import { goTo } from '../lib/navigation.js'
 import { formatPKR, dayAt, makeId } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import CityMap from '../components/CityMap.jsx'
+import { CheckIcon } from '../components/Icons.jsx'
 
 // The sender confirms the parcel contains none of these.
 // Shows how many checklist lines are ticked. Amber while incomplete, green when done.
@@ -19,7 +20,7 @@ function CheckCounter({ count, total }) {
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold ${
         done ? 'bg-brand text-white' : 'bg-hold-tint text-hold-ink'
       }`}>
-      {done && <span aria-hidden="true">✓</span>}
+      {done && <CheckIcon size={14} />}
       {count} of {total} checks ticked
     </p>
   )

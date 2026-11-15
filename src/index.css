@@ -64,6 +64,29 @@ h1, h2, h3 {
   line-height: 1.15;
   letter-spacing: -0.01em;
 }
+/* The parts of the page the browser draws also use the brand colours:
+   selected text, the typing cursor, checkboxes and the scrollbar. */
+::selection {
+  background: var(--color-brand);
+  color: white;
+}
+html {
+  caret-color: var(--color-brand-ink);
+  accent-color: var(--color-brand);
+  scrollbar-color: var(--color-muted) transparent;
+}
+a {
+  text-underline-offset: 0.2em;
+}
+
+/* Motion curves: a quick start that settles gently (used for anything that
+   appears or answers a press), and a smooth start-and-stop for things that
+   travel across the screen. */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
 /* Clear keyboard-focus ring on everything clickable (accessibility). */
 :focus-visible {
   outline: 3px solid var(--color-hold);
@@ -76,8 +99,12 @@ h1, h2, h3 {
 
   .btn {
     @apply inline-flex min-h-12 cursor-pointer items-center justify-center rounded-lg
-           px-5 py-2.5 text-center font-bold transition-colors;
+           px-5 py-2.5 text-center font-bold;
+    /* Colour changes softly; a press shrinks the button a touch, so it feels
+       like it answers the finger. */
+    transition: background-color 150ms ease, transform 160ms var(--ease-out);
   }
+  .btn:enabled:active { transform: scale(0.97); }
   /* "enabled:" means the hover colour only applies while the button can be pressed. */
   .btn-primary { @apply bg-brand text-white enabled:hover:bg-brand-dark; }
   .btn-secondary { @apply border-2 border-brand-ink bg-surface text-brand-ink enabled:hover:bg-brand-tint; }
@@ -101,4 +128,28 @@ h1, h2, h3 {
    text stays easy to read. */
 .route-web {
   mask-image: linear-gradient(to right, rgb(0 0 0 / 0.35), black 65%);
+}
+
+/* ---- Home page hero: the one moment of motion ---------------------------
+   When the page opens, the headline, text, route and buttons rise into place
+   one after another, and the parcel tag rides along the road once.
+   Each piece sets --i (0, 1, 2 ...) to say when its turn comes. */
+.hero-enter {
+  animation: hero-enter 500ms var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+@keyframes hero-enter {
+  from { opacity: 0; transform: translateY(10px); }
+}
+.parcel-ride {
+  transform: translateX(58%);
+  animation: parcel-ride 1600ms var(--ease-in-out) 450ms backwards;
+}
+@keyframes parcel-ride {
+  from { transform: translateX(0); }
+}
+/* People who ask for less motion get the finished picture straight away. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-enter, .parcel-ride { animation: none; }
+  .btn { transition: none; }
 }
