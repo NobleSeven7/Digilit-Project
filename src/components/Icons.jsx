@@ -1,10 +1,11 @@
 // Small line icons drawn as SVG (no icon library needed).
 // They use "currentColor", so they take the colour of the text around them.
 
-function Svg({ children, size = 24 }) {
+function Svg({ children, size = 24, strokeWidth = 2, className }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+      className={className}>
       {children}
     </svg>
   )
@@ -13,6 +14,23 @@ function Svg({ children, size = 24 }) {
 // A filled wheel (same colour as the icon's round background), so it sits
 // cleanly over the vehicle outline.
 const Wheel = ({ x, y, r = 2 }) => <circle cx={x} cy={y} r={r} fill="var(--color-brand-tint)" />
+
+// Small marks used inside chips, stops and buttons.
+export function CheckIcon(props) {
+  return <Svg strokeWidth={3} {...props}><path d="M5 12.5l4.5 4.5L19 7.5" /></Svg>
+}
+
+export function CrossIcon(props) {
+  return <Svg strokeWidth={3} {...props}><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" /></Svg>
+}
+
+export function ChevronDownIcon(props) {
+  return <Svg strokeWidth={2.5} {...props}><path d="M6 9.5l6 6 6-6" /></Svg>
+}
+
+export function ArrowRightIcon(props) {
+  return <Svg strokeWidth={2.5} {...props}><path d="M4.5 12h15M13.5 6l6 6-6 6" /></Svg>
+}
 
 // Sun and moon, for the light / dark theme switch in the header.
 export function SunIcon(props) {

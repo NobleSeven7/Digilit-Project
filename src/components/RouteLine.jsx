@@ -11,6 +11,8 @@
 //   showCurrent = highlight the next stop as "in progress"
 //   problem     = show the current stop in red (e.g. a dispute)
 
+import { CheckIcon } from './Icons.jsx'
+
 // Position of stop number i along the road, as a percentage.
 function position(i, count) {
   return `${(i / (count - 1)) * 100}%`
@@ -49,7 +51,7 @@ function Tracker({ stops, reached, showCurrent, problem }) {
           return (
             <span key={stop} style={{ left: position(i, count) }}
               className={`absolute top-1/2 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-bold ${look}`}>
-              {i <= lastDone ? '✓' : i + 1}
+              {i <= lastDone ? <CheckIcon size={14} /> : i + 1}
             </span>
           )
         })}

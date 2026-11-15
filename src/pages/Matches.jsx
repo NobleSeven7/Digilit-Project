@@ -9,7 +9,7 @@ import PageHeader from '../components/PageHeader.jsx'
 import RouteLine from '../components/RouteLine.jsx'
 import RuleCheck from '../components/RuleCheck.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
-import { VehicleIcon } from '../components/Icons.jsx'
+import { VehicleIcon, CheckIcon, ChevronDownIcon } from '../components/Icons.jsx'
 
 // The score out of 100, with a small bar that fills to the same amount.
 function ScoreBadge({ total }) {
@@ -33,7 +33,7 @@ function PassChip({ rule }) {
   return (
     <li data-rule={rule.key} data-pass={rule.pass}
       className="inline-flex items-center gap-1.5 rounded-full bg-brand-tint px-3 py-1 text-sm font-bold text-brand-ink">
-      <span aria-hidden="true">✓</span>
+      <CheckIcon size={14} />
       {rule.label}
       <span className="sr-only">: Pass</span>
     </li>
@@ -90,7 +90,7 @@ function CarrierCard({ result, rank, shipment, declined, canRequest, onRequest }
                                 [&::-webkit-details-marker]:hidden">
               <span className="group-open:hidden">See details</span>
               <span className="hidden group-open:inline">Hide details</span>
-              <span aria-hidden="true" className="transition-transform group-open:rotate-180 motion-reduce:transition-none">▾</span>
+              <ChevronDownIcon size={18} className="transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none" />
             </summary>
             <ul className="mt-2 grid gap-2 sm:grid-cols-2">
               {rules.map((rule) => <RuleCheck key={rule.key} rule={rule} />)}

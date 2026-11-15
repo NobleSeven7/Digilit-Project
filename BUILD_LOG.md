@@ -315,3 +315,42 @@ opting out. This replaces the "light only" declaration from Stage 12.
 - **Not verified here:** Samsung Internet itself. The dark theme should stop
   it applying its own colours, but that needs confirming on the phone.
   Screenshots: `test-screenshots/design-pass/dark-*.png`.
+
+## Stage 14: Home page redesign
+
+The team asked for a bolder Home page, built with three design skills as
+guidance (Emil Kowalski's design skills, Impeccable and the Taste skill),
+keeping the green brand colour and using diagrams instead of photos. A first,
+subtler version was shown and rejected as too close to the old page.
+
+**Home page**
+- The hero is now a route map of the eight cities (`src/components/HeroMap.jsx`),
+  drawn like a transit map in three greens. The Islamabad to Lahore demo
+  route is drawn as a road with a "5 kg, PKR 500" tag. When the page opens,
+  the routes draw themselves and an amber parcel rides that road once.
+- "What it costs" is a band of motorway green with large prices, bars to
+  scale and an amber "Save 50%" badge.
+- New closing section with two buttons (Post a parcel, Post a journey).
+- Removed: the green hero panel, the three fact tiles (their facts moved
+  into the map tag and the "How it works" sentence) and the background web
+  of routes (`RouteWeb.jsx`).
+
+**Every page**
+- New typeface: Barlow Condensed for headings and Barlow for text, a family
+  modelled on road-sign lettering. Replaces Bricolage Grotesque and Lexend.
+- Buttons shrink slightly when pressed; drawn icons replace the text symbols
+  for ticks, crosses and arrows; selected text, the typing cursor, checkboxes
+  and scrollbars use the brand colours.
+- Layouts, matching rules and logic are unchanged.
+
+**What was not used from the skills:** photos, shader effects and real
+product logos (the team chose diagrams); the skills' checker programs and
+hooks (their written rules were followed by hand). The skills are installed
+in `.claude/skills`, which is not uploaded to GitHub.
+
+**Checked:** all seven pages viewed at phone width in both themes; Home also
+at desktop width; no sideways scrolling or browser errors; the phone bottom
+menu no longer clips "Dashboard". All 8 tests re-run: 8 of 8 passed, and
+their screenshots were re-taken. The map is a diagram: cities are roughly
+placed and the lines do not follow real roads.
+Screenshots: `test-screenshots/design-pass/redesign-*.png`.

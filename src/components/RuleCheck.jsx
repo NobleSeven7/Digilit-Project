@@ -1,6 +1,8 @@
 // One row that shows whether a carrier passed or failed one matching rule.
 // Pass/fail is shown with an icon AND a word, never by colour alone.
 
+import { CheckIcon, CrossIcon } from './Icons.jsx'
+
 export default function RuleCheck({ rule }) {
   return (
     <li
@@ -14,7 +16,7 @@ export default function RuleCheck({ rule }) {
           rule.pass ? 'bg-brand text-white' : 'bg-fail text-surface'
         }`}
       >
-        {rule.pass ? '✓' : '✕'}
+        {rule.pass ? <CheckIcon size={14} /> : <CrossIcon size={14} />}
       </span>
       <div>
         <p className="font-bold">
