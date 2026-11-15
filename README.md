@@ -77,11 +77,11 @@ shows what was sent.
 
 | Page | What it does |
 |---|---|
-| Home | Choose a Sender or Carrier profile |
+| Home | Choose a Sender or Carrier profile (this also signs you in as a demo person with that role) |
 | Send | Post a shipment, including the prohibited-items checklist |
 | Carry | Post a journey with vehicle type and spare capacity; see the parcels that fit a journey and offer to carry one |
 | Matches | The sender's view: ranked carriers, with a pass or fail for each of the four rules |
-| Delivery | Accept the match, pickup code, delivery code, escrow release |
+| Delivery | Each person accepts as themselves, then pickup code, delivery code, escrow release |
 | Admin | Flagged, unmatched and disputed requests for human review |
 | Dashboard | Total shipments, matches, average matching time, cost saved |
 
@@ -108,7 +108,7 @@ Carriers that pass are ranked by a score out of 100:
 | Data storage | Real, local | Saved in the browser's localStorage so the demo works offline |
 | Make.com / Google Sheets / email | Real when connected | The app posts to the webhook URL in `.env.local`; the Make.com scenario and Sheet are set up separately |
 | Looker Studio dashboard | Real | Reads the Google Sheet (link above); the in-app Dashboard shows the same metrics from this device's data |
-| User accounts | Simulated | Pre-loaded demo profiles instead of a login |
+| User accounts | Simulated | A "Signed in as" picker with fictional demo senders and carriers. No passwords and no real accounts |
 | OTP codes | Simulated | Random 4-digit codes shown on screen instead of SMS |
 | Payment | Simulated | Escrow is a status tracked in the app; no real money or wallet |
 | Test data | Simulated | Fictional senders and carriers; no real personal data |

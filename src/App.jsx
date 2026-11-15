@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRoute } from './lib/navigation.js'
 import { loadState, saveState, resetState } from './lib/storage.js'
+import { getProfile, saveProfile } from './lib/profile.js'
 import Layout from './components/Layout.jsx'
 import Home from './pages/Home.jsx'
 import Sender from './pages/Sender.jsx'
@@ -16,6 +17,13 @@ export default function App() {
   // localStorage once, when the app starts.
   const [state, setState] = useState(loadState)
   const { page, id } = useRoute()
+
+  // Who is "signed in": one of the fictional demo people (see src/lib/profile.js).
+  const [profile, setProfileState] = useState(getProfile)
+  function setProfile(newProfile) {
+    saveProfile(newProfile)
+    setProfileState(newProfile)
+  }
 
   // Pages call save(newState) whenever something changes.
   // It writes to localStorage AND updates the screen.
@@ -34,9 +42,9 @@ export default function App() {
 
   // Every page receives the same three things: the data, the save function,
   // and the id from the address bar (if there is one).
-  const pageProps = { state, save, id }
+  const pageProps = { state, save, id, profile, setProfile }
   const pages = {
-    home: <Home />,
+    home: <Home {...pageProps} />,
     sender: <Sender {...pageProps} />,
     carrier: <Carrier {...pageProps} />,
     matches: <Matches {...pageProps} />,
@@ -46,8 +54,8 @@ export default function App() {
   }
 
   return (
-    <Layout currentPage={page} onReset={handleReset}>
-      {pages[page] || <Home />}
+    <Layout currentPage={page} onReset={handleReset} profile={profile} setProfile={setProfile}>
+      {pages[page] || <Home {...pageProps} />}
     </Layout>
   )
 }

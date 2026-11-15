@@ -2,7 +2,7 @@
 import { STATUS, DELIVERY, ESCROW } from '../data/constants.js'
 
 // Which colour family each status uses.
-const GOOD = [STATUS.FOUND, STATUS.MATCHED, STATUS.DELIVERED, DELIVERY.IN_TRANSIT, ESCROW.RELEASED]
+const GOOD = ['Accepted', STATUS.FOUND, STATUS.MATCHED, STATUS.DELIVERED, DELIVERY.IN_TRANSIT, ESCROW.RELEASED]
 const BAD = ['Not eligible', STATUS.DISPUTED, STATUS.CANCELLED, STATUS.FLAGGED, DELIVERY.DECLINED, ESCROW.FROZEN]
 
 export default function StatusBadge({ status }) {

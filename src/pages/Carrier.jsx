@@ -1,7 +1,7 @@
 // Carrier page: post a journey with spare capacity, and see which parcels
 // fit a journey (the carrier's side of matching).
 import { useEffect, useRef, useState } from 'react'
-import { CITIES, VEHICLES, VEHICLE_TYPES, DEMO_CARRIERS, STATUS, DELIVERY } from '../data/constants.js'
+import { CITIES, VEHICLES, VEHICLE_TYPES, STATUS, DELIVERY } from '../data/constants.js'
 import { findMatches, evaluateCarrier } from '../lib/matching.js'
 import { calculatePrice } from '../lib/pricing.js'
 import { startDelivery } from '../lib/delivery.js'
@@ -9,6 +9,7 @@ import { goTo } from '../lib/navigation.js'
 import { sendToWebhook } from '../lib/webhook.js'
 import { dayAt, makeId, formatDateTime, formatPKR } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
+import RoleNotice from '../components/RoleNotice.jsx'
 import RouteLine from '../components/RouteLine.jsx'
 import RuleCheck from '../components/RuleCheck.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
@@ -19,8 +20,7 @@ import StatusBadge from '../components/StatusBadge.jsx'
 //   3. parcels that do not fit, with the rule that failed
 // It uses the same four rules as the sender's Matches page.
 function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
-  // Only the open journeys of the carrier chosen under "Posting as", newest
-  // first. With real accounts this would be "the journeys of whoever is logged in".
+  // Only the open journeys of the signed-in demo carrier, newest first.
   const journeys = state.journeys
     .filter((j) => j.status === 'Open' && j.carrierName === carrierName)
     .reverse()
@@ -64,7 +64,7 @@ function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
     <section className="mt-10" data-testid="journey-parcels">
       <h2 className="text-2xl font-bold">Parcels for your journey</h2>
       <p className="mt-1 max-w-2xl text-muted">
-        Showing journeys posted as <strong>{carrierName}</strong>. Every waiting parcel is checked
+        Showing <strong>{carrierName}</strong>'s journeys. Every waiting parcel is checked
         against the journey with the same four rules senders see.
       </p>
 
@@ -164,8 +164,8 @@ function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
   )
 }
 
-export default function Carrier({ state, save }) {
-  const [carrierName, setCarrierName] = useState(DEMO_CARRIERS[0])
+export default function Carrier({ state, save, profile, setProfile }) {
+  const carrierName = profile.name // the signed-in demo carrier
   const [origin, setOrigin] = useState('Islamabad')
   const [destination, setDestination] = useState('Lahore')
   const [departure, setDeparture] = useState(dayAt(1, 8)) // default: tomorrow 8 am
@@ -237,6 +237,16 @@ export default function Carrier({ state, save }) {
     setJourneyId(journey.id) // show the parcels for the journey just posted
   }
 
+  // A sender cannot post a journey: offer to switch to a carrier profile.
+  if (profile.role !== 'carrier') {
+    return (
+      <div>
+        <PageHeader title="Post a journey" />
+        <RoleNotice profile={profile} setProfile={setProfile} needs="carrier" action="post a journey" />
+      </div>
+    )
+  }
+
   return (
     <div>
       <PageHeader title="Post a journey">
@@ -265,14 +275,9 @@ export default function Carrier({ state, save }) {
       )}
 
       <form onSubmit={handleSubmit} noValidate className="card max-w-2xl space-y-4">
-        <div>
-          <label className="label" htmlFor="carrierName">Posting as</label>
-          <select id="carrierName" className="field" value={carrierName}
-            onChange={(e) => setCarrierName(e.target.value)}>
-            {DEMO_CARRIERS.map((name) => <option key={name}>{name}</option>)}
-          </select>
-          <p className="hint">Demo profiles stand in for a real login.</p>
-        </div>
+        <p data-testid="posting-as">
+          Posting as <strong>{carrierName}</strong>
+        </p>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>

@@ -408,3 +408,33 @@ Screenshots: `test-screenshots/design-pass/redesign-*.png`.
   carrier, was added to the "Posting as" list so his journey can be viewed.
   Checked for four carriers, after posting a second journey, and through the
   "Offer to carry" path. All 8 tests re-run: 8 of 8 passed.
+
+## Stage 17: simulated sign-in
+
+A team idea, kept inside the proposal's limits: the proposal says users
+"choose a Sender or Carrier profile instead of a full login", and lists real
+login as future work. So this is a profile picker, not a login.
+
+- **"Signed in as" picker** (`src/lib/profile.js`, shown under the header on
+  every page): choose one of the fictional senders or carriers. No passwords,
+  no real accounts; the choice is remembered in the browser.
+- **Send and Carry** use the signed-in person, so their "Posting as" fields
+  are gone. Opening a page with the wrong role shows a notice with a button
+  to switch (`src/components/RoleNotice.jsx`).
+- **Delivery:** each person can only accept (or decline) as themselves. The
+  other person's row offers a "Switch to ..." button. Someone not involved in
+  the delivery sees no accept buttons.
+- **Home:** "I am a sender / carrier" also signs you in with that role.
+- **Not restricted:** entering the pickup and delivery codes, the Matches
+  page, and the Admin page work for any profile.
+- **Tests:** `tests/run-tests.cjs` now switches to the carrier before
+  accepting on their side. All 8 tests pass.
+- **Also in this change:** the blank space beside the route map on the Send
+  page is gone (the four route and parcel fields now stack beside the map).
+
+**How to undo the sign-in.** It is one commit, `d633586` ("Preview: simulated
+sign-in with demo profiles"). Reverting that commit brings back the "Posting
+as" fields and the two accept buttons, and keeps the Send page layout fix.
+This was tried before release: with the commit reverted, the app built and
+all 8 tests passed. On GitHub, the pull request's own "Revert" button would
+undo the layout fix as well, so revert the single commit instead.
