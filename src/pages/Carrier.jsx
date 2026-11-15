@@ -19,18 +19,21 @@ import StatusBadge from '../components/StatusBadge.jsx'
 //   3. parcels that do not fit, with the rule that failed
 // It uses the same four rules as the sender's Matches page.
 function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
-  // Open journeys, newest first.
-  const journeys = state.journeys.filter((j) => j.status === 'Open').reverse()
-  // Show the picked journey, else one belonging to the chosen demo carrier, else the newest.
-  const journey = journeys.find((j) => j.id === journeyId)
-    || journeys.find((j) => j.carrierName === carrierName)
-    || journeys[0]
+  // Only the open journeys of the carrier chosen under "Posting as", newest
+  // first. With real accounts this would be "the journeys of whoever is logged in".
+  const journeys = state.journeys
+    .filter((j) => j.status === 'Open' && j.carrierName === carrierName)
+    .reverse()
+  // Show the picked journey if it is one of them, else the newest.
+  const journey = journeys.find((j) => j.id === journeyId) || journeys[0]
 
   if (!journey) {
     return (
       <section className="mt-10" data-testid="journey-parcels">
         <h2 className="text-2xl font-bold">Parcels for your journey</h2>
-        <p className="card mt-3 text-muted">Post a journey above to see the parcels that fit it.</p>
+        <p className="card mt-3 text-muted" data-testid="no-journeys">
+          {carrierName} has no open journeys. Post one above to see the parcels that fit it.
+        </p>
       </section>
     )
   }
@@ -61,7 +64,8 @@ function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
     <section className="mt-10" data-testid="journey-parcels">
       <h2 className="text-2xl font-bold">Parcels for your journey</h2>
       <p className="mt-1 max-w-2xl text-muted">
-        Every waiting parcel is checked against your journey with the same four rules senders see.
+        Showing journeys posted as <strong>{carrierName}</strong>. Every waiting parcel is checked
+        against the journey with the same four rules senders see.
       </p>
 
       {/* Pick which journey to look at */}
@@ -70,7 +74,7 @@ function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
         <select id="journeyPicker" className="field" value={journey.id} onChange={(e) => onPick(e.target.value)}>
           {journeys.map((j) => (
             <option key={j.id} value={j.id}>
-              {j.carrierName}: {j.origin} to {j.destination}, {formatDateTime(j.departure)}, {j.spareKg} kg spare
+              {j.origin} to {j.destination}, {formatDateTime(j.departure)}, {j.vehicleType}, {j.spareKg} kg spare
             </option>
           ))}
         </select>
