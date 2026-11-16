@@ -17,6 +17,9 @@ export const SHEET_COLUMNS = [
   'carrierName', 'origin', 'destination', 'weightKg', 'itemType', 'deadline',
   'departure', 'vehicleType', 'spareKg', 'price', 'status', 'escrow',
   'eligibleCarriers', 'matchingMs', 'deliveredAt',
+  // Added for the AI parcel check. New columns go at the END so the
+  // existing 21 keep their order in the Google Sheet.
+  'aiDescription', 'aiReason', 'aiSource',
 ]
 
 // Turn one record into a row with every column filled in (blank if missing).
@@ -52,7 +55,7 @@ function addToSyncLog(event, summary, result) {
   localStorage.setItem(LOG_KEY, JSON.stringify(log))
 }
 
-// event   = 'shipment' | 'journey' | 'match' | 'delivery' | 'dispute'
+// event   = 'shipment' | 'journey' | 'match' | 'delivery' | 'dispute' | 'ai_check'
 // record  = a flat object; each property becomes a column in Google Sheets
 // summary = short text for the sync log
 export async function sendToWebhook(event, record, summary) {

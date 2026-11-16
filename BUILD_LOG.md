@@ -438,3 +438,75 @@ as" fields and the two accept buttons, and keeps the Send page layout fix.
 This was tried before release: with the commit reverted, the app built and
 all 8 tests passed. On GitHub, the pull request's own "Revert" button would
 undo the layout fix as well, so revert the single commit instead.
+
+## Stage 18: AI parcel check
+
+**Why:** the marking criteria include emerging technology, and the app had no
+AI anywhere. The matching engine stays rule-based on purpose and was not
+touched.
+
+**What was built**
+- `src/lib/aiCheck.js`: sends the sender's item description to a new Make.com
+  webhook (which asks an AI model) and reads the answer: a suggested item
+  type and a "possibly prohibited" flag with a one-line reason. The reply is
+  checked before it is trusted: the type must be one of our item types, the
+  flag must be a clear yes or no, and the reason is cut to one line.
+- **Fallback:** with no AI address, no answer within 8 seconds, or an
+  unusable reply, a keyword check runs instead and is labelled
+  "Offline check (not AI)".
+- **Send page:** a "Describe your item" field, a "Check with AI" button and a
+  suggestion card. The sender still chooses the item type (a "Use this type"
+  button applies the suggestion) and still ticks the checklist. Editing the
+  description clears the old answer.
+- **Admin page:** a "Possibly prohibited items" section. A flagged shipment
+  that is posted appears there with its description, the reason and the
+  source, and a person chooses Allow or Cancel request.
+- **Settings:** `VITE_AI_WEBHOOK_URL` in `.env.example` and the deploy
+  workflow (from a repository secret), the same way as `VITE_WEBHOOK_URL`.
+  No API key is in the app.
+- **Logging:** each check goes through `src/lib/webhook.js` as
+  `event = "ai_check"`. Three columns were added at the END of the fixed
+  column list (`aiDescription`, `aiReason`, `aiSource`), so the first 21 keep
+  their order.
+
+**Decisions (approved by the team before coding)**
+- A flag does not block the shipment. It still posts and matches, because the
+  AI can be wrong and no new status was to be added; a person decides on the
+  Admin page.
+- Provider: Google Gemini through Google AI Studio's free tier, called from
+  Make.com.
+- Not changed: the four rules, scores, pricing, statuses, the design style,
+  the simulated sign-in and tests 1 to 8.
+
+**Tests:** four added to `tests/run-tests.cjs` (9 normal item, 10 fragile
+item, 11 prohibited item, 12 offline fallback). All 12 pass. Tests 9 to 11
+use a stand-in that returns fixed replies, so they prove the app handles an
+AI answer correctly; they do not test the real model. A test build
+(`npm run build:e2e`, settings in `.env.e2e`) points the app at the stand-in
+address and keeps test runs from writing to the real Google Sheet.
+
+**Errors hit and fixes**
+- **"Fresh mangoes" was suggested as a small parcel** by the offline check.
+  Cause: the keyword match allowed a plural ending in "s" but not "es", so
+  "mango" did not match "mangoes". Fixed the pattern and re-checked eleven
+  descriptions.
+- **The Admin section was first titled "Possibly prohibited (AI check)"**,
+  which was wrong when the flag came from the offline keyword check. Renamed
+  to "Possibly prohibited items"; each row shows its source.
+- **Request format changed before release.** The first version sent JSON,
+  which makes browsers ask the server for permission first. It now sends a
+  plain form field, which browsers send directly, so there is less to get
+  right on the Make.com side.
+
+**Not verified here**
+- The real Make.com scenario and the real AI model. This environment cannot
+  reach Make.com, so the first real check has to be run by the team.
+- Whether Make.com's webhook response is readable by the browser without the
+  `Access-Control-Allow-Origin` header; the setup steps add it to be safe.
+- The free AI allowance: it is small and changes, and current limits were not
+  available from an official source when this was written.
+
+**Known limits:** the AI can be wrong; the offline check is a crude keyword
+search (for example it flags "wine glasses"); descriptions are sent to
+Make.com, the AI provider and the Google Sheet; the AI webhook address is
+public.
