@@ -512,6 +512,23 @@ response) and ran a check on the Send page with the app on a PC. For
 prohibited item, with Gemini's own reason ("Glass items are fragile and
 permitted for delivery.").
 
+**Confirmed on the live site (17 Nov 2026)**, after adding the
+`VITE_AI_WEBHOOK_URL` repository secret and redeploying:
+
+| Description | AI suggestion | Flag | Right? |
+|---|---|---|---|
+| 2 glass vases | Fragile item | Not prohibited | Yes |
+| a box of fireworks | Bulky item | Possibly prohibited: "classified as explosives and hazardous materials" | Flag yes, type no |
+| pair of shoes | Small parcel | Not prohibited | Yes |
+
+The fireworks shipment, once posted, appeared on the Admin page under
+"Possibly prohibited items" with its description and Gemini's reason. The
+"Bulky item" suggestion for a small box of fireworks is a real example of the
+AI being wrong; the sender still chooses the item type, and a person reviews
+the flag. The first live attempt showed "Offline check (not AI)" because the
+browser was still showing the version from before the redeploy; a hard
+refresh fixed it.
+
 **Problems hit while setting up Make.com, and fixes**
 - **Locked out of the original Make account.** Signing in only showed a new,
   empty organisation in the EU1 region ("You do not have access to this
