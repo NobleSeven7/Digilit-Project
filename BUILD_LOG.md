@@ -498,13 +498,46 @@ address and keeps test runs from writing to the real Google Sheet.
   plain form field, which browsers send directly, so there is less to get
   right on the Make.com side.
 
-**Not verified here**
-- The real Make.com scenario and the real AI model. This environment cannot
-  reach Make.com, so the first real check has to be run by the team.
-- Whether Make.com's webhook response is readable by the browser without the
-  `Access-Control-Allow-Origin` header; the setup steps add it to be safe.
+**Not verified at release**
 - The free AI allowance: it is small and changes, and current limits were not
   available from an official source when this was written.
+- Whether Make.com's webhook response is readable by the browser without the
+  `Access-Control-Allow-Origin` header; the setup adds it, so this was never
+  tried without it.
+
+**Confirmed with the real AI (17 Nov 2026).** The team built the Make.com
+scenario (Custom webhook → Google Gemini AI "Generate a response" → Webhook
+response) and ran a check on the Send page with the app on a PC. For
+"2 glass vases" the card showed "AI suggestion", suggested Fragile item, no
+prohibited item, with Gemini's own reason ("Glass items are fragile and
+permitted for delivery.").
+
+**Problems hit while setting up Make.com, and fixes**
+- **Locked out of the original Make account.** Signing in only showed a new,
+  empty organisation in the EU1 region ("You do not have access to this
+  zone"), while the existing logging scenario lives in the US2 region. That
+  scenario kept running and writing to the Google Sheet, so it was left as
+  it was. The AI scenario was built in the EU1 organisation instead; the app
+  does not mind the two webhooks being in different regions. Until access to
+  US2 is restored, the three new Sheet columns cannot be mapped, so
+  `ai_check` rows are logged without the description, reason and source.
+- **The Gemini module needs the description as a Message.** With the prompt
+  only in "System Instructions", Make reported "Messages: Field must not be
+  empty". Fix: rules in System Instructions, the item description alone as
+  the user Message. Keeping the two apart also makes it harder to trick the
+  AI with instructions typed into the description box.
+- **Body mapped to the whole result.** The Webhook response first sent
+  Gemini's full result bundle, which the app cannot read. Fix: map only
+  **Result** (the text answer).
+- **Gemini was too slow.** With Gemini 3.8 Flash, a run was still working
+  after 17 seconds, well past the app's 8-second wait, so the app always
+  used the offline check, and the run was later stopped
+  (ExecutionInterruptedError). Testing with "Run once" added to the
+  confusion; the scenario has to be switched ON.
+- **Wrong model picked.** `gemini-3.8-flash-lite-tts` is a text-to-speech
+  model and rejected the request ("[400] Thinking level is not supported for
+  this model"). Fix: the plain Gemini 3.8 Flash-Lite model, with the
+  thinking settings left empty. It answers within the 8-second limit.
 
 **Known limits:** the AI can be wrong; the offline check is a crude keyword
 search (for example it flags "wine glasses"); descriptions are sent to
