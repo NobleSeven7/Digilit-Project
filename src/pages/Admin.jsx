@@ -26,6 +26,9 @@ export default function Admin({ state, save }) {
   const flagged = state.shipments.filter((s) => s.status === STATUS.FLAGGED)
   const unmatched = state.shipments.filter((s) => s.status === STATUS.RETRYING)
   const disputed = state.deliveries.filter((d) => d.status === DELIVERY.DISPUTED)
+  // Parcels the AI parcel check marked "possibly prohibited" that no one has reviewed yet.
+  const aiFlagged = state.shipments.filter(
+    (s) => s.aiFlag === 'pending' && s.status !== STATUS.CANCELLED)
   const syncLog = readSyncLog()
 
   // Admin cancels a request that could not be matched.
@@ -34,6 +37,15 @@ export default function Admin({ state, save }) {
       ...state,
       shipments: state.shipments.map((s) =>
         s.id === shipmentId ? { ...s, status: STATUS.CANCELLED } : s),
+    })
+  }
+
+  // Admin has looked at an AI-flagged parcel and decided it is fine.
+  function allowFlagged(shipmentId) {
+    save({
+      ...state,
+      shipments: state.shipments.map((s) =>
+        s.id === shipmentId ? { ...s, aiFlag: 'allowed' } : s),
     })
   }
 
@@ -79,6 +91,36 @@ export default function Admin({ state, save }) {
       <PageHeader title="Admin review">
         Requests the system could not settle on its own. A person makes the final call.
       </PageHeader>
+
+      {/* The AI can be wrong, so a person makes the decision here */}
+      <Section title="Possibly prohibited items" count={aiFlagged.length} testId="admin-ai-flagged"
+        emptyText="Nothing to review. Parcels the item check marks as possibly prohibited appear here.">
+        {aiFlagged.map((s) => (
+          <li key={s.id} className="card">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <h3 className="text-lg font-bold">{s.origin} to {s.destination}</h3>
+                <p className="text-muted">
+                  {s.weightKg} kg {s.itemType.toLowerCase()} from {s.senderName}.
+                </p>
+                <p className="mt-1">Described as: “{s.aiCheck.description}”</p>
+                <p className="mt-1"><strong>{s.aiCheck.source}:</strong> {s.aiCheck.reason}</p>
+              </div>
+              <StatusBadge status="Needs review" />
+            </div>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <button type="button" className="btn btn-primary" data-testid="ai-allow"
+                onClick={() => allowFlagged(s.id)}>
+                Allow
+              </button>
+              <button type="button" className="btn btn-danger" data-testid="ai-cancel"
+                onClick={() => cancelShipment(s.id)}>
+                Cancel request
+              </button>
+            </div>
+          </li>
+        ))}
+      </Section>
 
       <Section title="Flagged" count={flagged.length} testId="admin-flagged"
         emptyText={`Nothing flagged. Requests land here after ${FLAG_AFTER_HOURS} hours without a match.`}>

@@ -5,6 +5,7 @@ import { CITIES, ITEM_TYPES, STATUS } from '../data/constants.js'
 import { findMatches } from '../lib/matching.js'
 import { calculatePrice } from '../lib/pricing.js'
 import { sendToWebhook } from '../lib/webhook.js'
+import { checkParcel, MAX_DESCRIPTION, SOURCE } from '../lib/aiCheck.js'
 import { goTo } from '../lib/navigation.js'
 import { formatPKR, dayAt, makeId } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
@@ -46,6 +47,12 @@ export default function Sender({ state, save, profile, setProfile }) {
   const [ticked, setTicked] = useState(PROHIBITED.map(() => false))
   const [error, setError] = useState('')
 
+  // The AI parcel check: what the sender typed, whether we are waiting for
+  // an answer, and the answer itself (null until a check has been run).
+  const [description, setDescription] = useState('')
+  const [checking, setChecking] = useState(false)
+  const [aiResult, setAiResult] = useState(null)
+
   const weight = Number(weightKg)
   const allTicked = ticked.every(Boolean)
   const tickedCount = ticked.filter(Boolean).length
@@ -53,6 +60,31 @@ export default function Sender({ state, save, profile, setProfile }) {
   // Tick or untick one checklist line.
   function toggle(index) {
     setTicked(ticked.map((value, i) => (i === index ? !value : value)))
+  }
+
+  // Typing a new description throws away the old answer, so a result can
+  // never be attached to a different item.
+  function handleDescription(text) {
+    setDescription(text)
+    setAiResult(null)
+  }
+
+  // "Check with AI": ask for a suggestion and log the check.
+  async function handleAiCheck() {
+    const text = description.trim()
+    if (!text || checking) return
+    setChecking(true)
+    const result = await checkParcel(text)
+    setChecking(false)
+    setAiResult({ ...result, description: text })
+
+    // Log the check to Make.com / Google Sheets (skipped if no webhook URL).
+    sendToWebhook('ai_check', {
+      senderName,
+      itemType: result.suggestedType,
+      status: result.prohibited ? 'Possibly prohibited' : 'No issue found',
+      aiDescription: text, aiReason: result.reason, aiSource: result.source,
+    }, `Parcel check (${result.source}): ${result.prohibited ? 'possibly prohibited' : 'no issue found'}`)
   }
 
   function handleSubmit(event) {
@@ -73,6 +105,14 @@ export default function Sender({ state, save, profile, setProfile }) {
       weightKg: weight,
       createdAt: new Date().toISOString(),
       rejectedJourneyIds: [],
+    }
+
+    // Keep the parcel check with the shipment. If it said "possibly
+    // prohibited", the shipment also appears on the Admin page for a person
+    // to review. The shipment's status and matching are not affected.
+    if (aiResult) {
+      shipment.aiCheck = aiResult
+      if (aiResult.prohibited) shipment.aiFlag = 'pending'
     }
 
     // Run the matching engine immediately.
@@ -120,6 +160,58 @@ export default function Sender({ state, save, profile, setProfile }) {
             <p data-testid="posting-as">
               Posting as <strong>{senderName}</strong>
             </p>
+
+            {/* AI parcel check: describe the item, get a suggestion */}
+            <div>
+              <label className="label" htmlFor="aiDescription">Describe your item</label>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <input id="aiDescription" data-testid="ai-description" className="field" type="text"
+                  maxLength={MAX_DESCRIPTION} value={description} autoComplete="off"
+                  placeholder="For example: two glass vases wrapped in bubble wrap"
+                  onChange={(e) => handleDescription(e.target.value)} />
+                <button type="button" className="btn btn-secondary shrink-0" data-testid="ai-check-button"
+                  disabled={!description.trim() || checking} onClick={handleAiCheck}>
+                  {checking ? 'Checking…' : 'Check with AI'}
+                </button>
+              </div>
+              <p className="hint">
+                Optional. Describe the item only: no names, addresses or phone numbers. The text is
+                sent to an AI service to suggest an item type and spot prohibited items.
+              </p>
+
+              {/* The suggestion card */}
+              {aiResult && (
+                <div role="status" data-testid="ai-result" data-source={aiResult.source}
+                  data-prohibited={aiResult.prohibited} data-type={aiResult.suggestedType}
+                  className={`mt-3 rounded-lg border p-4 ${
+                    aiResult.prohibited ? 'border-fail bg-fail-tint' : 'border-brand-ink bg-brand-tint'}`}>
+                  <p className="text-sm font-bold">
+                    {aiResult.source}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <p>Suggested item type: <strong>{aiResult.suggestedType}</strong></p>
+                    {itemType === aiResult.suggestedType ? (
+                      <span className="text-sm text-muted">Already selected.</span>
+                    ) : (
+                      <button type="button" className="btn btn-secondary !min-h-10 !py-1" data-testid="ai-use-type"
+                        onClick={() => setItemType(aiResult.suggestedType)}>
+                        Use this type
+                      </button>
+                    )}
+                  </div>
+                  <p className={`mt-2 font-bold ${aiResult.prohibited ? 'text-fail' : 'text-brand-ink'}`}>
+                    {aiResult.prohibited ? 'This may be a prohibited item.' : 'No prohibited item spotted.'}
+                  </p>
+                  <p>{aiResult.reason}</p>
+                  <p className="mt-2 text-sm text-muted">
+                    {aiResult.prohibited
+                      ? 'If you post this parcel, a person will review it on the Admin page. '
+                      : ''}
+                    This is a suggestion and can be wrong. You choose the item type and confirm the checklist.
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* The route and parcel fields on the left, with a map of the chosen route
                 beside them (below them on phones) */}

@@ -1,9 +1,10 @@
-// Browser tests for the 8 test cases in the project proposal.
+// Browser tests: the 8 test cases in the project proposal (tests 1 to 8),
+// plus 4 tests for the AI parcel check (tests 9 to 12).
 // The script opens the app in a real (headless) Chromium browser, clicks
 // through it like a user, checks the result and saves a screenshot of each
 // case in the test-screenshots folder.
 //
-// How to run:  1) npm run build   2) npm run preview   3) npm run test:e2e
+// How to run:  1) npm run build:e2e   2) npm run preview   3) npm run test:e2e
 const { chromium } = require('playwright')
 const path = require('path')
 
@@ -182,10 +183,131 @@ async function main() {
     return `"${message}" Escrow: ${escrow}. Sync log: ${logText}`
   })
 
+  // ---- AI parcel check (tests 9 to 12) -------------------------------------
+  // These need the test build ("npm run build:e2e"), which points the app at
+  // a fake AI address. The tests catch requests to that address and answer
+  // with a fixed reply, so they check how the app HANDLES an AI answer.
+  // They do not test a real AI model.
+  const AI_ADDRESS = 'https://ai-check.test.invalid/**'
+  const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*' }
+
+  // Pretend to be the AI: answer every check with this text.
+  async function fakeAi(replyText) {
+    await page.unroute(AI_ADDRESS).catch(() => {})
+    await page.route(AI_ADDRESS, (route) => {
+      if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS })
+      return route.fulfill({ status: 200, headers: CORS, contentType: 'application/json', body: replyText })
+    })
+  }
+  // Pretend the AI never answers.
+  async function silentAi() {
+    await page.unroute(AI_ADDRESS).catch(() => {})
+    await page.route(AI_ADDRESS, () => {})
+  }
+
+  // Type a description on the Send page, press "Check with AI" and read the card.
+  async function runAiCheck(description, timeout = 5000) {
+    await page.fill('[data-testid="ai-description"]', description)
+    await page.click('[data-testid="ai-check-button"]')
+    const cardLocator = page.locator('[data-testid="ai-result"]')
+    await cardLocator.waitFor({ timeout })
+    return {
+      source: await cardLocator.getAttribute('data-source'),
+      type: await cardLocator.getAttribute('data-type'),
+      prohibited: await cardLocator.getAttribute('data-prohibited'),
+      text: (await cardLocator.textContent()).replace(/\s+/g, ' ').trim(),
+    }
+  }
+  const needsTestBuild = 'The AI did not answer. Build the app with "npm run build:e2e" before these tests'
+
+  // Tick the checklist and post the shipment that is on screen.
+  async function postCurrentShipment() {
+    for (const box of await page.locator('input[type="checkbox"]').all()) await box.check()
+    await page.click('[data-testid="post-shipment"]')
+    await page.waitForSelector('[data-testid="shipment-summary"]')
+  }
+  const aiFlaggedCount = async () => {
+    await page.goto(APP_URL + '#/admin')
+    return page.locator('[data-testid="admin-ai-flagged"] li').count()
+  }
+
+  await runTest(page, 9, 'AI check: a normal item', 'Suggests an item type, no prohibited flag, not sent to Admin', async () => {
+    await fakeAi(JSON.stringify({ itemType: 'Small parcel', prohibited: false, reason: 'Ordinary clothing, nothing restricted.' }))
+    await page.goto(APP_URL + '#/sender')
+    const result = await runAiCheck('A pair of running shoes in a shoe box')
+    check(result.source === 'AI suggestion', needsTestBuild)
+    check(result.type === 'Small parcel', `Suggested type was "${result.type}"`)
+    check(result.prohibited === 'false', 'Item was flagged as prohibited')
+    await shot('test-9-ai-normal-item.png', page.locator('#parcel-heading').locator('..'))
+    await postCurrentShipment()
+    const flagged = await aiFlaggedCount()
+    check(flagged === 0, `${flagged} parcel(s) were sent to Admin`)
+    return `${result.source}: ${result.type}, not prohibited; Admin review list: ${flagged}`
+  })
+
+  await runTest(page, 10, 'AI check: a fragile item', 'Suggests "Fragile item"; sender applies it with one click', async () => {
+    // The reply is deliberately messy (extra text, lower case) to check it is read safely.
+    await fakeAi('Here you go:\n```json\n{"itemType": "fragile item", "prohibited": "no", "reason": "Glass breaks easily in transit."}\n```')
+    await page.goto(APP_URL + '#/sender')
+    const before = await page.inputValue('#itemType')
+    const result = await runAiCheck('Two glass vases wrapped in bubble wrap')
+    check(result.source === 'AI suggestion', needsTestBuild)
+    check(result.type === 'Fragile item', `Suggested type was "${result.type}"`)
+    check(await page.inputValue('#itemType') === before, 'The item type changed without the sender choosing it')
+    await page.click('[data-testid="ai-use-type"]')
+    const after = await page.inputValue('#itemType')
+    check(after === 'Fragile item', `Item type is "${after}" after "Use this type"`)
+    await shot('test-10-ai-fragile-item.png', page.locator('#parcel-heading').locator('..'))
+    return `${result.source}: ${result.type}; item type stayed "${before}" until "Use this type", then "${after}"`
+  })
+
+  await runTest(page, 11, 'AI check: a prohibited item', 'Flagged with a reason; shipment appears on Admin for human review', async () => {
+    await fakeAi(JSON.stringify({ itemType: 'Small parcel', prohibited: true, reason: 'Fireworks are explosives and cannot be carried.' }))
+    await page.goto(APP_URL + '#/sender')
+    const result = await runAiCheck('A box of fireworks for a wedding')
+    check(result.source === 'AI suggestion', needsTestBuild)
+    check(result.prohibited === 'true', 'Item was not flagged')
+    check(result.text.includes('Fireworks are explosives'), 'The reason is not shown')
+    check(await page.locator('[data-testid="post-shipment"]').isDisabled(), 'Checklist no longer required before posting')
+    await shot('test-11-ai-prohibited-item.png', page.locator('#parcel-heading').locator('..'))
+    await postCurrentShipment()
+    const flagged = await aiFlaggedCount()
+    check(flagged === 1, `Admin review list has ${flagged} parcel(s), expected 1`)
+    const row = (await page.locator('[data-testid="admin-ai-flagged"] li').first().textContent()).replace(/\s+/g, ' ')
+    check(row.includes('A box of fireworks for a wedding'), 'Admin does not show the description')
+    await shot('test-11b-ai-flag-on-admin.png', page.locator('[data-testid="admin-ai-flagged"]'))
+    check(await page.locator('[data-testid="sync-log"] li[data-event="ai_check"]').count() === 1, 'The check was not logged as ai_check')
+    await page.click('[data-testid="ai-allow"]')
+    const left = await page.locator('[data-testid="admin-ai-flagged"] li').count()
+    check(left === 0, 'The parcel stayed in the list after "Allow"')
+    return `Flagged: "${'Fireworks are explosives and cannot be carried.'}" Admin list: 1, then 0 after "Allow"; logged as ai_check`
+  })
+
+  await runTest(page, 12, 'AI check: offline fallback', 'With no AI answer in about 8 seconds, a keyword check labelled "Offline check (not AI)" is used', async () => {
+    // Part 1: the AI never answers.
+    await silentAi()
+    await page.goto(APP_URL + '#/sender')
+    const startedAt = Date.now()
+    const result = await runAiCheck('Fireworks and sparklers', 15000)
+    const waited = Math.round((Date.now() - startedAt) / 100) / 10
+    check(result.source === 'Offline check (not AI)', `Card says "${result.source}"`)
+    check(waited >= 7 && waited <= 11, `Fallback came after ${waited} seconds, expected about 8`)
+    check(result.prohibited === 'true', 'The keyword check missed "fireworks"')
+    await shot('test-12-ai-offline-fallback.png', page.locator('#parcel-heading').locator('..'))
+
+    // Part 2: the AI answers with something unusable.
+    await fakeAi(JSON.stringify({ itemType: 'Spaceship', prohibited: 'maybe', reason: '' }))
+    const second = await runAiCheck('A stack of university degree certificates')
+    check(second.source === 'Offline check (not AI)', 'An unusable AI reply was accepted')
+    check(second.type === 'Documents', `Keyword check suggested "${second.type}"`)
+    await page.unroute(AI_ADDRESS).catch(() => {})
+    return `No answer: "${result.source}" after ${waited} s, fireworks flagged. Unusable reply: "${second.source}", suggested ${second.type}`
+  })
+
   await browser.close()
 
   // Print the results table.
-  console.log('\nRaastaShare - proposal test cases\n')
+  console.log('\nRaastaShare - test cases\n')
   for (const r of results) {
     console.log(`${r.pass ? 'PASS' : 'FAIL'}  Test ${r.number}: ${r.name}`)
     console.log(`      Expected: ${r.expected}`)

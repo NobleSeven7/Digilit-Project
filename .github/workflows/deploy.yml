@@ -32,6 +32,9 @@ jobs:
           # It is never stored in the code. If the secret is missing, this is
           # empty and the live site works offline, like before.
           VITE_WEBHOOK_URL: ${{ secrets.VITE_WEBHOOK_URL }}
+          # Same idea for the AI parcel check: a secret named VITE_AI_WEBHOOK_URL.
+          # If it is missing, the Send page uses its offline keyword check.
+          VITE_AI_WEBHOOK_URL: ${{ secrets.VITE_AI_WEBHOOK_URL }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
