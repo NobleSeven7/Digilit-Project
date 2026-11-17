@@ -613,3 +613,14 @@ Checks: axe-core finds no issues on all 7 pages in both themes; keyboard focus
 is still visible; the Impeccable detector reports one finding (the big Home
 headline, kept on purpose). The only control under 44px is the 24px checkbox,
 whose whole 48px label row is clickable. All 12 tests pass.
+
+## Stage 21: slower animations
+
+- **Feedback:** after turning Windows animation effects back on, the motion
+  felt a little fast.
+- **Change:** every entrance and state-change animation now takes about 1.5
+  times as long (for example a card rising in: 240 to 360 ms; the delivery
+  road filling: 300 to 450 ms; the Home routes drawing: 1.1 to 1.5 s), and
+  the gaps between staggered pieces grew by the same amount. Hover and press
+  reactions on buttons and cards were left quick on purpose.
+- **Checked:** all 12 tests pass. Reduced-motion users still get fades only.
