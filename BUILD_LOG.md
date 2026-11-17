@@ -560,3 +560,30 @@ refresh fixed it.
 search (for example it flags "wine glasses"); descriptions are sent to
 Make.com, the AI provider and the Google Sheet; the AI webhook address is
 public.
+
+## Stage 19: motion on state changes
+
+Built with the `animate` and `choreograph` skills (Emil Kowalski's design
+skills). Only things that change move; pages, typing and data the user is
+reading stay still. Curves come from the existing `--ease-out` and
+`--ease-in-out` tokens, and every animation is under 300 ms.
+
+| Where | What moves | Why |
+|---|---|---|
+| Delivery | The amber and green road slides to its new stop (clip-path, 300 ms); the new step card rises in (240 ms); the message fades in; the escrow badge colour fades | Shows which step just happened |
+| Delivery, when paid | The last stop settles in as the road arrives (the one small celebration) | Marks the end of the delivery |
+| Matches | Ranked carriers arrive best first with shrinking gaps (0, 50, 90, 120 ms); the best match rises furthest; not-eligible carriers stay still | The order reinforces the ranking |
+| Matches | "See details" opens smoothly (browsers that support it) | Avoids a jump |
+| Send | Each AI answer arrives as a new card from just under the button | Shows a new answer arrived |
+| Admin | After Allow or Cancel, the row fades while the rows below slide up (view transitions, recent Chrome-based browsers) | Shows where the row went |
+
+- **Reduced motion:** nothing moves or slides; things only fade.
+- **New file:** `src/lib/motion.js` (view-transition helper); the rest is in
+  `src/index.css` and small class changes on the pages.
+- **Error and fix:** test 11 failed after the change because the Admin row now
+  leaves a frame later (the view transition applies the change on the next
+  frame). Checked in the browser that the row is gone within 50 ms and the
+  decision is saved at once, then made the test wait up to 2 seconds for the
+  row to leave. All 12 tests pass.
+- **Not checked:** how it feels on a real phone; the Admin sliding and smooth
+  "See details" fall back to an instant change in browsers without support.
