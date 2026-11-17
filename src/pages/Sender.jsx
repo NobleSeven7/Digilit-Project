@@ -74,6 +74,7 @@ export default function Sender({ state, save, profile, setProfile }) {
     const text = description.trim()
     if (!text || checking) return
     setChecking(true)
+    setAiResult(null) // the old card goes, so each answer arrives as a new card
     const result = await checkParcel(text)
     setChecking(false)
     setAiResult({ ...result, description: text })
@@ -181,9 +182,9 @@ export default function Sender({ state, save, profile, setProfile }) {
 
               {/* The suggestion card */}
               {aiResult && (
-                <div role="status" data-testid="ai-result" data-source={aiResult.source}
+                <div role="status" data-testid="ai-result" data-source={aiResult.source} key={aiResult.reason}
                   data-prohibited={aiResult.prohibited} data-type={aiResult.suggestedType}
-                  className={`mt-3 rounded-lg border p-4 ${
+                  className={`enter-pop mt-3 rounded-lg border p-4 ${
                     aiResult.prohibited ? 'border-fail bg-fail-tint' : 'border-brand-ink bg-brand-tint'}`}>
                   <p className="text-sm font-bold">
                     {aiResult.source}

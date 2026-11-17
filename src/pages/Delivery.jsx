@@ -196,7 +196,9 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
         <div className="space-y-6">
           {/* Progress along the route */}
           <section className="card">
-            <RouteLine origin={shipment.origin} destination={shipment.destination}
+            {/* Keyed by delivery, so switching deliveries redraws the tracker
+                instead of sliding from one delivery's progress to another's */}
+            <RouteLine key={delivery.id} origin={shipment.origin} destination={shipment.destination}
               stops={STOPS} reached={REACHED[delivery.status] ?? 0}
               showCurrent={STILL_MOVING.includes(delivery.status)}
               problem={delivery.status === DELIVERY.DISPUTED} />
@@ -208,15 +210,15 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
           {/* Result of the last action */}
           {message && (
-            <p role="alert" data-testid="delivery-message"
-              className={`rounded-lg px-4 py-3 font-bold ${message.ok ? 'bg-brand-tint text-brand-ink' : 'bg-fail-tint text-fail'}`}>
+            <p role="alert" data-testid="delivery-message" key={message.text}
+              className={`enter-fade rounded-lg px-4 py-3 font-bold ${message.ok ? 'bg-brand-tint text-brand-ink' : 'bg-fail-tint text-fail'}`}>
               {message.text}
             </p>
           )}
 
           {/* Step 1: both sides accept */}
           {delivery.status === DELIVERY.AWAITING_ACCEPT && (
-            <section className="card" data-testid="step-accept">
+            <section className="card enter-rise" data-testid="step-accept">
               <h2 className="text-xl font-bold">Accept the match</h2>
               <p className="mt-1 text-muted">
                 Both people must accept before any money moves. You can only answer for the
@@ -261,7 +263,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
           {/* Step 2: pickup code */}
           {delivery.status === DELIVERY.AWAITING_PICKUP && (
-            <section className="card" data-testid="step-pickup">
+            <section className="card enter-rise" data-testid="step-pickup">
               <h2 className="text-xl font-bold">Pickup</h2>
               <p className="mt-1 text-muted">
                 {shipment.senderName} reads this code to {journey.carrierName} when handing over the parcel.
@@ -276,7 +278,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
           {/* Step 3: delivery code */}
           {delivery.status === DELIVERY.IN_TRANSIT && (
-            <section className="card" data-testid="step-delivery">
+            <section className="card enter-rise" data-testid="step-delivery">
               <h2 className="text-xl font-bold">Delivery</h2>
               <p className="mt-1 text-muted">
                 The receiver reads this code to {journey.carrierName} once the parcel arrives safely.
@@ -291,7 +293,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
           {/* Finished states */}
           {delivery.status === DELIVERY.DELIVERED && (
-            <section className="card border-brand-ink bg-brand-tint" data-testid="step-done">
+            <section className="card enter-rise border-brand-ink bg-brand-tint" data-testid="step-done">
               <h2 className="text-xl font-bold text-brand-ink">Delivered and paid</h2>
               <p className="mt-1">
                 {amount} was released to {journey.carrierName}
@@ -301,21 +303,21 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
             </section>
           )}
           {delivery.status === DELIVERY.DISPUTED && (
-            <section className="card border-fail bg-fail-tint">
+            <section className="card enter-rise border-fail bg-fail-tint">
               <h2 className="text-xl font-bold text-fail">Under admin review</h2>
               <p className="mt-1">{delivery.disputeReason}. The payment is frozen until a person decides.</p>
               <a href="#/admin" className="btn btn-secondary mt-4">Open admin</a>
             </section>
           )}
           {delivery.status === DELIVERY.DECLINED && (
-            <section className="card">
+            <section className="card enter-rise">
               <h2 className="text-xl font-bold">Carrier declined</h2>
               <p className="mt-1">No money moved. The next-ranked carrier is offered on the Matches page.</p>
               <a href={`#/matches/${shipment.id}`} className="btn btn-primary mt-4">See next carrier</a>
             </section>
           )}
           {delivery.status === DELIVERY.REFUNDED && (
-            <section className="card">
+            <section className="card enter-rise">
               <h2 className="text-xl font-bold">Refunded</h2>
               <p className="mt-1">An admin reviewed the dispute and returned {amount} to {shipment.senderName}.</p>
             </section>

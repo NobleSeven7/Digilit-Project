@@ -42,6 +42,18 @@ function PassChip({ rule }) {
 }
 
 // One carrier card. "rank" is set only for eligible carriers.
+// Ranked carriers arrive one after another, best first, with shrinking gaps
+// (0, 50, 90, 120 ms, then the rest together) so the group reads as one wave.
+// The best match rises the furthest. Not-eligible carriers do not move.
+const ARRIVE_DELAY = [0, 50, 90, 120]
+function arrival(rank) {
+  if (!rank) return {}
+  return {
+    className: 'enter-rise',
+    style: { '--delay': `${ARRIVE_DELAY[Math.min(rank, ARRIVE_DELAY.length) - 1]}ms`, '--rise': rank === 1 ? '10px' : '6px' },
+  }
+}
+
 function CarrierCard({ result, rank, shipment, declined, canRequest, onRequest }) {
   const { journey, rules, eligible, score } = result
   const usedPercent = Math.round((shipment.weightKg / journey.spareKg) * 100)
@@ -52,7 +64,8 @@ function CarrierCard({ result, rank, shipment, declined, canRequest, onRequest }
       data-testid="carrier-card"
       data-carrier={journey.carrierName}
       data-eligible={eligible && !declined}
-      className={`card ${rank === 1 ? 'border-2 border-brand-ink' : ''}`}
+      className={`card ${arrival(rank).className ?? ''} ${rank === 1 ? 'border-2 border-brand-ink' : ''}`}
+      style={arrival(rank).style}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
@@ -86,7 +99,7 @@ function CarrierCard({ result, rank, shipment, declined, canRequest, onRequest }
           <ul aria-label="Rule checks" className="mt-4 flex flex-wrap gap-2">
             {rules.map((rule) => <PassChip key={rule.key} rule={rule} />)}
           </ul>
-          <details className="group mt-3">
+          <details className="rule-details group mt-3">
             <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1.5 rounded-lg font-bold text-brand-ink
                                 [&::-webkit-details-marker]:hidden">
               <span className="group-open:hidden">See details</span>
@@ -221,7 +234,7 @@ export default function Matches({ state, save, id }) {
             </p>
           </div>
         ) : (
-          <ol className="space-y-4">
+          <ol className="space-y-4" key={shipment.id}>
             {offered.map((result, index) => (
               <CarrierCard key={result.journey.id} result={result} rank={index + 1}
                 shipment={shipment} canRequest={canRequest} onRequest={handleRequest} />

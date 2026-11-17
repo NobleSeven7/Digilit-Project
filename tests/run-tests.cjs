@@ -278,6 +278,10 @@ async function main() {
     await shot('test-11b-ai-flag-on-admin.png', page.locator('[data-testid="admin-ai-flagged"]'))
     check(await page.locator('[data-testid="sync-log"] li[data-event="ai_check"]').count() === 1, 'The check was not logged as ai_check')
     await page.click('[data-testid="ai-allow"]')
+    // The row slides away (a view transition), so the page updates a frame
+    // later: wait up to 2 seconds for it to go before counting.
+    await page.locator('[data-testid="admin-ai-flagged"] li').first()
+      .waitFor({ state: 'detached', timeout: 2000 }).catch(() => {})
     const left = await page.locator('[data-testid="admin-ai-flagged"] li').count()
     check(left === 0, 'The parcel stayed in the list after "Allow"')
     return `Flagged: "${'Fireworks are explosives and cannot be carried.'}" Admin list: 1, then 0 after "Allow"; logged as ai_check`
