@@ -1,14 +1,16 @@
 // Delivery page: both sides accept -> pickup code -> delivery code -> escrow release.
 // The payment is simulated: it is only a status tracked inside this app.
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { STATUS, DELIVERY, ESCROW } from '../data/constants.js'
 import { generateOtp, generateDifferentOtp } from '../lib/otp.js'
 import { sendToWebhook } from '../lib/webhook.js'
 import { goTo } from '../lib/navigation.js'
 import { formatPKR, formatDateTime } from '../lib/format.js'
+import { shake } from '../lib/motion.js'
 import PageHeader from '../components/PageHeader.jsx'
 import RouteLine from '../components/RouteLine.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
+import SuccessTick from '../components/SuccessTick.jsx'
 
 // How many progress stops are complete for each delivery status.
 const STOPS = ['Accepted', 'Picked up', 'Delivered', 'Paid']
@@ -34,14 +36,21 @@ function CodeBox({ label, code, testId }) {
   )
 }
 
-// A 4-digit code input with its confirm button.
+// A 4-digit code input with its confirm button. onSubmit returns false for a
+// wrong code, and the box then shakes.
 function CodeForm({ id, label, buttonText, onSubmit }) {
   const [code, setCode] = useState('')
+  const input = useRef(null)
+  function handleSubmit(e) {
+    e.preventDefault()
+    if (onSubmit(code) === false) shake(input.current)
+    setCode('')
+  }
   return (
-    <form className="mt-4" onSubmit={(e) => { e.preventDefault(); onSubmit(code); setCode('') }}>
+    <form className="mt-4" onSubmit={handleSubmit}>
       <label className="label" htmlFor={id}>{label}</label>
       <div className="flex flex-wrap gap-3">
-        <input id={id} className="field w-36 text-center text-2xl tracking-[0.3em]"
+        <input id={id} ref={input} className="field w-36 text-center text-2xl tracking-[0.3em]"
           inputMode="numeric" maxLength={4} autoComplete="one-time-code" value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
         <button type="submit" className="btn btn-primary" data-testid={`${id}-submit`}>
@@ -136,6 +145,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
       setMessage({ ok: true, text: 'Pickup confirmed. The parcel is on its way.' })
     } else {
       setMessage({ ok: false, text: 'Wrong pickup code. The parcel has not been handed over.' })
+      return false
     }
   }
 
@@ -154,6 +164,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
       // Wrong code: nothing changes, the money stays in escrow.
       update({ wrongAttempts: delivery.wrongAttempts + 1 })
       setMessage({ ok: false, text: `Wrong delivery code. ${amount} stays in escrow.` })
+      return false
     }
   }
 
@@ -294,7 +305,12 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
           {/* Finished states */}
           {delivery.status === DELIVERY.DELIVERED && (
             <section className="card enter-rise border-brand-ink bg-brand-tint" data-testid="step-done">
-              <h2 className="text-xl font-bold text-brand-ink">Delivered and paid</h2>
+              {/* The tick draws itself only right after the delivery code is
+                  confirmed, not every time a finished delivery is opened. */}
+              <h2 className="flex items-center gap-3 text-xl font-bold text-brand-ink">
+                <SuccessTick animate={message?.ok === true} />
+                Delivered and paid
+              </h2>
               <p className="mt-1">
                 {amount} was released to {journey.carrierName}
                 {delivery.deliveredAt ? ` on ${formatDateTime(delivery.deliveredAt)}` : ''}.

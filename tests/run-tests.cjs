@@ -228,6 +228,9 @@ async function main() {
   }
   const aiFlaggedCount = async () => {
     await page.goto(APP_URL + '#/admin')
+    // Pages fade from one to the next, so wait until the Admin page is the one showing.
+    await page.waitForFunction(() => /Admin/.test(document.querySelector('h1')?.textContent || '')
+      && !document.documentElement.dataset.transition)
     return page.locator('[data-testid="admin-ai-flagged"] li').count()
   }
 

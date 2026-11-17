@@ -5,6 +5,7 @@ import { formatPKR } from '../lib/format.js'
 import { ParcelIcon, CarIcon, ArrowRightIcon } from '../components/Icons.jsx'
 import HeroMap from '../components/HeroMap.jsx'
 import { firstWithRole } from '../lib/profile.js'
+import { useSeenOnce } from '../lib/motion.js'
 
 // The demo case from the proposal.
 const DEMO_KG = 5
@@ -41,10 +42,12 @@ const STEPS = [
   ['Verify', 'One-time codes confirm pickup and delivery, then the carrier is paid.'],
 ]
 
-// A numbered stop that sits on the "How it works" road.
+// A numbered stop that sits on the "How it works" road. It starts grey and
+// lights up green when the road reaches it (.step-stop in src/index.css).
 function StepStop({ number, className }) {
   return (
-    <span className={`absolute flex size-8 items-center justify-center rounded-full border-4 border-brand-ink bg-surface text-sm font-bold text-brand-ink ${className}`}>
+    <span style={{ '--i': number - 1 }}
+      className={`step-stop absolute z-10 flex size-8 items-center justify-center rounded-full border-4 bg-surface text-sm font-bold ${className}`}>
       {number}
     </span>
   )
@@ -52,7 +55,8 @@ function StepStop({ number, className }) {
 
 // One line of the price comparison: a name, a price, and a bar drawn to scale.
 // It sits on the green band, so everything is white.
-function PriceRow({ name, note, price, highlight }) {
+// The bar fills from the left when the band scrolls into view (.bar-grow).
+function PriceRow({ name, note, price, highlight, order }) {
   return (
     <li>
       <div className="flex items-end justify-between gap-4">
@@ -65,14 +69,19 @@ function PriceRow({ name, note, price, highlight }) {
         </p>
       </div>
       <div className="mt-3 h-4 rounded-full bg-white/15" aria-hidden="true">
-        <div className={`h-4 rounded-full ${highlight ? 'bg-hold' : 'bg-white/45'}`}
-          style={{ width: `${(price / COURIER_FEE) * 100}%` }} />
+        <div className={`bar-grow h-4 rounded-full ${highlight ? 'bg-hold' : 'bg-white/45'}`}
+          style={{ width: `${(price / COURIER_FEE) * 100}%`, '--i': order }} />
       </div>
     </li>
   )
 }
 
 export default function Home({ profile, setProfile }) {
+  // Two animations wait until they are on screen: the "How it works" road
+  // lights up stop by stop, and the price bars fill.
+  const [stepsRef, stepsSeen] = useSeenOnce()
+  const [pricesRef, pricesSeen] = useSeenOnce()
+
   // Choosing a side also signs you in as a demo person with that role
   // (unless you already have it).
   const become = (role) => () => {
@@ -105,7 +114,7 @@ export default function Home({ profile, setProfile }) {
       </section>
 
       {/* How it works: the three steps as stops along one road */}
-      <section>
+      <section ref={stepsRef} className={stepsSeen ? 'is-seen' : ''}>
         <h2 className="text-4xl font-bold sm:text-6xl">How it works</h2>
         <p className="mt-2 max-w-2xl text-lg text-muted">
           Three steps, where phone calls and bargaining took about eight. A match takes under a minute.
@@ -116,10 +125,13 @@ export default function Home({ profile, setProfile }) {
           {STEPS.map(([title, text], index) => (
             <li key={title}>
               <h3 className="text-3xl font-semibold">{title}</h3>
-              <div className={`relative my-4 h-4 bg-brand ${index === 0 ? 'rounded-l-full' : ''} ${
+              <div className={`relative my-4 h-4 bg-line ${index === 0 ? 'rounded-l-full' : ''} ${
                 index === STEPS.length - 1 ? 'rounded-r-full' : ''}`}>
-                <span aria-hidden="true"
-                  className="absolute inset-x-2 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-white/70" />
+                {/* The green road: grows left to right, one stretch after another */}
+                <span aria-hidden="true" style={{ '--i': index }}
+                  className="road-grow road-grow-x absolute inset-0 rounded-[inherit] bg-brand">
+                  <span className="absolute inset-x-2 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-white/70" />
+                </span>
                 <StepStop number={index + 1} className="left-0 top-1/2 -translate-y-1/2" />
               </div>
               <p className="pr-8 text-muted">{text}</p>
@@ -131,9 +143,13 @@ export default function Home({ profile, setProfile }) {
         <ol className="mt-6 sm:hidden">
           {STEPS.map(([title, text], index) => (
             <li key={title} className="relative pb-6 pl-12 last:pb-1">
-              <span aria-hidden="true" className={`absolute inset-y-0 left-2.5 w-3 bg-brand ${
+              <span aria-hidden="true" className={`absolute inset-y-0 left-2.5 w-3 bg-line ${
                 index === 0 ? 'rounded-t-full' : ''} ${index === STEPS.length - 1 ? 'rounded-b-full' : ''}`}>
-                <span className="absolute inset-y-2 left-1/2 -translate-x-1/2 border-l-2 border-dashed border-white/70" />
+                {/* The green road: grows top to bottom on phones */}
+                <span style={{ '--i': index }}
+                  className="road-grow road-grow-y absolute inset-0 rounded-[inherit] bg-brand">
+                  <span className="absolute inset-y-2 left-1/2 -translate-x-1/2 border-l-2 border-dashed border-white/70" />
+                </span>
               </span>
               <StepStop number={index + 1} className="left-0 top-0" />
               <h3 className="text-2xl font-semibold">{title}</h3>
@@ -144,7 +160,8 @@ export default function Home({ profile, setProfile }) {
       </section>
 
       {/* Price comparison from the proposal, on a band of motorway green */}
-      <section className="rounded-2xl bg-brand px-5 py-9 text-white sm:px-12 sm:py-14">
+      <section ref={pricesRef}
+        className={`rounded-2xl bg-brand px-5 py-9 text-white sm:px-12 sm:py-14 ${pricesSeen ? 'is-seen' : ''}`}>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-4xl font-bold sm:text-6xl">What it costs</h2>
@@ -156,8 +173,8 @@ export default function Home({ profile, setProfile }) {
           </span>
         </div>
         <ul className="mt-9 space-y-9">
-          <PriceRow name="Courier" note="Typical courier quote" price={COURIER_FEE} />
-          <PriceRow name="RaastaShare" highlight price={calculatePrice(DEMO_KG)}
+          <PriceRow name="Courier" note="Typical courier quote" price={COURIER_FEE} order={0} />
+          <PriceRow name="RaastaShare" highlight order={1} price={calculatePrice(DEMO_KG)}
             note={`${formatPKR(BASE_FEE)} base + ${formatPKR(FEE_PER_KG)} × ${DEMO_KG} kg`} />
         </ul>
       </section>
