@@ -13,6 +13,7 @@ import RoleNotice from '../components/RoleNotice.jsx'
 import RouteLine from '../components/RouteLine.jsx'
 import RuleCheck from '../components/RuleCheck.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
+import SuccessTick from '../components/SuccessTick.jsx'
 
 // The carrier's side of matching. For one journey it shows:
 //   1. requests senders have already sent to this carrier
@@ -257,7 +258,10 @@ export default function Carrier({ state, save, profile, setProfile }) {
       {posted && (
         <div ref={confirmation} role="status" data-testid="journey-posted"
           className="card mb-6 scroll-mt-4 border-brand-ink bg-brand-tint">
-          <h2 className="text-xl font-bold text-brand-ink">Journey posted</h2>
+          <h2 className="flex items-center gap-3 text-xl font-bold text-brand-ink">
+            <SuccessTick key={posted.journey.id} animate />
+            Journey posted
+          </h2>
           <div className="mt-3 max-w-md">
             <RouteLine origin={posted.journey.origin} destination={posted.journey.destination} />
           </div>
