@@ -32,6 +32,16 @@ export function toSheetRow(event, record) {
   return row
 }
 
+// The sentence for the "new match" email, written in full here so the
+// Make.com Gmail module only inserts one field (emailText). It is sent with
+// every record (empty for other events) but is not a Google Sheets column.
+export function matchEmailText(event, record) {
+  if (event !== 'match') return ''
+  return `${record.senderName}'s ${record.weightKg} kg parcel from ${record.origin} to ` +
+    `${record.destination} will be carried by ${record.carrierName}. ` +
+    `PKR ${record.price} is now held in escrow until delivery is confirmed.`
+}
+
 export function isWebhookConfigured() {
   return WEBHOOK_URL !== ''
 }
@@ -67,7 +77,7 @@ export async function sendToWebhook(event, record, summary) {
     await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(toSheetRow(event, record)),
+      body: JSON.stringify({ ...toSheetRow(event, record), emailText: matchEmailText(event, record) }),
     })
     addToSyncLog(event, summary, 'Sent to Make.com')
   } catch {

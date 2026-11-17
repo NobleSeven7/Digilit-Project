@@ -654,3 +654,22 @@ menus, the profile picker, Dashboard data). Shown as a preview video first.
   pages change at once.
 - **Test change:** test 11 counted the Admin list before the page fade ended;
   it now waits until the Admin page is showing. All 12 tests pass.
+
+## Stage 23: records scenario moves to Make.com EU1
+
+- **Problem:** the match email read "Islamabad toLahore, will be carried
+  byUsman Tariq. PKR 500 held in Held in escrow." The text lives in the US2
+  Make.com scenario, and Make support confirmed the US2 organization belongs
+  to another email we can no longer reach.
+- **Decision:** rebuild the records scenario (webhook → router → Google Sheets
+  row + match email) in the EU1 account, which also holds the AI check, and
+  point `VITE_WEBHOOK_URL` at it. The US2 scenario simply stops receiving data.
+  The Sheet and the Looker Studio dashboard stay the same.
+- **App change:** every record now also carries `emailText`, the finished
+  sentence for a match ("Ayesha Khan's 5 kg parcel from Islamabad to Lahore
+  will be carried by Bilal Ahmed. PKR 500 is now held in escrow until delivery
+  is confirmed."), empty for other events. The Gmail module inserts only this
+  one field, so no spaces can go missing between pieces. It is not a Sheet
+  column; the 24 Sheet columns are unchanged.
+- **Checked:** the sentence is built correctly and is empty for other events;
+  all 12 tests pass.
