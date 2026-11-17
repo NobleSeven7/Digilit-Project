@@ -11,7 +11,7 @@ export default function StatusBadge({ status }) {
   if (BAD.includes(status)) colours = 'bg-fail-tint text-fail border-fail'
 
   return (
-    <span data-testid="status" className={`inline-block rounded-full border px-3 py-0.5 text-sm font-bold ${colours}`}>
+    <span data-testid="status" className={`inline-block rounded-full border px-3 py-0.5 text-sm font-bold transition-colors duration-200 ${colours}`}>
       {status}
     </span>
   )

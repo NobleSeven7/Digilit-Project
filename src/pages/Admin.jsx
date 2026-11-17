@@ -5,6 +5,7 @@ import { readSyncLog, isWebhookConfigured } from '../lib/webhook.js'
 import { formatPKR, formatDateTime } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
+import { withViewTransition } from '../lib/motion.js'
 
 // How long ago a shipment was posted, in plain words.
 function waitingTime(createdAt) {
@@ -15,7 +16,7 @@ function waitingTime(createdAt) {
 // One section with a heading, a count and a list (or an empty message).
 function Section({ title, count, emptyText, testId, children }) {
   return (
-    <section className="mb-8" data-testid={testId}>
+    <section className="mb-8" data-testid={testId} style={{ viewTransitionName: `admin-${testId}` }}>
       <h2 className="mb-3 text-2xl font-bold">{title} ({count})</h2>
       {count === 0 ? <p className="card text-muted">{emptyText}</p> : <ul className="space-y-3">{children}</ul>}
     </section>
@@ -33,25 +34,25 @@ export default function Admin({ state, save }) {
 
   // Admin cancels a request that could not be matched.
   function cancelShipment(shipmentId) {
-    save({
+    withViewTransition(() => save({
       ...state,
       shipments: state.shipments.map((s) =>
         s.id === shipmentId ? { ...s, status: STATUS.CANCELLED } : s),
-    })
+    }))
   }
 
   // Admin has looked at an AI-flagged parcel and decided it is fine.
   function allowFlagged(shipmentId) {
-    save({
+    withViewTransition(() => save({
       ...state,
       shipments: state.shipments.map((s) =>
         s.id === shipmentId ? { ...s, aiFlag: 'allowed' } : s),
-    })
+    }))
   }
 
   // Admin settles a dispute: pay the carrier, or refund the sender.
   function resolveDispute(delivery, payCarrier) {
-    save({
+    withViewTransition(() => save({
       ...state,
       deliveries: state.deliveries.map((d) => (d.id !== delivery.id ? d : {
         ...d,
@@ -62,12 +63,12 @@ export default function Admin({ state, save }) {
       shipments: state.shipments.map((s) => (s.id !== delivery.shipmentId ? s : {
         ...s, status: payCarrier ? STATUS.DELIVERED : STATUS.CANCELLED,
       })),
-    })
+    }))
   }
 
   // A shipment row, shared by the flagged and unmatched lists.
   const shipmentRow = (s) => (
-    <li key={s.id} className="card">
+    <li key={s.id} className="card" style={{ viewTransitionName: `admin-row-${s.id}` }}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-lg font-bold">{s.origin} to {s.destination}</h3>
@@ -96,7 +97,7 @@ export default function Admin({ state, save }) {
       <Section title="Possibly prohibited items" count={aiFlagged.length} testId="admin-ai-flagged"
         emptyText="Nothing to review. Parcels the item check marks as possibly prohibited appear here.">
         {aiFlagged.map((s) => (
-          <li key={s.id} className="card">
+          <li key={s.id} className="card" style={{ viewTransitionName: `admin-row-${s.id}` }}>
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
                 <h3 className="text-lg font-bold">{s.origin} to {s.destination}</h3>
@@ -138,7 +139,7 @@ export default function Admin({ state, save }) {
           const s = state.shipments.find((x) => x.id === d.shipmentId)
           const j = state.journeys.find((x) => x.id === d.journeyId)
           return (
-            <li key={d.id} className="card">
+            <li key={d.id} className="card" style={{ viewTransitionName: `admin-dispute-${d.id}` }}>
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <h3 className="text-lg font-bold">{s.origin} to {s.destination}</h3>

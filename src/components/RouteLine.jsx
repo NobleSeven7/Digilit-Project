@@ -11,7 +11,13 @@
 //   showCurrent = highlight the next stop as "in progress"
 //   problem     = show the current stop in red (e.g. a dispute)
 
+import { useEffect, useRef } from 'react'
 import { CheckIcon } from './Icons.jsx'
+
+// A clip-path that shows a full-width road only up to stop number i.
+function cutAt(i, count) {
+  return `inset(0 ${100 - (i / (count - 1)) * 100}% 0 0 round 9999px)`
+}
 
 // Position of stop number i along the road, as a percentage.
 function position(i, count) {
@@ -23,22 +29,26 @@ function Tracker({ stops, reached, showCurrent, problem }) {
   const current = showCurrent && reached < count ? reached : -1 // -1 = no current step
   const lastDone = reached - 1
 
+  // Did the parcel reach the last stop just now (not already done when the
+  // page opened)? Only then does the last stop play its small "settle".
+  const previous = useRef(reached)
+  const justFinished = reached === count && previous.current < count
+  useEffect(() => { previous.current = reached }, [reached])
+
   return (
     <>
       {/* The road with its markers (decorative; the list below is what screen readers read) */}
       <div className="relative mx-3.5 mt-3 h-7" aria-hidden="true">
         {/* Grey road: the whole route */}
         <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-line" />
+        {/* Amber road: from the start to the stop being travelled to now (the
+            green road covers the part already done). Each road is a full-width
+            bar cut short with clip-path, so a change of step slides smoothly. */}
+        <div className={`road-fill absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full ${problem ? 'bg-fail/60' : 'bg-hold/70'}`}
+          style={{ clipPath: cutAt(current > 0 ? current : 0, count) }} />
         {/* Green road: from the start to the last completed stop */}
-        {lastDone > 0 && (
-          <div className="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-brand"
-            style={{ width: position(lastDone, count) }} />
-        )}
-        {/* Amber road: the stretch being travelled now */}
-        {current > 0 && (
-          <div className={`absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full ${problem ? 'bg-fail/60' : 'bg-hold/70'}`}
-            style={{ left: position(lastDone, count), width: `${(1 / (count - 1)) * 100}%` }} />
-        )}
+        <div className="road-fill absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-brand"
+          style={{ clipPath: cutAt(Math.max(lastDone, 0), count) }} />
 
         {stops.map((stop, i) => {
           let look = 'border-2 border-line bg-surface text-muted' // upcoming
@@ -50,7 +60,8 @@ function Tracker({ stops, reached, showCurrent, problem }) {
           }
           return (
             <span key={stop} style={{ left: position(i, count) }}
-              className={`absolute top-1/2 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-bold ${look}`}>
+              className={`absolute top-1/2 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200 ${look} ${
+                i === count - 1 && justFinished ? 'stop-settle' : ''}`}>
               {i <= lastDone ? <CheckIcon size={14} /> : i + 1}
             </span>
           )
