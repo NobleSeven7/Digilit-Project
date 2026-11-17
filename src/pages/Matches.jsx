@@ -100,7 +100,7 @@ function CarrierCard({ result, rank, shipment, declined, canRequest, onRequest }
             {rules.map((rule) => <PassChip key={rule.key} rule={rule} />)}
           </ul>
           <details className="rule-details group mt-3">
-            <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1.5 rounded-lg font-bold text-brand-ink
+            <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-lg font-bold text-brand-ink
                                 [&::-webkit-details-marker]:hidden">
               <span className="group-open:hidden">See details</span>
               <span className="hidden group-open:inline">Hide details</span>
@@ -211,7 +211,7 @@ export default function Matches({ state, save, id }) {
 
       {/* The published score formula (transparency) */}
       <details className="card mb-6">
-        <summary className="cursor-pointer font-bold">How the score is calculated</summary>
+        <summary className="flex min-h-11 cursor-pointer items-center font-bold">How the score is calculated</summary>
         <ul className="mt-3 list-disc space-y-1 pl-5">
           <li>Time buffer: 50 points if the carrier departs at least 6 hours before your deadline, otherwise 25.</li>
           <li>Capacity fit: 50 × (parcel kg ÷ carrier spare kg). A fuller fit scores higher.</li>

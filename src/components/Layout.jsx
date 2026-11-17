@@ -18,7 +18,7 @@ const NAV_ITEMS = [
 // The RaastaShare logo: two stops joined by a road.
 function Logo() {
   return (
-    <a href="#/home" className="flex min-w-0 items-center gap-2 font-display text-xl font-bold text-white sm:text-2xl">
+    <a href="#/home" className="flex min-h-11 min-w-0 items-center gap-2 font-display text-xl font-bold text-white sm:text-2xl">
       <svg width="36" height="20" viewBox="0 0 36 20" aria-hidden="true" className="shrink-0">
         <path d="M6 10h24" stroke="white" strokeWidth="3" strokeDasharray="4 3" />
         <circle cx="6" cy="10" r="5" fill="white" />
@@ -42,7 +42,7 @@ function ThemeSwitch() {
   return (
     <button type="button" onClick={handleClick} data-testid="theme-switch"
       aria-label={`Switch to ${next} theme`} title={`Switch to ${next} theme`}
-      className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-lg text-white hover:bg-brand-dark">
+      className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-lg text-white hover:bg-brand-dark">
       {next === 'dark' ? <MoonIcon size={22} /> : <SunIcon size={22} />}
     </button>
   )
@@ -51,12 +51,12 @@ function ThemeSwitch() {
 // The simulated sign-in: pick which fictional person you are.
 function ProfileBar({ profile, setProfile }) {
   return (
-    <div className="border-b border-line bg-surface">
+    <aside aria-label="Demo profile" className="border-b border-line bg-surface">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2">
         <label htmlFor="profilePicker" className="text-sm font-bold">Signed in as</label>
         <select id="profilePicker" data-testid="profile-picker" value={profileKey(profile)}
           onChange={(e) => setProfile(findProfile(e.target.value))}
-          className="min-h-10 rounded-lg border border-muted/60 bg-surface px-2 py-1 font-bold text-brand-ink">
+          className="min-h-11 rounded-lg border border-muted/60 bg-surface px-2 py-1 font-bold text-brand-ink">
           <optgroup label="Senders">
             {PROFILES.filter((p) => p.role === 'sender').map((p) => (
               <option key={profileKey(p)} value={profileKey(p)}>{p.name} (sender)</option>
@@ -70,7 +70,7 @@ function ProfileBar({ profile, setProfile }) {
         </select>
         <span className="hidden text-sm text-muted sm:inline">Demo profile. No password, no real account.</span>
       </div>
-    </div>
+    </aside>
   )
 }
 
@@ -94,20 +94,23 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
             <ThemeSwitch />
           </div>
           {/* Desktop navigation (hidden on phones). The current page is a white tab
-              with an amber underline; the others are plain white text. */}
+              with a short amber bar under its name; the others are plain text. */}
           <nav aria-label="Main" className="hidden gap-1 md:ml-auto md:flex">
             {NAV_ITEMS.map((item) => (
               <a
                 key={item.page}
                 href={`#/${item.page}`}
                 aria-current={currentPage === item.page ? 'page' : undefined}
-                className={`rounded-lg border-b-4 px-3 py-1.5 font-bold ${
+                className={`relative flex min-h-11 items-center rounded-lg px-3 font-bold ${
                   currentPage === item.page
-                    ? 'border-hold bg-surface text-brand-ink'
-                    : 'border-transparent text-white/85 hover:bg-brand-dark hover:text-white'
+                    ? 'bg-surface text-brand-ink'
+                    : 'text-on-brand-soft hover:bg-brand-dark hover:text-white'
                 }`}
               >
                 {item.label}
+                {currentPage === item.page && (
+                  <span aria-hidden="true" className="absolute inset-x-3 bottom-1.5 h-1 rounded-full bg-hold" />
+                )}
               </a>
             ))}
           </nav>
