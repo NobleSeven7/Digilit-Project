@@ -19,7 +19,10 @@
   --color-hold: #E0A100;         /* road-marking amber: payment held, warnings */
   --color-hold-ink: #7A5600;     /* amber dark enough to read as text */
   --color-hold-tint: #FBF1D3;
-  --color-fail: #C4372C;         /* signal red: failed rule, dispute */
+  /* Secondary text on the green header, hero and price band. A fixed colour,
+     not see-through white, so its contrast stays 4.5:1 or more. */
+  --color-on-brand-soft: #E2EDE8;
+  --color-fail: #B83228;         /* signal red: failed rule, dispute */
   --color-fail-tint: #FBE6E3;
 
   /* Small print is a little larger than Tailwind's defaults (14px and 12px),
@@ -58,6 +61,7 @@
   --color-hold-tint: #3A2F12;
   --color-fail: #F07A6A;
   --color-fail-tint: #3D1D19;
+  --color-on-brand-soft: #EEF6F3;
 }
 body {
   background: var(--color-paper);
@@ -70,7 +74,10 @@ h1, h2, h3 {
   font-family: var(--font-display);
   line-height: 1.05;
   letter-spacing: 0;
+  text-wrap: balance; /* even line lengths in headings */
 }
+/* Body text avoids a lone word on its last line, where the browser supports it. */
+p, li { text-wrap: pretty; }
 /* The parts of the page the browser draws also use the brand colours:
    selected text, the typing cursor, checkboxes and the scrollbar. */
 ::selection {
@@ -125,7 +132,7 @@ a {
   .label { @apply mb-1 block font-bold; }
   .field {
     @apply block min-h-12 w-full rounded-lg border border-muted/60 bg-surface px-3 py-2
-           text-ink;
+           text-ink placeholder:text-muted;
   }
   .hint { @apply mt-1 text-sm text-muted; }
 }

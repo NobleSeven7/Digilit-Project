@@ -194,7 +194,7 @@ export default function Sender({ state, save, profile, setProfile }) {
                     {itemType === aiResult.suggestedType ? (
                       <span className="text-sm text-muted">Already selected.</span>
                     ) : (
-                      <button type="button" className="btn btn-secondary !min-h-10 !py-1" data-testid="ai-use-type"
+                      <button type="button" className="btn btn-secondary !min-h-11 !py-1" data-testid="ai-use-type"
                         onClick={() => setItemType(aiResult.suggestedType)}>
                         Use this type
                       </button>

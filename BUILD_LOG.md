@@ -587,3 +587,29 @@ reading stay still. Curves come from the existing `--ease-out` and
   row to leave. All 12 tests pass.
 - **Not checked:** how it feels on a real phone; the Admin sliding and smooth
   "See details" fall back to an instant change in browsers without support.
+
+## Stage 20: Impeccable audit fixes
+
+The Impeccable audit scored the live site 16/20. Its five follow-up commands
+were run in order:
+
+- **colorize (contrast):** the red text on the red "failed rule" card went from
+  4.46:1 to 4.97:1 (`--color-fail` now `#B83228`). The faint white notes on the
+  green band (4.45:1 light, 3.75:1 dark) now use a new solid token,
+  `--color-on-brand-soft`, at 4.5:1 or better in both themes. Placeholders use
+  the muted colour.
+- **harden (markup):** the price comparison was a `<dl>` with invalid children;
+  it is now a list. The "Signed in as" bar is now a labelled `<aside>` so it
+  sits inside a landmark.
+- **adapt (tap targets):** the theme switch, profile picker, logo, the "See
+  details" and "How the score is calculated" toggles and "Use this type" are
+  now at least 44px tall.
+- **typeset:** headings use balanced line breaks, paragraphs avoid one-word
+  last lines, and page intros are capped at 65 characters a line.
+- **polish:** the desktop nav tab had a thick bottom border on a rounded box;
+  the current page now shows a short amber bar under its name instead.
+
+Checks: axe-core finds no issues on all 7 pages in both themes; keyboard focus
+is still visible; the Impeccable detector reports one finding (the big Home
+headline, kept on purpose). The only control under 44px is the 24px checkbox,
+whose whole 48px label row is clickable. All 12 tests pass.

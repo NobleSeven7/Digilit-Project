@@ -54,21 +54,21 @@ function StepStop({ number, className }) {
 // It sits on the green band, so everything is white.
 function PriceRow({ name, note, price, highlight }) {
   return (
-    <div>
+    <li>
       <div className="flex items-end justify-between gap-4">
-        <dt className="min-w-0">
+        <p className="min-w-0">
           <span className="font-display text-2xl font-semibold sm:text-3xl">{name}</span>
-          <span className="block text-white/75">{note}</span>
-        </dt>
-        <dd className="whitespace-nowrap font-display text-4xl font-bold tabular-nums leading-none sm:text-7xl">
+          <span className="block text-on-brand-soft">{note}</span>
+        </p>
+        <p className="whitespace-nowrap font-display text-4xl font-bold tabular-nums leading-none sm:text-7xl">
           {formatPKR(price)}
-        </dd>
+        </p>
       </div>
       <div className="mt-3 h-4 rounded-full bg-white/15" aria-hidden="true">
         <div className={`h-4 rounded-full ${highlight ? 'bg-hold' : 'bg-white/45'}`}
           style={{ width: `${(price / COURIER_FEE) * 100}%` }} />
       </div>
-    </div>
+    </li>
   )
 }
 
@@ -148,18 +148,18 @@ export default function Home({ profile, setProfile }) {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-4xl font-bold sm:text-6xl">What it costs</h2>
-            <p className="mt-2 text-lg text-white/85">A {DEMO_KG} kg parcel from Islamabad to Lahore</p>
+            <p className="mt-2 text-lg text-on-brand-soft">A {DEMO_KG} kg parcel from Islamabad to Lahore</p>
           </div>
           <span className="rounded-full bg-hold px-5 py-1.5 font-display text-2xl font-bold text-[#12241B]"
             data-testid="saving-badge">
             Save {savingPercent(DEMO_KG)}%
           </span>
         </div>
-        <dl className="mt-9 space-y-9">
+        <ul className="mt-9 space-y-9">
           <PriceRow name="Courier" note="Typical courier quote" price={COURIER_FEE} />
           <PriceRow name="RaastaShare" highlight price={calculatePrice(DEMO_KG)}
             note={`${formatPKR(BASE_FEE)} base + ${formatPKR(FEE_PER_KG)} × ${DEMO_KG} kg`} />
-        </dl>
+        </ul>
       </section>
 
       {/* Closing: the same two choices as buttons */}
