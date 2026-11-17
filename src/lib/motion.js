@@ -62,6 +62,6 @@ export function shake(element) {
       { transform: 'translateX(3px)' },
       { transform: 'translateX(0)' },
     ],
-    { duration: 420, easing: 'ease-out' },
+    { duration: 400, easing: 'linear' }, // the shrinking steps above already slow it down
   )
 }

@@ -624,3 +624,33 @@ whose whole 48px label row is clickable. All 12 tests pass.
   the gaps between staggered pieces grew by the same amount. Hover and press
   reactions on buttons and cards were left quick on purpose.
 - **Checked:** all 12 tests pass. Reduced-motion users still get fades only.
+
+## Stage 22: five more animations
+
+Picked from a list of places where motion helps someone understand what just
+happened (and a list of places left still on purpose: typing the weight, the
+menus, the profile picker, Dashboard data). Shown as a preview video first.
+
+- **Wrong code shakes (Delivery):** the code box shakes side to side for
+  0.4 s after a wrong pickup or delivery code (`shake` in `src/lib/motion.js`,
+  played with `element.animate()` so it runs again on every wrong try).
+- **Price bars fill (Home):** the bars in "What it costs" fill from the left
+  when the band scrolls into view; the courier bar first, then RaastaShare
+  stopping at half (`useSeenOnce` hook, `clip-path`).
+- **Success tick:** a green circle pops in and a check mark draws itself next
+  to "Delivered and paid" (only right after the correct code) and "Journey
+  posted" (`src/components/SuccessTick.jsx`).
+- **"How it works" lights up (Home):** the road starts grey and turns green
+  stop by stop, each stop lighting up as the road reaches it; downwards on
+  phones.
+- **Page fade:** moving between pages, the old page fades out (180 ms, with a
+  slight blur) as the new one fades in (260 ms), using a view transition.
+- **Design review (emil-design-eng):** the tick and the unlit stops start at
+  90% size instead of 60% / 80% ("nothing appears from nothing"); the old page
+  leaves faster than the new one arrives and blurs a little so two pages never
+  show at once; the shake uses even timing because its shrinking steps already
+  slow it down.
+- **Less motion:** finished pictures straight away, no shake, the tick fades in,
+  pages change at once.
+- **Test change:** test 11 counted the Admin list before the page fade ended;
+  it now waits until the Admin page is showing. All 12 tests pass.

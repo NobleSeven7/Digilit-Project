@@ -260,7 +260,9 @@ details.rule-details[open]::details-content { block-size: auto; }
 /* ---- Motion: added in Stage 22 ---------------------------------------- */
 
 /* Moving between pages: the new page softly fades in over the old one
-   (src/lib/navigation.js). Fade only, nothing slides. */
+   (src/lib/navigation.js). Fade only, nothing slides. The old page leaves
+   faster than the new one arrives, and blurs slightly as it goes so the two
+   pages never read as two overlapping pictures. */
 html[data-transition="page"]::view-transition-old(root) {
   animation: page-out 180ms ease both;
 }
@@ -268,7 +270,7 @@ html[data-transition="page"]::view-transition-new(root) {
   animation: page-in 260ms var(--ease-out) both;
 }
 html[data-transition="page"]::view-transition-group(*) { animation-duration: 260ms; }
-@keyframes page-out { to { opacity: 0; } }
+@keyframes page-out { to { opacity: 0; filter: blur(2px); } }
 @keyframes page-in { from { opacity: 0; } }
 
 /* Home, "What it costs": each bar fills from the left once the band is on
@@ -293,7 +295,7 @@ html[data-transition="page"]::view-transition-group(*) { animation-duration: 260
 .step-stop {
   border-color: var(--color-line);
   color: var(--color-muted);
-  scale: 0.8;
+  scale: 0.9;
   transition: border-color 250ms ease, color 250ms ease, scale 400ms var(--ease-out);
   transition-delay: calc(var(--i, 0) * 550ms);
 }
@@ -303,10 +305,11 @@ html[data-transition="page"]::view-transition-group(*) { animation-duration: 260
   scale: 1;
 }
 
-/* Success: the green circle pops in, then the check mark draws itself. */
+/* Success: the green circle pops in, then the check mark draws itself.
+   It starts at 90% size, never from nothing. */
 .tick-pop { animation: tick-pop 350ms var(--ease-out) both; }
 @keyframes tick-pop {
-  from { opacity: 0; transform: scale(0.6); }
+  from { opacity: 0; transform: scale(0.9); }
 }
 .tick-draw {
   stroke-dasharray: 1;
