@@ -143,8 +143,8 @@ a {
    rides from Islamabad to Lahore once.
    Each piece sets --i (0, 1, 2 ...) to say when its turn comes. */
 .hero-enter {
-  animation: hero-enter 500ms var(--ease-out) backwards;
-  animation-delay: calc(var(--i, 0) * 70ms);
+  animation: hero-enter 700ms var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 100ms);
 }
 @keyframes hero-enter {
   from { opacity: 0; transform: translateY(10px); }
@@ -154,15 +154,15 @@ a {
    line; sliding the dash in makes the line draw itself. */
 .route-draw {
   stroke-dasharray: 1;
-  animation: route-draw 1100ms var(--ease-out) backwards;
-  animation-delay: calc(200ms + var(--i, 0) * 130ms);
+  animation: route-draw 1500ms var(--ease-out) backwards;
+  animation-delay: calc(300ms + var(--i, 0) * 180ms);
 }
 @keyframes route-draw {
   from { stroke-dashoffset: 1; }
 }
 .stop-enter {
-  animation: stop-enter 300ms var(--ease-out) backwards;
-  animation-delay: calc(900ms + var(--i, 0) * 45ms);
+  animation: stop-enter 400ms var(--ease-out) backwards;
+  animation-delay: calc(1300ms + var(--i, 0) * 60ms);
 }
 @keyframes stop-enter {
   from { opacity: 0; }
@@ -177,7 +177,7 @@ a {
     offset-path: path("M220 80 L300 160 H440");
     offset-rotate: 0deg;
     offset-distance: 100%;
-    animation: map-parcel 1900ms var(--ease-in-out) 1500ms backwards;
+    animation: map-parcel 2600ms var(--ease-in-out) 2100ms backwards;
   }
 }
 @keyframes map-parcel {
@@ -193,12 +193,12 @@ a {
 /* ---- Motion: state changes on the Delivery, Matches, Send and Admin pages ----
    Only things that CHANGE move, never the page itself. Each piece names its
    purpose. Curves are --ease-out (appearing) and --ease-in-out (moving
-   across the screen); everything stays under 300ms. */
+   across the screen); each lasts about a third to half a second. */
 
 /* A new card arrives (the next delivery step, ranked carriers): it rises a
    little and fades in. --rise sets how far, --delay when (Matches page). */
 .enter-rise {
-  animation: enter-rise 240ms var(--ease-out) both;
+  animation: enter-rise 360ms var(--ease-out) both;
   animation-delay: var(--delay, 0ms);
 }
 @keyframes enter-rise {
@@ -206,7 +206,7 @@ a {
 }
 
 /* A message banner appears: fade only, it is secondary to the card. */
-.enter-fade { animation: enter-fade 200ms ease both; }
+.enter-fade { animation: enter-fade 300ms ease both; }
 @keyframes enter-fade {
   from { opacity: 0; }
 }
@@ -214,7 +214,7 @@ a {
 /* The AI suggestion card appears from just below the button that asked for it. */
 .enter-pop {
   transform-origin: top center;
-  animation: enter-pop 200ms var(--ease-out) both;
+  animation: enter-pop 300ms var(--ease-out) both;
 }
 @keyframes enter-pop {
   from { opacity: 0; transform: translateY(-4px) scale(0.97); }
@@ -222,11 +222,11 @@ a {
 
 /* Delivery tracker: the green and amber road grows to its new stop. clip-path
    is used instead of width so nothing has to be laid out again. */
-.road-fill { transition: clip-path 300ms var(--ease-in-out); }
+.road-fill { transition: clip-path 450ms var(--ease-in-out); }
 
 /* The one celebration: when the parcel is paid, the last stop settles in as
-   the road arrives (the delay matches the road's 300ms). */
-.stop-settle { animation: stop-settle 320ms var(--ease-out) 260ms both; }
+   the road arrives (the delay matches the road's 450ms). */
+.stop-settle { animation: stop-settle 450ms var(--ease-out) 400ms both; }
 @keyframes stop-settle {
   from { transform: scale(0.8); }
 }
@@ -237,7 +237,7 @@ details.rule-details { interpolate-size: allow-keywords; }
 details.rule-details::details-content {
   block-size: 0;
   overflow: clip;
-  transition: block-size 220ms var(--ease-out), content-visibility 220ms allow-discrete;
+  transition: block-size 320ms var(--ease-out), content-visibility 320ms allow-discrete;
 }
 details.rule-details[open]::details-content { block-size: auto; }
 
@@ -245,7 +245,7 @@ details.rule-details[open]::details-content { block-size: auto; }
    their new places while a removed row fades. The page itself does not fade. */
 ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
 ::view-transition-group(*) {
-  animation-duration: 260ms;
+  animation-duration: 380ms;
   animation-timing-function: var(--ease-in-out);
 }
 

@@ -43,9 +43,9 @@ function PassChip({ rule }) {
 
 // One carrier card. "rank" is set only for eligible carriers.
 // Ranked carriers arrive one after another, best first, with shrinking gaps
-// (0, 50, 90, 120 ms, then the rest together) so the group reads as one wave.
+// (0, 80, 140, 190 ms, then the rest together) so the group reads as one wave.
 // The best match rises the furthest. Not-eligible carriers do not move.
-const ARRIVE_DELAY = [0, 50, 90, 120]
+const ARRIVE_DELAY = [0, 80, 140, 190]
 function arrival(rank) {
   if (!rank) return {}
   return {
