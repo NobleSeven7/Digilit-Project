@@ -10,6 +10,7 @@
   --color-brand-dark: #084F32;   /* pressed / hover state */
   --color-route-2: #3FA37A;      /* second route colour on the Home map */
   --color-route-3: #A3D2BC;      /* third route colour on the Home map */
+  --color-on-hold: #12241B;      /* dark text on an amber background (both themes) */
   --color-brand-tint: #E3F1E9;   /* soft green background */
   --color-ink: #12241B;          /* main text */
   --color-muted: #3D4C44;        /* secondary text (dark enough to read easily in a thin font) */
@@ -76,6 +77,8 @@ h1, h2, h3 {
   letter-spacing: 0;
   text-wrap: balance; /* even line lengths in headings */
 }
+/* Big headings sit a touch tighter: letters look further apart as they grow. */
+h1 { letter-spacing: -0.01em; }
 /* Body text avoids a lone word on its last line, where the browser supports it. */
 p, li { text-wrap: pretty; }
 /* The parts of the page the browser draws also use the brand colours:
@@ -122,6 +125,10 @@ a {
 :root {
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  /* Elevation: only cards you can click rest on a shadow and lift when
+     pointed at; a card floating over a picture uses the lifted shadow. */
+  --shadow-rest: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-lift: 0 12px 24px -14px rgba(0, 0, 0, 0.45);
 }
 
 /* Clear keyboard-focus ring on everything clickable (accessibility). */
@@ -133,6 +140,17 @@ a {
 /* ---- Reusable building blocks (used all over the pages) ------------- */
 @layer components {
   .card { @apply rounded-xl border border-line bg-surface p-4 sm:p-5; }
+  /* A whole card that is a link: rests on a soft shadow, lifts a little when
+     pointed at (mouse only) and presses in when tapped. */
+  .card-link {
+    box-shadow: var(--shadow-rest);
+    transition: translate 200ms var(--ease-out), scale 160ms var(--ease-out), box-shadow 200ms var(--ease-out);
+  }
+  .card-link:active { scale: 0.98; }
+  @media (hover: hover) and (pointer: fine) {
+    .card-link:hover { translate: 0 -2px; border-color: var(--color-brand-ink); box-shadow: var(--shadow-lift); }
+  }
+  @media (prefers-reduced-motion: reduce) { .card-link { transition: none; } }
 
   .btn {
     @apply inline-flex min-h-12 cursor-pointer items-center justify-center rounded-lg
@@ -165,6 +183,8 @@ a {
            text-ink placeholder:text-muted;
   }
   .hint { @apply mt-1 text-sm text-muted; }
+  /* A field with a problem: red border, matching the message under it. */
+  .field[aria-invalid="true"] { @apply border-2 border-fail; }
 }
 
 /* ---- Home page: the one moment of motion --------------------------------
@@ -301,6 +321,12 @@ html[data-transition="page"]::view-transition-new(root) {
 }
 html[data-transition="page"]::view-transition-group(*) { animation-duration: 260ms; }
 @keyframes page-out { to { opacity: 0; filter: blur(2px); } }
+
+/* Switching light/dark: the old colours fade out as the new ones fade in. */
+html[data-transition="theme"]::view-transition-old(root) { animation: theme-out 300ms ease both; }
+html[data-transition="theme"]::view-transition-new(root) { animation: page-in 300ms ease both; }
+html[data-transition="theme"]::view-transition-group(*) { animation-duration: 300ms; }
+@keyframes theme-out { to { opacity: 0; } }
 @keyframes page-in { from { opacity: 0; } }
 
 /* Home, "What it costs": each bar fills from the left once the band is on

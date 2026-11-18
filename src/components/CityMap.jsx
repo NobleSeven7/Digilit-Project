@@ -27,7 +27,7 @@ export default function CityMap({ origin, destination }) {
   return (
     <figure className="flex h-full flex-col justify-center rounded-lg bg-paper p-3" data-testid="city-map"
       data-route={hasRoute ? `${origin}-${destination}` : ''}>
-      <svg viewBox="0 0 385 360" className="mx-auto block w-full max-w-64" role="img"
+      <svg viewBox="0 0 385 360" className="mx-auto block w-full max-w-sm" role="img"
         aria-label={hasRoute
           ? `Map showing the route from ${origin} to ${destination}`
           : 'Map of the eight cities'}>
@@ -44,18 +44,18 @@ export default function CityMap({ origin, destination }) {
         {/* Every city: grey unless it is one end of the chosen route */}
         {Object.entries(PLACES).map(([name, place]) => {
           const chosen = name === origin || name === destination
-          const gap = chosen ? 16 : 11
+          const gap = chosen ? 18 : 12
           return (
             <g key={name}>
-              <circle cx={place.x} cy={place.y} r={chosen ? 9 : 5} fill="var(--color-surface)"
+              <circle cx={place.x} cy={place.y} r={chosen ? 10 : 6} fill="var(--color-surface)"
                 stroke={chosen ? 'var(--color-brand-ink)' : 'var(--color-muted)'}
                 strokeWidth={chosen ? 4 : 2} />
               {/* The white outline keeps a name readable where the road passes behind it */}
               <text x={place.side === 'left' ? place.x - gap : place.x + gap} y={place.y + 5}
                 textAnchor={place.side === 'left' ? 'end' : 'start'}
-                fontSize={chosen ? 16 : 13} fontWeight={chosen ? 700 : 400}
+                fontSize={chosen ? 22 : 18} fontWeight={chosen ? 700 : 400}
                 fill={chosen ? 'var(--color-ink)' : 'var(--color-muted)'}
-                stroke="var(--color-paper)" strokeWidth="4" paintOrder="stroke">
+                stroke="var(--color-paper)" strokeWidth="5" paintOrder="stroke">
                 {name}
               </text>
             </g>

@@ -127,7 +127,7 @@ shows what was sent.
 | Page | What it does |
 |---|---|
 | Home | Choose a Sender or Carrier profile (this also signs you in as a demo person with that role) |
-| Send | Post a shipment, including the prohibited-items checklist. An optional AI parcel check suggests an item type and spots possibly prohibited items |
+| Send | Post a parcel, including the prohibited-items checklist. An optional AI parcel check suggests an item type and spots possibly prohibited items |
 | Carry | Post a journey with vehicle type and spare capacity; see the parcels that fit a journey and offer to carry one |
 | Matches | The sender's view: ranked carriers, with a pass or fail for each of the four rules |
 | Delivery | Each person accepts as themselves, then pickup code, delivery code, escrow release |
@@ -160,7 +160,7 @@ decided while building:
 | 3 | Timing is strict: the carrier must depart before the deadline, not at the same time | The proposal does not say how to treat an exact tie in time |
 | 4 | If two carriers have the same score, the one departing earlier is shown first | Ranking needs a tie-breaker |
 | 5 | Sender and carrier accept on the same device by switching profile with the "Signed in as" picker | There are no real accounts in the prototype |
-| 6 | Matching time is measured in the app, from pressing "Post shipment" to the ranked result | The proposal names the metric but not where the clock starts and stops |
+| 6 | Matching time is measured in the app, from pressing "Post parcel" to the ranked result | The proposal names the metric but not where the clock starts and stops |
 | 7 | Cost saved uses the same PKR 1,000 courier baseline for every delivery; a parcel that costs more than that (over about 13 kg) counts as no saving rather than a negative one | The baseline is a 5 kg quote; quotes for other weights are not yet collected |
 | 8 | The admin can cancel or re-check an unmatched request, allow or cancel an AI-flagged item, and settle a dispute by paying the carrier or refunding the sender | The proposal says "admin review" without listing the possible decisions |
 | 9 | A carrier's spare capacity is not reduced after a match; each journey carries one parcel in the demo | Keeps the demo simple; several parcels on one trip is future work |

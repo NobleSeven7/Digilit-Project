@@ -28,6 +28,12 @@ function CheckCounter({ count, total }) {
   )
 }
 
+// The message under a field that needs fixing (nothing when it is fine).
+function FieldError({ error, field }) {
+  if (error?.field !== field) return null
+  return <p id={`${field}-error`} className="mt-1 font-bold text-fail">{error.text}</p>
+}
+
 const PROHIBITED = [
   'No weapons, ammunition or explosives',
   'No illegal drugs, alcohol or tobacco in bulk',
@@ -45,7 +51,12 @@ export default function Sender({ state, save, profile, setProfile }) {
   const [itemType, setItemType] = useState('Small parcel')
   const [deadline, setDeadline] = useState(dayAt(1, 18)) // default: tomorrow 6 pm
   const [ticked, setTicked] = useState(PROHIBITED.map(() => false))
-  const [error, setError] = useState('')
+  // The problem to fix, shown under the field it is about: { field, text }.
+  const [error, setError] = useState(null)
+  const fail = (field, text) => setError({ field, text })
+  // Props for a field: marks it as wrong and links it to its message.
+  const errorProps = (field) => (error?.field === field
+    ? { 'aria-invalid': true, 'aria-describedby': `${field}-error` } : {})
 
   // The AI parcel check: what the sender typed, whether we are waiting for
   // an answer, and the answer itself (null until a check has been run).
@@ -96,13 +107,13 @@ export default function Sender({ state, save, profile, setProfile }) {
     event.preventDefault() // stop the browser from reloading the page
 
     // Check the inputs and explain any problem in plain words.
-    if (origin === destination) return setError('Choose two different cities.')
+    if (origin === destination) return fail('route', 'Choose two different cities.')
     // Same limits as the weight box (0.5 to 200 kg), so a typo such as
     // 999999 kg cannot be posted as a "small parcel".
-    if (!(weight >= 0.5 && weight <= 200)) return setError('Enter a parcel weight between 0.5 and 200 kg.')
-    if (new Date(deadline) <= new Date()) return setError('The deadline must be in the future.')
-    if (!allTicked) return setError('Tick every line of the prohibited-items checklist.')
-    setError('')
+    if (!(weight >= 0.5 && weight <= 200)) return fail('weight', 'Enter a weight between 0.5 and 200 kg.')
+    if (new Date(deadline) <= new Date()) return fail('deadline', 'Choose a deadline in the future.')
+    if (!allTicked) return fail('checklist', 'Tick every line of the prohibited-items checklist.')
+    setError(null)
 
     // The parcel check suggested a different item type: ask before posting,
     // so the suggestion is not lost by accident. The sender still decides.
@@ -150,7 +161,7 @@ export default function Sender({ state, save, profile, setProfile }) {
       shipmentId: shipment.id, senderName, origin, destination, weightKg: weight,
       itemType: type, deadline, status: shipment.status, price: calculatePrice(weight),
       eligibleCarriers: eligible.length, matchingMs,
-    }, `Shipment posted: ${origin} to ${destination}, ${weight} kg`)
+    }, `Parcel posted: ${origin} to ${destination}, ${weight} kg`)
 
     goTo(`matches/${shipment.id}`) // show the ranked results
   }
@@ -159,7 +170,7 @@ export default function Sender({ state, save, profile, setProfile }) {
   if (profile.role !== 'sender') {
     return (
       <div>
-        <PageHeader title="Post a shipment" />
+        <PageHeader title="Post a parcel" />
         <RoleNotice profile={profile} setProfile={setProfile} needs="sender" action="post a parcel" />
       </div>
     )
@@ -167,7 +178,7 @@ export default function Sender({ state, save, profile, setProfile }) {
 
   return (
     <div>
-      <PageHeader title="Post a shipment">
+      <PageHeader title="Post a parcel">
         Tell us what you are sending and when it must leave. We check every carrier
         on that route and rank the ones that fit.
       </PageHeader>
@@ -257,16 +268,18 @@ export default function Sender({ state, save, profile, setProfile }) {
                 </div>
                 <div>
                   <label className="label" htmlFor="destination">To</label>
-                  <select id="destination" className="field" value={destination}
+                  <select id="destination" className="field" value={destination} {...errorProps('route')}
                     onChange={(e) => setDestination(e.target.value)}>
                     {CITIES.map((city) => <option key={city}>{city}</option>)}
                   </select>
+                  <FieldError error={error} field="route" />
                 </div>
                 <div>
                   <label className="label" htmlFor="weightKg">Weight (kg)</label>
                   <input id="weightKg" className="field" type="number" inputMode="decimal"
-                    min="0.5" max="200" step="0.5" value={weightKg}
+                    min="0.5" max="200" step="0.5" value={weightKg} {...errorProps('weight')}
                     onChange={(e) => setWeightKg(e.target.value)} />
+                  <FieldError error={error} field="weight" />
                 </div>
                 <div>
                   <label className="label" htmlFor="itemType">Item type</label>
@@ -274,6 +287,16 @@ export default function Sender({ state, save, profile, setProfile }) {
                     onChange={(e) => { setItemType(e.target.value); setAskType(false) }}>
                     {ITEM_TYPES.map((type) => <option key={type}>{type}</option>)}
                   </select>
+                  {/* The parcel check's suggestion, right where the type is chosen */}
+                  {aiResult && aiResult.suggestedType !== itemType && (
+                    <p className="mt-2 flex flex-wrap items-center gap-2 text-sm" data-testid="ai-type-hint">
+                      <span>The check suggests <strong>{aiResult.suggestedType}</strong>.</span>
+                      <button type="button" className="btn btn-secondary !min-h-11 !px-3 !py-1"
+                        onClick={() => setItemType(aiResult.suggestedType)}>
+                        Use {aiResult.suggestedType}
+                      </button>
+                    </p>
+                  )}
                 </div>
               </div>
               <CityMap origin={origin} destination={destination} />
@@ -281,8 +304,9 @@ export default function Sender({ state, save, profile, setProfile }) {
 
             <div>
               <label className="label" htmlFor="deadline">Deadline</label>
-              <input id="deadline" className="field" type="datetime-local" value={deadline}
+              <input id="deadline" className="field" type="datetime-local" value={deadline} {...errorProps('deadline')}
                 onChange={(e) => setDeadline(e.target.value)} />
+              <FieldError error={error} field="deadline" />
               <p className="hint">The carrier must depart before this time.</p>
             </div>
           </div>
@@ -312,12 +336,14 @@ export default function Sender({ state, save, profile, setProfile }) {
             {formatPKR(weight > 0 ? calculatePrice(weight) : 0)}
           </p>
           <p className="text-sm text-muted">
-            PKR 200 base fee + PKR 60 × {weight > 0 ? weight : 0} kg. You pay into escrow only
-            after a carrier accepts.
+            PKR 200 base fee + PKR 60 × {weight > 0 ? weight : 0} kg. Nothing is paid until a
+            carrier accepts; then RaastaShare holds the money (escrow) until delivery is confirmed.
           </p>
 
           {error && (
-            <p role="alert" className="rounded-lg bg-fail-tint px-3 py-2 font-bold text-fail">{error}</p>
+            <p role="alert" className="rounded-lg bg-fail-tint px-3 py-2 font-bold text-fail">
+              {error.field === 'checklist' ? error.text : 'Check the field marked in red.'}
+            </p>
           )}
           <div aria-live="polite">
             <CheckCounter count={tickedCount} total={PROHIBITED.length} />
@@ -342,7 +368,7 @@ export default function Sender({ state, save, profile, setProfile }) {
           ) : (
             <button type="submit" className="btn btn-primary w-full" disabled={!allTicked}
               data-testid="post-shipment">
-              Post shipment
+              Post parcel
             </button>
           )}
         </aside>

@@ -2,7 +2,10 @@
 import { BASE_FEE, FEE_PER_KG, COURIER_FEE } from '../data/constants.js'
 import { calculatePrice, savingPercent } from '../lib/pricing.js'
 import { formatPKR } from '../lib/format.js'
-import { ParcelIcon, CarIcon, ArrowRightIcon } from '../components/Icons.jsx'
+import { ParcelIcon, CarIcon, ArrowRightIcon, CheckIcon, VehicleIcon } from '../components/Icons.jsx'
+import { createSampleData } from '../data/sampleData.js'
+import { findMatches } from '../lib/matching.js'
+import { formatDateTime } from '../lib/format.js'
 import HeroMap from '../components/HeroMap.jsx'
 import { firstWithRole } from '../lib/profile.js'
 import { useSeenOnce } from '../lib/motion.js'
@@ -15,11 +18,7 @@ const DEMO_KG = 5
 function ChoiceCard({ href, testId, icon, title, text, onClick }) {
   return (
     <a href={href} data-testid={testId} onClick={onClick}
-      className="group flex items-center gap-4 rounded-xl border border-line bg-surface p-4 text-ink
-                 shadow-[0_1px_2px_rgba(0,0,0,0.06)]
-                 transition-[translate,scale,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]
-                 hover:-translate-y-0.5 hover:border-brand-ink hover:shadow-[0_12px_24px_-14px_rgba(0,0,0,0.45)]
-                 active:scale-[0.98] motion-reduce:transition-none sm:p-5">
+      className="card-link group flex items-center gap-4 rounded-xl border border-line bg-surface p-4 text-ink sm:p-5">
       <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand-ink">
         {icon}
       </span>
@@ -27,11 +26,51 @@ function ChoiceCard({ href, testId, icon, title, text, onClick }) {
         <span className="block whitespace-nowrap font-display text-2xl font-bold text-brand-ink">{title}</span>
         <span className="mt-0.5 block text-sm text-muted">{text}</span>
       </span>
-      <span className="text-brand-ink transition-[translate] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]
+      <span className="text-brand-ink transition-[translate] duration-200 ease-[var(--ease-out)]
                        group-hover:translate-x-1 motion-reduce:transition-none">
         <ArrowRightIcon size={22} />
       </span>
     </a>
+  )
+}
+
+// The real product on the Home page: the matching engine's best carrier for
+// the demo parcel (Islamabad to Lahore, 5 kg), worked out from the fresh
+// sample data, so it always shows what the Matches page would show.
+function BestMatchCard() {
+  const sample = createSampleData()
+  const parcel = sample.shipments.find((s) => s.id === 's-demo')
+  const best = findMatches(parcel, sample.journeys).eligible[0]
+  if (!best) return null
+  const { journey, rules, score } = best
+  const total = Math.round(score.total)
+  return (
+    <div className="hero-enter card relative z-10 mx-auto w-full max-w-sm shadow-[var(--shadow-lift)] [--i:3] lg:-mt-14 lg:mr-0"
+      data-testid="hero-best-match" aria-label="Example: the best match for a 5 kg parcel from Islamabad to Lahore">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand-ink">
+            <VehicleIcon type={journey.vehicleType} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-brand-ink">Best match for {parcel.weightKg} kg to {parcel.destination}</p>
+            <p className="font-display text-xl font-bold">{journey.carrierName}</p>
+            <p className="text-sm text-muted">{journey.vehicleType}, departs {formatDateTime(journey.departure)}</p>
+          </div>
+        </div>
+        <p className="shrink-0 font-display text-3xl font-bold leading-none text-brand-ink">
+          {total}<span className="text-base text-muted"> / 100</span>
+        </p>
+      </div>
+      <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="All four rules passed">
+        {rules.map((rule) => (
+          <li key={rule.key}
+            className="inline-flex items-center gap-1 rounded-full bg-brand-tint px-2.5 py-0.5 text-sm font-bold text-brand-ink">
+            <CheckIcon size={12} />{rule.label}
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 
@@ -100,6 +139,9 @@ export default function Home({ profile, setProfile }) {
             RaastaShare matches your parcel with a traveller who has spare space on the
             same intercity route. Payment stays in escrow until delivery is confirmed.
           </p>
+          <p className="hero-enter mt-4 max-w-md font-bold [--i:1]" data-testid="hero-fact">
+            Islamabad to Lahore, 5 kg: {formatPKR(calculatePrice(DEMO_KG))} instead of about {formatPKR(COURIER_FEE)} by courier.
+          </p>
 
           {/* The two profile choices (simulated accounts: no login needed) */}
           <div className="hero-enter mt-7 grid max-w-md gap-3 [--i:2]">
@@ -110,7 +152,11 @@ export default function Home({ profile, setProfile }) {
           </div>
         </div>
 
-        <HeroMap />
+        {/* The route map, with a real ranked result from the matching engine */}
+        <div>
+          <HeroMap />
+          <BestMatchCard />
+        </div>
       </section>
 
       {/* How it works: the three steps as stops along one road */}
@@ -167,7 +213,7 @@ export default function Home({ profile, setProfile }) {
             <h2 className="text-4xl font-bold sm:text-6xl">What it costs</h2>
             <p className="mt-2 text-lg text-on-brand-soft">A {DEMO_KG} kg parcel from Islamabad to Lahore</p>
           </div>
-          <span className="rounded-full bg-hold px-5 py-1.5 font-display text-2xl font-bold text-[#12241B]"
+          <span className="rounded-full bg-hold px-5 py-1.5 font-display text-2xl font-bold text-on-hold"
             data-testid="saving-badge">
             Save {savingPercent(DEMO_KG)}%
           </span>

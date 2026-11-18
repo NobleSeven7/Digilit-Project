@@ -5,10 +5,22 @@ import { STATUS, DELIVERY, ESCROW } from '../data/constants.js'
 const GOOD = ['Accepted', STATUS.FOUND, STATUS.MATCHED, STATUS.DELIVERED, DELIVERY.IN_TRANSIT, ESCROW.RELEASED]
 const BAD = ['Not eligible', STATUS.DISPUTED, STATUS.CANCELLED, STATUS.FLAGGED, DELIVERY.DECLINED, ESCROW.FROZEN]
 
+// "good" (green), "bad" (red) or "waiting" (amber). The Dashboard bars use
+// the same families, so a status has one colour everywhere.
+export function statusTone(status) {
+  if (GOOD.includes(status)) return 'good'
+  if (BAD.includes(status)) return 'bad'
+  return 'waiting'
+}
+
+const COLOURS = {
+  good: 'bg-brand-tint text-brand-ink border-brand-ink',
+  bad: 'bg-fail-tint text-fail border-fail',
+  waiting: 'bg-hold-tint text-hold-ink border-hold',
+}
+
 export default function StatusBadge({ status }) {
-  let colours = 'bg-hold-tint text-hold-ink border-hold' // default: amber = waiting
-  if (GOOD.includes(status)) colours = 'bg-brand-tint text-brand-ink border-brand-ink'
-  if (BAD.includes(status)) colours = 'bg-fail-tint text-fail border-fail'
+  const colours = COLOURS[statusTone(status)]
 
   return (
     <span data-testid="status" className={`inline-block rounded-full border px-3 py-0.5 text-sm font-bold transition-colors duration-200 ${colours}`}>

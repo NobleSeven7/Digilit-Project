@@ -211,7 +211,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
       update({ status: DELIVERY.IN_TRANSIT })
       setMessage({ ok: true, text: 'Pickup confirmed. The parcel is on its way.' })
     } else {
-      setMessage({ ok: false, text: 'Wrong pickup code. The parcel has not been handed over.' })
+      setMessage({ ok: false, text: `Wrong pickup code. The parcel has not been handed over. Ask ${shipment.senderName} to read the code again.` })
       return false
     }
   }
@@ -230,7 +230,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
     } else {
       // Wrong code: nothing changes, the money stays in escrow.
       update({ wrongAttempts: delivery.wrongAttempts + 1 })
-      setMessage({ ok: false, text: `Wrong delivery code. ${amount} stays in escrow.` })
+      setMessage({ ok: false, text: `Wrong delivery code. ${amount} stays in escrow. Ask the receiver to read the code again.` })
       return false
     }
   }
@@ -476,8 +476,9 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
           <p className="mt-2 font-display text-4xl font-bold text-brand-ink">{amount}</p>
           <p className="mt-2" data-testid="escrow-status"><StatusBadge status={delivery.escrow} /></p>
           <p className="mt-3 text-sm text-muted">
-            Simulated payment. The fee is held when both sides accept and released only
-            when the correct delivery code is entered.
+            Escrow means RaastaShare holds the money safely: it is held when both sides
+            accept and paid to the carrier only when the correct delivery code is entered.
+            The payment is simulated in this demo.
           </p>
           {delivery.wrongAttempts > 0 && delivery.escrow === ESCROW.HELD && (
             <p className="mt-2 text-sm text-fail">
