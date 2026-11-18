@@ -10,6 +10,18 @@ const STATUS_ORDER = [STATUS.FOUND, STATUS.MATCHED, STATUS.DELIVERED,
   STATUS.RETRYING, STATUS.FLAGGED, STATUS.DISPUTED, STATUS.CANCELLED]
 // Bar colour per status family (same families as the status badges).
 const BAR = { good: 'bg-brand', waiting: 'bg-hold', bad: 'bg-fail' }
+// The road on a delivery card: its colour matches the status badge beside
+// it, and it fills as far as the parcel has got. A delivery that went wrong
+// (disputed, refunded, declined) shows the whole road in red.
+const ROAD_FILL = {
+  [DELIVERY.AWAITING_ACCEPT]: 8,
+  [DELIVERY.AWAITING_PICKUP]: 33,
+  [DELIVERY.IN_TRANSIT]: 66,
+}
+function road(status) {
+  return { colour: BAR[statusTone(status)] ?? 'bg-hold', fill: ROAD_FILL[status] ?? 100 }
+}
+
 // The proposal's target band for spare capacity used.
 const TARGET_LOW = 40
 const TARGET_HIGH = 60
@@ -108,7 +120,7 @@ export default function Dashboard({ state }) {
           value={timed.length === 0 ? '—'
             : averageMs < 1000 ? `${Math.round(averageMs * 10) / 10} ms` : `${Math.round(averageMs / 100) / 10} s`}
           note={timed.length === 0 ? 'No matches yet, so nothing to measure.'
-            : averageMs < 60000 ? 'From posting to ranked results, well inside the 1-minute target.'
+            : averageMs < 60000 ? 'From posting to ranked results, well inside the 1\u2011minute target.'
               : 'From posting to ranked results. The target is under 1 minute.'} />
         <Metric label="Cost saved" value={formatPKR(costSaved)} testId="metric-saved"
           note={`${savedPercent}% less than a ${formatPKR(COURIER_FEE)} courier, over ${completed.length} completed deliveries.`} />
@@ -164,15 +176,16 @@ export default function Dashboard({ state }) {
             {recent.map(({ d, s, j }) => (
               <li key={d.id}>
                 <a href={`#/delivery/${d.id}`}
-                  className="card card-link block text-ink no-underline">
+                  className="card card-link block h-full text-ink no-underline">
                   <div className="flex items-baseline justify-between gap-3 font-display text-lg font-bold">
                     <span>{s.origin}</span>
                     <span className="text-right">{s.destination}</span>
                   </div>
                   {/* A short road between the two cities */}
-                  <div className="relative mt-1 h-2 rounded-full bg-brand" aria-hidden="true">
-                    <span className="absolute -top-0.5 left-0 size-3 rounded-full border-2 border-brand-ink bg-surface" />
-                    <span className="absolute -top-0.5 right-0 size-3 rounded-full border-2 border-brand-ink bg-surface" />
+                  <div className="relative mt-1 h-2 rounded-full bg-line" aria-hidden="true">
+                    <div className={`h-2 rounded-full ${road(d.status).colour}`} style={{ width: `${road(d.status).fill}%` }} />
+                    <span className="absolute -top-0.5 left-0 size-3 rounded-full border-2 border-ink/60 bg-surface" />
+                    <span className="absolute -top-0.5 right-0 size-3 rounded-full border-2 border-ink/60 bg-surface" />
                   </div>
                   <p className="mt-3 text-sm text-muted">
                     {s.weightKg} kg from {isolate(s.senderName)}, carried by {isolate(j.carrierName)}.{' '}

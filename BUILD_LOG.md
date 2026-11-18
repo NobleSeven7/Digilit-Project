@@ -817,3 +817,13 @@ the following.
   - 9 new browser checks pass, and the 19 earlier checks still pass.
   - axe is clean; no page errors.
 - README assumptions #11 and #13 updated.
+
+## Stage 28: Dashboard delivery cards
+
+- Each road on "Recent deliveries" matches its status badge and fills as far
+  as the parcel has got: about a third awaiting pickup, two thirds in transit,
+  full when delivered. A disputed delivery is fully red, so it no longer looks
+  like a finished trip.
+- The two cards in a row are the same height.
+- "1-minute" uses a non-breaking hyphen, so it no longer splits across lines.
+- "Total shipments" stays as it is, matching the proposal and Looker.
