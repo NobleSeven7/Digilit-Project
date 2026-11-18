@@ -1,5 +1,6 @@
 // Matches page: ranked carriers for one shipment, and for every carrier
 // the result of each of the four rules, so the decision is transparent.
+import { useState } from 'react'
 import { STATUS, DELIVERY, FLAG_AFTER_HOURS } from '../data/constants.js'
 import { findMatches } from '../lib/matching.js'
 import { calculatePrice, calculateSaving } from '../lib/pricing.js'
@@ -125,14 +126,29 @@ function CarrierCard({ result, rank, shipment, declined, canRequest, onRequest }
       {eligible && !declined && canRequest && (
         <button type="button" className={`btn mt-4 w-full sm:w-auto ${rank === 1 ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => onRequest(journey)} data-testid="request-carrier">
-          Request {journey.carrierName.split(' ')[0]}
+          Request {journey.carrierName}
         </button>
       )}
     </li>
   )
 }
 
+// On a busy route the lists can be long, so each starts with this many cards.
+const FIRST_SHOWN = 5
+
+// "Show all 30 carriers": a plain button under a shortened list.
+function ShowAll({ total, onClick }) {
+  return (
+    <button type="button" className="btn btn-secondary mt-4 w-full sm:w-auto" onClick={onClick}>
+      Show all {total}
+    </button>
+  )
+}
+
 export default function Matches({ state, save, id }) {
+  // Which lists are opened in full: "shipmentId:eligible" / "shipmentId:other".
+  const [opened, setOpened] = useState([])
+
   // Newest shipments first in the picker.
   const shipments = [...state.shipments].reverse()
   // Show the shipment named in the address bar, or the newest one.
@@ -161,6 +177,13 @@ export default function Matches({ state, save, id }) {
   // The sender can request a carrier only while the shipment is still open.
   const canRequest = [STATUS.FOUND, STATUS.RETRYING, STATUS.FLAGGED].includes(shipment.status)
   const price = calculatePrice(shipment.weightKg)
+
+  // Long lists show the first few cards until "Show all" is pressed.
+  const isOpen = (list) => opened.includes(`${shipment.id}:${list}`)
+  const open = (list) => setOpened([...opened, `${shipment.id}:${list}`])
+  const shownOffered = isOpen('eligible') ? offered : offered.slice(0, FIRST_SHOWN)
+  const others = [...declined.map((r) => ({ ...r, declined: true })), ...ineligible]
+  const shownOthers = isOpen('other') ? others : others.slice(0, FIRST_SHOWN)
 
   // Sender picks a carrier: create a delivery that both sides must accept.
   function handleRequest(journey) {
@@ -234,12 +257,17 @@ export default function Matches({ state, save, id }) {
             </p>
           </div>
         ) : (
-          <ol className="space-y-4" key={shipment.id}>
-            {offered.map((result, index) => (
-              <CarrierCard key={result.journey.id} result={result} rank={index + 1}
-                shipment={shipment} canRequest={canRequest} onRequest={handleRequest} />
-            ))}
-          </ol>
+          <>
+            <ol className="space-y-4" key={shipment.id}>
+              {shownOffered.map((result, index) => (
+                <CarrierCard key={result.journey.id} result={result} rank={index + 1}
+                  shipment={shipment} canRequest={canRequest} onRequest={handleRequest} />
+              ))}
+            </ol>
+            {shownOffered.length < offered.length && (
+              <ShowAll total={`${offered.length} eligible carriers`} onClick={() => open('eligible')} />
+            )}
+          </>
         )}
       </section>
 
@@ -250,13 +278,13 @@ export default function Matches({ state, save, id }) {
             {ineligible.length + declined.length} not available, and why
           </h2>
           <ul className="space-y-4">
-            {declined.map((result) => (
-              <CarrierCard key={result.journey.id} result={result} shipment={shipment} declined />
-            ))}
-            {ineligible.map((result) => (
-              <CarrierCard key={result.journey.id} result={result} shipment={shipment} />
+            {shownOthers.map((result) => (
+              <CarrierCard key={result.journey.id} result={result} shipment={shipment} declined={result.declined} />
             ))}
           </ul>
+          {shownOthers.length < others.length && (
+            <ShowAll total={`${others.length} not available`} onClick={() => open('other')} />
+          )}
         </section>
       )}
     </div>

@@ -1,6 +1,6 @@
 // Sender page: post a shipment. The sender must tick every line of the
 // prohibited-items checklist before the parcel can be posted.
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { CITIES, ITEM_TYPES, STATUS } from '../data/constants.js'
 import { findMatches } from '../lib/matching.js'
 import { calculatePrice } from '../lib/pricing.js'
@@ -52,6 +52,10 @@ export default function Sender({ state, save, profile, setProfile }) {
   const [description, setDescription] = useState('')
   const [checking, setChecking] = useState(false)
   const [aiResult, setAiResult] = useState(null)
+  // True while we ask "the check suggested another item type: which one?"
+  const [askType, setAskType] = useState(false)
+  // Set once the shipment is saved, so a double tap cannot post it twice.
+  const posted = useRef(false)
 
   const weight = Number(weightKg)
   const allTicked = ticked.every(Boolean)
@@ -93,16 +97,31 @@ export default function Sender({ state, save, profile, setProfile }) {
 
     // Check the inputs and explain any problem in plain words.
     if (origin === destination) return setError('Choose two different cities.')
-    if (!(weight > 0)) return setError('Enter the parcel weight in kg (more than 0).')
+    // Same limits as the weight box (0.5 to 200 kg), so a typo such as
+    // 999999 kg cannot be posted as a "small parcel".
+    if (!(weight >= 0.5 && weight <= 200)) return setError('Enter a parcel weight between 0.5 and 200 kg.')
     if (new Date(deadline) <= new Date()) return setError('The deadline must be in the future.')
     if (!allTicked) return setError('Tick every line of the prohibited-items checklist.')
+    setError('')
+
+    // The parcel check suggested a different item type: ask before posting,
+    // so the suggestion is not lost by accident. The sender still decides.
+    if (aiResult && aiResult.suggestedType !== itemType) return setAskType(true)
+
+    post(itemType)
+  }
+
+  // Save the shipment, run matching, log it and open the results.
+  function post(type) {
+    if (posted.current) return // already posted (e.g. a double tap)
+    posted.current = true
 
     // Start a timer so we can measure how long matching takes.
     const startedAt = performance.now()
 
     const shipment = {
       id: makeId('s'),
-      senderName, origin, destination, itemType, deadline,
+      senderName, origin, destination, itemType: type, deadline,
       weightKg: weight,
       createdAt: new Date().toISOString(),
       rejectedJourneyIds: [],
@@ -129,7 +148,7 @@ export default function Sender({ state, save, profile, setProfile }) {
     // Log the shipment to Make.com / Google Sheets (skipped if no webhook URL).
     sendToWebhook('shipment', {
       shipmentId: shipment.id, senderName, origin, destination, weightKg: weight,
-      itemType, deadline, status: shipment.status, price: calculatePrice(weight),
+      itemType: type, deadline, status: shipment.status, price: calculatePrice(weight),
       eligibleCarriers: eligible.length, matchingMs,
     }, `Shipment posted: ${origin} to ${destination}, ${weight} kg`)
 
@@ -175,6 +194,12 @@ export default function Sender({ state, save, profile, setProfile }) {
                   {checking ? 'Checking…' : 'Check with AI'}
                 </button>
               </div>
+              {checking && (
+                <p className="hint" data-testid="ai-waiting">
+                  Asking the AI. If it does not answer within about 8 seconds, a simple keyword
+                  check is used instead.
+                </p>
+              )}
               <p className="hint">
                 Optional. Describe the item only: no names, addresses or phone numbers. The text is
                 sent to an AI service to suggest an item type and spot prohibited items.
@@ -189,6 +214,11 @@ export default function Sender({ state, save, profile, setProfile }) {
                   <p className="text-sm font-bold">
                     {aiResult.source}
                   </p>
+                  {aiResult.source === SOURCE.OFFLINE && (
+                    <p className="text-sm text-muted">
+                      The AI service did not answer, so this result comes from a simple keyword check.
+                    </p>
+                  )}
                   <div className="mt-2 flex flex-wrap items-center gap-3">
                     <p>Suggested item type: <strong>{aiResult.suggestedType}</strong></p>
                     {itemType === aiResult.suggestedType ? (
@@ -241,7 +271,7 @@ export default function Sender({ state, save, profile, setProfile }) {
                 <div>
                   <label className="label" htmlFor="itemType">Item type</label>
                   <select id="itemType" className="field" value={itemType}
-                    onChange={(e) => setItemType(e.target.value)}>
+                    onChange={(e) => { setItemType(e.target.value); setAskType(false) }}>
                     {ITEM_TYPES.map((type) => <option key={type}>{type}</option>)}
                   </select>
                 </div>
@@ -293,10 +323,28 @@ export default function Sender({ state, save, profile, setProfile }) {
             <CheckCounter count={tickedCount} total={PROHIBITED.length} />
           </div>
 
-          <button type="submit" className="btn btn-primary w-full" disabled={!allTicked}
-            data-testid="post-shipment">
-            Post shipment
-          </button>
+          {askType && aiResult && aiResult.suggestedType !== itemType ? (
+            /* The check suggested another item type: the sender picks one */
+            <div role="alert" data-testid="type-question" className="space-y-3 rounded-lg border border-hold bg-hold-tint p-3">
+              <p>
+                The check suggested <strong>{aiResult.suggestedType}</strong>, but the item type
+                is <strong>{itemType}</strong>. Which one should we post?
+              </p>
+              <button type="button" className="btn btn-primary w-full" data-testid="type-use-suggested"
+                onClick={() => { setItemType(aiResult.suggestedType); post(aiResult.suggestedType) }}>
+                Use {aiResult.suggestedType}
+              </button>
+              <button type="button" className="btn btn-secondary w-full" data-testid="type-keep"
+                onClick={() => post(itemType)}>
+                Keep {itemType}
+              </button>
+            </div>
+          ) : (
+            <button type="submit" className="btn btn-primary w-full" disabled={!allTicked}
+              data-testid="post-shipment">
+              Post shipment
+            </button>
+          )}
         </aside>
       </form>
     </div>

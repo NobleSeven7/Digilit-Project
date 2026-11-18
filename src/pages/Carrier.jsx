@@ -2,7 +2,7 @@
 // fit a journey (the carrier's side of matching).
 import { useEffect, useRef, useState } from 'react'
 import { CITIES, VEHICLES, VEHICLE_TYPES, STATUS, DELIVERY } from '../data/constants.js'
-import { findMatches, evaluateCarrier } from '../lib/matching.js'
+import { findMatches, evaluateCarrier, isAvailable } from '../lib/matching.js'
 import { calculatePrice } from '../lib/pricing.js'
 import { startDelivery } from '../lib/delivery.js'
 import { goTo } from '../lib/navigation.js'
@@ -15,15 +15,19 @@ import RuleCheck from '../components/RuleCheck.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import SuccessTick from '../components/SuccessTick.jsx'
 
+
+// Largest spare capacity accepted for a car or van (kg).
+const MAX_SPARE_KG = 500
+
 // The carrier's side of matching. For one journey it shows:
 //   1. requests senders have already sent to this carrier
 //   2. parcels that pass all four rules (the carrier can offer to carry one)
 //   3. parcels that do not fit, with the rule that failed
 // It uses the same four rules as the sender's Matches page.
 function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
-  // Only the open journeys of the signed-in demo carrier, newest first.
+  // Only the signed-in carrier's journeys that are open and have not left yet, newest first.
   const journeys = state.journeys
-    .filter((j) => j.status === 'Open' && j.carrierName === carrierName)
+    .filter((j) => isAvailable(j) && j.carrierName === carrierName)
     .reverse()
   // Show the picked journey if it is one of them, else the newest.
   const journey = journeys.find((j) => j.id === journeyId) || journeys[0]
@@ -193,10 +197,11 @@ export default function Carrier({ state, save, profile, setProfile }) {
     event.preventDefault()
 
     if (origin === destination) return setError('Choose two different cities.')
-    if (!(spare > 0)) return setError('Enter your spare capacity in kg (more than 0).')
-    if (vehicle.maxKg !== null && spare > vehicle.maxKg) {
-      return setError(`A ${vehicleType} can carry up to ${vehicle.maxKg} kg.`)
-    }
+    if (!(spare >= 0.5)) return setError('Enter your spare capacity in kg (at least 0.5).')
+    // Motorbike and bus have fixed limits; for a car or van we stop at 500 kg,
+    // the same top value the capacity box allows, so typos are caught.
+    const limit = vehicle.maxKg ?? MAX_SPARE_KG
+    if (spare > limit) return setError(`A ${vehicleType} can carry up to ${limit} kg.`)
     if (new Date(departure) <= new Date()) return setError('The departure time must be in the future.')
 
     // Stop the same journey being posted twice (e.g. tapping the button again).
@@ -316,7 +321,7 @@ export default function Carrier({ state, save, profile, setProfile }) {
           <div>
             <label className="label" htmlFor="spareKg">Spare capacity (kg)</label>
             <input id="spareKg" className="field" type="number" inputMode="decimal"
-              min="0.5" max={vehicle.maxKg ?? 500} step="0.5" value={spareKg}
+              min="0.5" max={vehicle.maxKg ?? MAX_SPARE_KG} step="0.5" value={spareKg}
               onChange={(e) => setSpareKg(e.target.value)} />
           </div>
         </div>

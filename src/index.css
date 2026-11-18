@@ -88,6 +88,29 @@ html {
   caret-color: var(--color-brand-ink);
   accent-color: var(--color-brand);
   scrollbar-color: var(--color-muted) transparent;
+  /* Phones: no grey box flashing over whatever is tapped (buttons have their
+     own press effect), and no text enlarging when the phone turns sideways. */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+/* Phones: taps on controls answer at once (no wait for a possible
+   double-tap zoom). */
+a, button, summary, label, select, [role="button"] {
+  touch-action: manipulation;
+}
+/* Holding a finger on a button or tab should not select its words.
+   Only controls: normal text stays selectable. */
+.btn, nav a, summary {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+/* Keeps content clear of a phone's notch or rounded corners when it is
+   turned sideways (the values are 0 on other screens). */
+.safe-x {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
 }
 a {
   text-underline-offset: 0.2em;
@@ -118,11 +141,18 @@ a {
        like it answers the finger. */
     transition: background-color 150ms ease, transform 160ms var(--ease-out);
   }
-  .btn:enabled:active { transform: scale(0.97); }
-  /* "enabled:" means the hover colour only applies while the button can be pressed. */
-  .btn-primary { @apply bg-brand text-white enabled:hover:bg-brand-dark; }
-  .btn-secondary { @apply border-2 border-brand-ink bg-surface text-brand-ink enabled:hover:bg-brand-tint; }
-  .btn-danger { @apply border-2 border-fail bg-surface text-fail enabled:hover:bg-fail-tint; }
+  /* ":not(:disabled)" (not "enabled") so that links styled as buttons get
+     the same press and hover effects as real buttons. */
+  .btn:not(:disabled):active { transform: scale(0.97); }
+  .btn-primary { @apply bg-brand text-white; }
+  .btn-secondary { @apply border-2 border-brand-ink bg-surface text-brand-ink; }
+  .btn-danger { @apply border-2 border-fail bg-surface text-fail; }
+  /* Hover colours only with a mouse, so they do not stick after a tap. */
+  @media (hover: hover) and (pointer: fine) {
+    .btn-primary:not(:disabled):hover { background-color: var(--color-brand-dark); }
+    .btn-secondary:not(:disabled):hover { background-color: var(--color-brand-tint); }
+    .btn-danger:not(:disabled):hover { background-color: var(--color-fail-tint); }
+  }
   /* A button that cannot be pressed yet: grey with a dashed outline, so it
      reads as "not ready" instead of a faded version of the real button. */
   .btn:disabled {

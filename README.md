@@ -161,9 +161,12 @@ decided while building:
 | 4 | If two carriers have the same score, the one departing earlier is shown first | Ranking needs a tie-breaker |
 | 5 | Sender and carrier accept on the same device by switching profile with the "Signed in as" picker | There are no real accounts in the prototype |
 | 6 | Matching time is measured in the app, from pressing "Post shipment" to the ranked result | The proposal names the metric but not where the clock starts and stops |
-| 7 | Cost saved uses the same PKR 1,000 courier baseline for every delivery, so savings on heavier parcels are understated | The baseline is a 5 kg quote; quotes for other weights are not yet collected |
+| 7 | Cost saved uses the same PKR 1,000 courier baseline for every delivery; a parcel that costs more than that (over about 13 kg) counts as no saving rather than a negative one | The baseline is a 5 kg quote; quotes for other weights are not yet collected |
 | 8 | The admin can cancel or re-check an unmatched request, allow or cancel an AI-flagged item, and settle a dispute by paying the carrier or refunding the sender | The proposal says "admin review" without listing the possible decisions |
 | 9 | A carrier's spare capacity is not reduced after a match; each journey carries one parcel in the demo | Keeps the demo simple; several parcels on one trip is future work |
+| 10 | A journey is offered only until its departure time; after that it no longer appears for matching | Without it, yesterday's journeys could still be requested |
+| 11 | A parcel can weigh 0.5 to 200 kg; a car or van can offer up to 500 kg spare (motorbike 10 kg, bus 15 kg as before) | Catches typing mistakes such as 999,999 kg |
+| 12 | Only the carrier enters the pickup and delivery codes; anyone else signed in is offered a switch to the carrier | Entering the delivery code releases the money |
 
 ## Real vs. simulated
 
