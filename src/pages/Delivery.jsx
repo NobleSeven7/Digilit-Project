@@ -1,11 +1,11 @@
 // Delivery page: both sides accept -> pickup code -> delivery code -> escrow release.
 // The payment is simulated: it is only a status tracked inside this app.
 import { useRef, useState } from 'react'
-import { STATUS, DELIVERY, ESCROW } from '../data/constants.js'
+import { STATUS, DELIVERY, ESCROW, MAX_CODE_TRIES } from '../data/constants.js'
 import { generateOtp, generateDifferentOtp } from '../lib/otp.js'
 import { sendToWebhook } from '../lib/webhook.js'
 import { goTo } from '../lib/navigation.js'
-import { formatPKR, formatDateTime } from '../lib/format.js'
+import { formatPKR, formatDateTime, formatShort, isolate } from '../lib/format.js'
 import { findMatches } from '../lib/matching.js'
 import { calculateSaving } from '../lib/pricing.js'
 import { shake } from '../lib/motion.js'
@@ -183,8 +183,8 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
   // One line saying who acts next, so it is clear whose turn it is.
   function nextStep() {
-    const sender = shipment.senderName
-    const carrier = journey.carrierName
+    const sender = isolate(shipment.senderName)
+    const carrier = isolate(journey.carrierName)
     switch (delivery.status) {
       case DELIVERY.AWAITING_ACCEPT: {
         const waiting = [!delivery.senderAccepted && sender, !delivery.carrierAccepted && carrier].filter(Boolean)
@@ -211,7 +211,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
       update({ status: DELIVERY.IN_TRANSIT })
       setMessage({ ok: true, text: 'Pickup confirmed. The parcel is on its way.' })
     } else {
-      setMessage({ ok: false, text: `Wrong pickup code. The parcel has not been handed over. Ask ${shipment.senderName} to read the code again.` })
+      setMessage({ ok: false, text: `Wrong pickup code. The parcel has not been handed over. Ask ${isolate(shipment.senderName)} to read the code again.` })
       return false
     }
   }
@@ -224,13 +224,28 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
         { status: DELIVERY.DELIVERED, escrow: ESCROW.RELEASED, deliveredAt },
         { status: STATUS.DELIVERED },
       )
-      setMessage({ ok: true, text: `Delivery confirmed. ${amount} released to ${journey.carrierName}.` })
+      setMessage({ ok: true, text: `Delivery confirmed. ${amount} released to ${isolate(journey.carrierName)}.` })
       sendToWebhook('delivery', { ...record, escrow: ESCROW.RELEASED, deliveredAt },
         `Delivery completed: ${amount} released to ${journey.carrierName}`)
     } else {
-      // Wrong code: nothing changes, the money stays in escrow.
-      update({ wrongAttempts: delivery.wrongAttempts + 1 })
-      setMessage({ ok: false, text: `Wrong delivery code. ${amount} stays in escrow. Ask the receiver to read the code again.` })
+      // Wrong code: the money stays in escrow. After MAX_CODE_TRIES wrong
+      // codes the delivery goes to an admin (escrow frozen), so the 4-digit
+      // code cannot simply be guessed.
+      const tries = delivery.wrongAttempts + 1
+      if (tries >= MAX_CODE_TRIES) {
+        const reason = `${MAX_CODE_TRIES} wrong delivery codes were entered`
+        update(
+          { wrongAttempts: tries, status: DELIVERY.DISPUTED, escrow: ESCROW.FROZEN, disputeReason: reason },
+          { status: STATUS.DISPUTED },
+        )
+        setMessage({ ok: false, text: `Wrong delivery code again. After ${MAX_CODE_TRIES} wrong codes, ${amount} is frozen and an admin will check this delivery.` })
+        sendToWebhook('dispute', { ...record, escrow: ESCROW.FROZEN },
+          `Dispute raised: ${reason}, ${shipment.origin} to ${shipment.destination}`)
+      } else {
+        const left = MAX_CODE_TRIES - tries
+        update({ wrongAttempts: tries })
+        setMessage({ ok: false, text: `Wrong delivery code. ${amount} stays in escrow. ${left} ${left === 1 ? 'try' : 'tries'} left. Ask the receiver to read the code again.` })
+      }
       return false
     }
   }
@@ -264,7 +279,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
             const s = state.shipments.find((x) => x.id === d.shipmentId)
             return (
               <option key={d.id} value={d.id}>
-                {s.origin} to {s.destination}, {s.weightKg} kg ({d.status})
+                {s.origin} to {s.destination}, {s.weightKg} kg, {s.senderName}, {formatShort(d.createdAt)} ({d.status})
               </option>
             )
           })}
@@ -282,8 +297,8 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
               showCurrent={STILL_MOVING.includes(delivery.status)}
               problem={delivery.status === DELIVERY.DISPUTED} />
             <p className="mt-4 text-muted">
-              {shipment.weightKg} kg {shipment.itemType.toLowerCase()} from {shipment.senderName},
-              carried by {journey.carrierName} ({journey.vehicleType}), departing {formatDateTime(journey.departure)}.
+              {shipment.weightKg} kg {shipment.itemType.toLowerCase()} from {isolate(shipment.senderName)},
+              carried by {isolate(journey.carrierName)} ({journey.vehicleType}), departing {formatDateTime(journey.departure)}.
             </p>
           </section>
 
@@ -359,7 +374,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
             <section className="card enter-rise" data-testid="step-pickup">
               <h2 className="text-xl font-bold">Pickup</h2>
               <p className="mt-1 text-muted">
-                {shipment.senderName} reads this code to {journey.carrierName} when handing over the parcel.
+                {isolate(shipment.senderName)} reads this code to {isolate(journey.carrierName)} when handing over the parcel.
               </p>
               <div className="mt-4 max-w-xs">
                 <CodeBox label="Pickup code (would arrive by SMS)" code={delivery.pickupOtp} testId="pickup-otp" />
@@ -378,7 +393,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
             <section className="card enter-rise" data-testid="step-delivery">
               <h2 className="text-xl font-bold">Delivery</h2>
               <p className="mt-1 text-muted">
-                The receiver reads this code to {journey.carrierName} once the parcel arrives safely.
+                The receiver reads this code to {isolate(journey.carrierName)} once the parcel arrives safely.
               </p>
               <div className="mt-4 max-w-xs">
                 <CodeBox label="Delivery code (would arrive by SMS)" code={delivery.deliveryOtp} testId="delivery-otp" />
@@ -402,13 +417,13 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
                 Delivered and paid
               </h2>
               <p className="mt-1">
-                {amount} was released to {journey.carrierName}
+                {amount} was released to {isolate(journey.carrierName)}
                 {delivery.deliveredAt ? ` on ${formatDateTime(delivery.deliveredAt)}` : ''}.
               </p>
               <p className="mt-2" data-testid="outcome">
                 {saving > 0
-                  ? `${shipment.senderName} paid about ${formatPKR(saving)} less than a PKR 1,000 courier, and ${journey.carrierName} earned ${amount} on a trip that was happening anyway.`
-                  : `${journey.carrierName} earned ${amount} on a trip that was happening anyway.`}
+                  ? `${isolate(shipment.senderName)} paid about ${formatPKR(saving)} less than a PKR 1,000 courier, and ${isolate(journey.carrierName)} earned ${amount} on a trip that was happening anyway.`
+                  : `${isolate(journey.carrierName)} earned ${amount} on a trip that was happening anyway.`}
               </p>
               <a href="#/dashboard" className="btn btn-secondary mt-4">See the dashboard</a>
             </section>
@@ -430,7 +445,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
           {delivery.status === DELIVERY.REFUNDED && (
             <section className="card enter-rise">
               <h2 className="text-xl font-bold">Refunded</h2>
-              <p className="mt-1">An admin reviewed the dispute and returned {amount} to {shipment.senderName}.</p>
+              <p className="mt-1">An admin reviewed the dispute and returned {amount} to {isolate(shipment.senderName)}.</p>
             </section>
           )}
 
@@ -482,7 +497,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
           </p>
           {delivery.wrongAttempts > 0 && delivery.escrow === ESCROW.HELD && (
             <p className="mt-2 text-sm text-fail">
-              Wrong delivery codes entered: {delivery.wrongAttempts}
+              Wrong delivery codes entered: {delivery.wrongAttempts} of {MAX_CODE_TRIES}
             </p>
           )}
         </aside>

@@ -40,3 +40,17 @@ export function makeId(prefix) {
 export function toPakistanTime(value) {
   return new Date(value).toLocaleString('sv-SE', { timeZone: 'Asia/Karachi' })
 }
+
+// A short date and time for picker lists, e.g. "17 Nov, 2:23 pm".
+export function formatShort(value) {
+  return new Date(value).toLocaleString('en-GB', {
+    day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true,
+  })
+}
+
+// A person's name inside a sentence. The invisible marks around it keep a
+// right-to-left name (e.g. Urdu) from pulling the full stop or nearby words
+// to the wrong side. They change nothing for English names.
+export function isolate(name) {
+  return `\u2068${name}\u2069`
+}

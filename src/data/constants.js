@@ -50,6 +50,10 @@ export const COURIER_FEE = 1000
 // A request still unmatched after this many hours is flagged for the admin.
 export const FLAG_AFTER_HOURS = 2
 
+// Wrong delivery codes allowed before the delivery goes to an admin
+// (stops someone guessing the 4-digit code until the money is released).
+export const MAX_CODE_TRIES = 3
+
 // Shipment statuses (one place, so the spelling is always identical).
 export const STATUS = {
   FOUND: 'Carriers found',
