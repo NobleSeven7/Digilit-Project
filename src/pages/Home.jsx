@@ -2,10 +2,7 @@
 import { BASE_FEE, FEE_PER_KG, COURIER_FEE } from '../data/constants.js'
 import { calculatePrice, savingPercent } from '../lib/pricing.js'
 import { formatPKR } from '../lib/format.js'
-import { ParcelIcon, CarIcon, ArrowRightIcon, CheckIcon, VehicleIcon } from '../components/Icons.jsx'
-import { createSampleData } from '../data/sampleData.js'
-import { findMatches } from '../lib/matching.js'
-import { formatDateTime } from '../lib/format.js'
+import { ParcelIcon, CarIcon, ArrowRightIcon } from '../components/Icons.jsx'
 import HeroMap from '../components/HeroMap.jsx'
 import { firstWithRole } from '../lib/profile.js'
 import { useSeenOnce } from '../lib/motion.js'
@@ -31,46 +28,6 @@ function ChoiceCard({ href, testId, icon, title, text, onClick }) {
         <ArrowRightIcon size={22} />
       </span>
     </a>
-  )
-}
-
-// The real product on the Home page: the matching engine's best carrier for
-// the demo parcel (Islamabad to Lahore, 5 kg), worked out from the fresh
-// sample data, so it always shows what the Matches page would show.
-function BestMatchCard() {
-  const sample = createSampleData()
-  const parcel = sample.shipments.find((s) => s.id === 's-demo')
-  const best = findMatches(parcel, sample.journeys).eligible[0]
-  if (!best) return null
-  const { journey, rules, score } = best
-  const total = Math.round(score.total)
-  return (
-    <div className="hero-enter card relative z-10 mx-auto w-full max-w-sm shadow-[var(--shadow-lift)] [--i:3] lg:-mt-14 lg:mr-0"
-      data-testid="hero-best-match" aria-label="Example: the best match for a 5 kg parcel from Islamabad to Lahore">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand-ink">
-            <VehicleIcon type={journey.vehicleType} />
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-bold text-brand-ink">Best match for {parcel.weightKg} kg to {parcel.destination}</p>
-            <p className="font-display text-xl font-bold">{journey.carrierName}</p>
-            <p className="text-sm text-muted">{journey.vehicleType}, departs {formatDateTime(journey.departure)}</p>
-          </div>
-        </div>
-        <p className="shrink-0 font-display text-3xl font-bold leading-none text-brand-ink">
-          {total}<span className="text-base text-muted"> / 100</span>
-        </p>
-      </div>
-      <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="All four rules passed">
-        {rules.map((rule) => (
-          <li key={rule.key}
-            className="inline-flex items-center gap-1 rounded-full bg-brand-tint px-2.5 py-0.5 text-sm font-bold text-brand-ink">
-            <CheckIcon size={12} />{rule.label}
-          </li>
-        ))}
-      </ul>
-    </div>
   )
 }
 
@@ -152,11 +109,7 @@ export default function Home({ profile, setProfile }) {
           </div>
         </div>
 
-        {/* The route map, with a real ranked result from the matching engine */}
-        <div>
-          <HeroMap />
-          <BestMatchCard />
-        </div>
+        <HeroMap />
       </section>
 
       {/* How it works: the three steps as stops along one road */}

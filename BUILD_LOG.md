@@ -775,11 +775,11 @@ the following.
   - The route map uses its full column, with larger city names.
   - The check's suggestion also appears under Item type, with "Use
     Fragile item".
-- **Home** (taste-skill: show the real product, one hard fact)
-  - A real "Best match" card worked out by the matching engine from fresh
-    sample data sits over the map's corner (below it on phones).
+- **Home** (taste-skill: one hard fact)
   - One fact under the intro: "Islamabad to Lahore, 5 kg: PKR 500 instead
     of about PKR 1,000 by courier."
+  - A "Best match" card over the map was previewed and removed at the
+    team's request; the map stays the only picture.
 - **System** (design-system, apple-design, emil-design-eng)
   - Shadow tokens (`--shadow-rest`, `--shadow-lift`) and one `.card-link`
     style: only clickable cards rest on a shadow and lift on hover.
