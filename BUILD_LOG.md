@@ -734,6 +734,14 @@ security review. The team chose all four groups of fixes below.
   - Identical-looking picker options.
   - A limit on wrong-code attempts.
   - Rounding prices for odd weights.
-- **Make.com**
-  - The Google Sheets module should use Value input option = Raw, so text
-    starting with "=" can never run as a formula in the Sheet.
+- **Make.com: tried and reverted**
+  - The security review suggested Value input option = Raw on the Google
+    Sheets module, so text starting with "=" could never run as a formula.
+  - In testing, Raw stored every value as text ("500" as a word, not a
+    number). Looker showed Price as null and left that delivery out of
+    Cost saved.
+  - Switched back to "User entered", and the team cleared the Sheet; the
+    dashboard reads numbers again (1 shipment, 1 match, PKR 500 saved).
+  - The formula risk is accepted for the prototype: the Sheet holds only
+    fictional demo data. Create a new webhook address after the
+    presentation.
