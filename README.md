@@ -148,6 +148,23 @@ Carriers that pass are ranked by a score out of 100:
 - Time buffer: 50 points if departure is at least 6 hours before the deadline, otherwise 25.
 - Capacity fit: 50 × (parcel kg ÷ carrier spare kg).
 
+### Assumptions
+
+The proposal did not settle every detail the rules need, so these were
+decided while building:
+
+| # | Assumption | Why it was needed |
+|---|---|---|
+| 1 | Approximate road trip times are used for each city pair (for example Islamabad to Lahore about 4.5 hours, Islamabad to Multan about 6.5 hours), in `src/data/constants.js` | The rule "perishables only in a car on trips under 6 hours" needs a trip length |
+| 2 | Weight limits are part of the Compatibility rule: a motorbike carries at most 10 kg and a bus traveller at most 15 kg | The compatibility table names vehicles but not their weight limits |
+| 3 | Timing is strict: the carrier must depart before the deadline, not at the same time | The proposal does not say how to treat an exact tie in time |
+| 4 | If two carriers have the same score, the one departing earlier is shown first | Ranking needs a tie-breaker |
+| 5 | Sender and carrier accept on the same device by switching profile with the "Signed in as" picker | There are no real accounts in the prototype |
+| 6 | Matching time is measured in the app, from pressing "Post shipment" to the ranked result | The proposal names the metric but not where the clock starts and stops |
+| 7 | Cost saved uses the same PKR 1,000 courier baseline for every delivery, so savings on heavier parcels are understated | The baseline is a 5 kg quote; quotes for other weights are not yet collected |
+| 8 | The admin can cancel or re-check an unmatched request, allow or cancel an AI-flagged item, and settle a dispute by paying the carrier or refunding the sender | The proposal says "admin review" without listing the possible decisions |
+| 9 | A carrier's spare capacity is not reduced after a match; each journey carries one parcel in the demo | Keeps the demo simple; several parcels on one trip is future work |
+
 ## Real vs. simulated
 
 | Element | Status | Details |

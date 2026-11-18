@@ -673,3 +673,11 @@ menus, the profile picker, Dashboard data). Shown as a preview video first.
   column; the 24 Sheet columns are unchanged.
 - **Checked:** the sentence is built correctly and is empty for other events;
   all 12 tests pass.
+
+## Stage 24: assumptions in the README
+
+- The nine assumptions listed near the top of this log are now also in the
+  README under "Matching rules → Assumptions", and in the proposal updates.
+- Two were reworded to match the app as it is now: #5 (both sides accept by
+  switching profile with the "Signed in as" picker, added in Stage 17) and #8
+  (the admin can also allow or cancel AI-flagged items, added in Stage 18).
