@@ -52,7 +52,7 @@ function ThemeSwitch() {
 function ProfileBar({ profile, setProfile }) {
   return (
     <aside aria-label="Demo profile" className="border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 safe-x py-2">
         <label htmlFor="profilePicker" className="text-sm font-bold">Signed in as</label>
         <select id="profilePicker" data-testid="profile-picker" value={profileKey(profile)}
           onChange={(e) => setProfile(findProfile(e.target.value))}
@@ -79,10 +79,10 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
   const current = NAV_ITEMS.find((item) => item.page === currentPage)
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       {/* Header */}
       <header className="bg-brand">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3 sm:gap-4">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 safe-x py-3 sm:gap-4">
           <Logo />
           {/* Phones: show which page you are on */}
           <div className="flex shrink-0 items-center gap-1 md:order-last">
@@ -120,11 +120,11 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
       <ProfileBar profile={profile} setProfile={setProfile} />
 
       {/* Page content. Extra bottom padding on phones leaves room for the tab bar. */}
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:py-8">{children}</main>
+      <main className="mx-auto w-full max-w-5xl flex-1 safe-x py-6 sm:py-8">{children}</main>
 
       {/* Footer */}
-      <footer className="border-t border-line pb-24 md:pb-0">
-        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-5 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
+      <footer className="border-t border-line pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0">
+        <div className="mx-auto flex max-w-5xl flex-col gap-3 safe-x py-5 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
           <p>
             Student prototype. All people and trips are fictional; codes and payments are simulated.
           </p>
@@ -135,14 +135,16 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
         </div>
       </footer>
 
-      {/* Phone navigation: a tab bar fixed to the bottom of the screen */}
-      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-10 flex overflow-hidden border-t border-line bg-surface md:hidden">
+      {/* Phone navigation: a tab bar fixed to the bottom of the screen. The
+          padding keeps the tabs above an iPhone's home bar. */}
+      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-10 flex overflow-hidden border-t border-line bg-surface md:hidden"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
         {NAV_ITEMS.map((item) => (
           <a
             key={item.page}
             href={`#/${item.page}`}
             aria-current={currentPage === item.page ? 'page' : undefined}
-            className={`flex min-h-14 min-w-0 flex-auto items-center justify-center border-t-4 px-1 text-xs font-bold ${
+            className={`flex min-h-14 min-w-0 flex-auto items-center justify-center border-t-4 px-1 text-xs font-bold active:bg-brand-tint ${
               currentPage === item.page ? 'border-brand-ink text-brand-ink' : 'border-transparent text-muted'
             }`}
           >

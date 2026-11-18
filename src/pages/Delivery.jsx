@@ -6,14 +6,25 @@ import { generateOtp, generateDifferentOtp } from '../lib/otp.js'
 import { sendToWebhook } from '../lib/webhook.js'
 import { goTo } from '../lib/navigation.js'
 import { formatPKR, formatDateTime } from '../lib/format.js'
+import { findMatches } from '../lib/matching.js'
+import { calculateSaving } from '../lib/pricing.js'
 import { shake } from '../lib/motion.js'
 import PageHeader from '../components/PageHeader.jsx'
 import RouteLine from '../components/RouteLine.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import SuccessTick from '../components/SuccessTick.jsx'
 
+// Reasons a sender or carrier can give when reporting a problem.
+const PROBLEMS = [
+  'The parcel arrived damaged',
+  'The parcel was not delivered',
+  'Something else went wrong',
+]
+
 // How many progress stops are complete for each delivery status.
 const STOPS = ['Accepted', 'Picked up', 'Delivered', 'Paid']
+// The same steps before they happen, so the current one reads as "to do".
+const TODO = ['Accept', 'Pick up', 'Deliver', 'Pay']
 const REACHED = {
   [DELIVERY.AWAITING_ACCEPT]: 0,
   [DELIVERY.AWAITING_PICKUP]: 1,
@@ -61,9 +72,27 @@ function CodeForm({ id, label, buttonText, onSubmit }) {
   )
 }
 
+// Only the carrier enters the codes (entering the delivery code releases the
+// money). Anyone else signed in sees a one-tap switch to the carrier instead.
+function CarrierOnly({ carrierName, setProfile }) {
+  return (
+    <div className="mt-4 rounded-lg bg-paper px-3 py-3">
+      <p>Only <strong>{carrierName}</strong> (the carrier) enters this code.</p>
+      <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-carrier"
+        onClick={() => setProfile({ role: 'carrier', name: carrierName })}>
+        Switch to {carrierName}
+      </button>
+    </div>
+  )
+}
+
 export default function Delivery({ state, save, id, profile, setProfile }) {
   // Message shown after an action, e.g. "Wrong code".
   const [message, setMessage] = useState(null) // { ok: true/false, text }
+  // "Report a problem" opens a short form first: nothing is frozen until the
+  // reason is chosen and confirmed.
+  const [reporting, setReporting] = useState(false)
+  const [problem, setProblem] = useState('')
 
   const deliveries = [...state.deliveries].reverse() // newest first
   const delivery = deliveries.find((d) => d.id === id) || deliveries[0]
@@ -138,6 +167,44 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
     goTo(`matches/${shipment.id}`)
   }
 
+  // The sender changes their mind before both have accepted: the request is
+  // removed (no money has moved) and the parcel goes back to its carriers.
+  function handleWithdraw() {
+    const { eligible } = findMatches(shipment, state.journeys)
+    const stillOpen = eligible.some((r) => !shipment.rejectedJourneyIds.includes(r.journey.id))
+    save({
+      ...state,
+      deliveries: state.deliveries.filter((d) => d.id !== delivery.id),
+      shipments: state.shipments.map((s) => (s.id !== shipment.id ? s
+        : { ...s, status: stillOpen ? STATUS.FOUND : STATUS.RETRYING })),
+    })
+    goTo(`matches/${shipment.id}`)
+  }
+
+  // One line saying who acts next, so it is clear whose turn it is.
+  function nextStep() {
+    const sender = shipment.senderName
+    const carrier = journey.carrierName
+    switch (delivery.status) {
+      case DELIVERY.AWAITING_ACCEPT: {
+        const waiting = [!delivery.senderAccepted && sender, !delivery.carrierAccepted && carrier].filter(Boolean)
+        return waiting.length === 2
+          ? `Next: ${sender} and ${carrier} both accept. Nothing is paid until both have.`
+          : `Next: ${waiting[0]} accepts. Nothing is paid until both have.`
+      }
+      case DELIVERY.AWAITING_PICKUP:
+        return `Next: at pickup, ${sender} reads the pickup code to ${carrier}, who enters it.`
+      case DELIVERY.IN_TRANSIT:
+        return `Next: when the parcel arrives, the receiver reads the delivery code to ${carrier}, who enters it to release ${amount}.`
+      case DELIVERY.DISPUTED:
+        return `Next: a person on the Admin page decides who gets ${amount}.`
+      default:
+        return null
+    }
+  }
+  const next = nextStep()
+  const saving = calculateSaving(shipment.weightKg)
+
   // ---- Step 2: pickup code ---------------------------------------------
   function handlePickup(code) {
     if (code === delivery.pickupOtp) {
@@ -170,8 +237,9 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
   // ---- Dispute: freeze the escrow and hand over to a human admin --------
   function handleDispute() {
+    setReporting(false)
     update(
-      { status: DELIVERY.DISPUTED, escrow: ESCROW.FROZEN, disputeReason: 'Problem reported during delivery' },
+      { status: DELIVERY.DISPUTED, escrow: ESCROW.FROZEN, disputeReason: problem },
       { status: STATUS.DISPUTED },
     )
     setMessage({ ok: false, text: `Problem reported. ${amount} is frozen until an admin reviews it.` })
@@ -210,7 +278,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
             {/* Keyed by delivery, so switching deliveries redraws the tracker
                 instead of sliding from one delivery's progress to another's */}
             <RouteLine key={delivery.id} origin={shipment.origin} destination={shipment.destination}
-              stops={STOPS} reached={REACHED[delivery.status] ?? 0}
+              stops={STOPS} todo={TODO} reached={REACHED[delivery.status] ?? 0}
               showCurrent={STILL_MOVING.includes(delivery.status)}
               problem={delivery.status === DELIVERY.DISPUTED} />
             <p className="mt-4 text-muted">
@@ -218,6 +286,13 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
               carried by {journey.carrierName} ({journey.vehicleType}), departing {formatDateTime(journey.departure)}.
             </p>
           </section>
+
+          {/* Whose turn it is */}
+          {next && (
+            <p data-testid="next-step" className="rounded-lg border-l-4 border-hold bg-surface px-4 py-3 font-bold">
+              {next}
+            </p>
+          )}
 
           {/* Result of the last action */}
           {message && (
@@ -269,6 +344,13 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
                     )}
                 </div>
               </div>
+              {/* The sender may take the request back while nothing is agreed */}
+              {isSender && (
+                <button type="button" className="btn btn-secondary mt-4" data-testid="withdraw-request"
+                  onClick={handleWithdraw}>
+                  Withdraw request
+                </button>
+              )}
             </section>
           )}
 
@@ -282,8 +364,12 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
               <div className="mt-4 max-w-xs">
                 <CodeBox label="Pickup code (would arrive by SMS)" code={delivery.pickupOtp} testId="pickup-otp" />
               </div>
-              <CodeForm id="pickup-code" label="Carrier enters the pickup code"
-                buttonText="Confirm pickup" onSubmit={handlePickup} />
+              {isCarrier ? (
+                <CodeForm id="pickup-code" label="Carrier enters the pickup code"
+                  buttonText="Confirm pickup" onSubmit={handlePickup} />
+              ) : (
+                <CarrierOnly carrierName={journey.carrierName} setProfile={setProfile} />
+              )}
             </section>
           )}
 
@@ -297,8 +383,12 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
               <div className="mt-4 max-w-xs">
                 <CodeBox label="Delivery code (would arrive by SMS)" code={delivery.deliveryOtp} testId="delivery-otp" />
               </div>
-              <CodeForm id="delivery-code" label="Carrier enters the delivery code"
-                buttonText="Confirm delivery" onSubmit={handleDelivery} />
+              {isCarrier ? (
+                <CodeForm id="delivery-code" label="Carrier enters the delivery code"
+                  buttonText="Confirm delivery" onSubmit={handleDelivery} />
+              ) : (
+                <CarrierOnly carrierName={journey.carrierName} setProfile={setProfile} />
+              )}
             </section>
           )}
 
@@ -315,7 +405,12 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
                 {amount} was released to {journey.carrierName}
                 {delivery.deliveredAt ? ` on ${formatDateTime(delivery.deliveredAt)}` : ''}.
               </p>
-              <a href="#/dashboard" className="btn btn-primary mt-4">See the dashboard</a>
+              <p className="mt-2" data-testid="outcome">
+                {saving > 0
+                  ? `${shipment.senderName} paid about ${formatPKR(saving)} less than a PKR 1,000 courier, and ${journey.carrierName} earned ${amount} on a trip that was happening anyway.`
+                  : `${journey.carrierName} earned ${amount} on a trip that was happening anyway.`}
+              </p>
+              <a href="#/dashboard" className="btn btn-secondary mt-4">See the dashboard</a>
             </section>
           )}
           {delivery.status === DELIVERY.DISPUTED && (
@@ -340,10 +435,38 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
           )}
 
           {/* Report a problem (only while the delivery is under way) */}
-          {active && (
-            <button type="button" className="btn btn-danger" onClick={handleDispute} data-testid="report-problem">
+          {active && !reporting && (
+            <button type="button" className="btn btn-danger" data-testid="report-problem"
+              onClick={() => { setProblem(''); setReporting(true) }}>
               Report a problem
             </button>
+          )}
+          {active && reporting && (
+            <section className="card enter-rise border-fail" data-testid="report-form">
+              <h2 className="text-xl font-bold">Report a problem</h2>
+              <p className="mt-1">
+                {amount} will be frozen until a person on the Admin page decides who gets it.
+              </p>
+              <fieldset className="mt-3 space-y-1">
+                <legend className="label">What went wrong?</legend>
+                {PROBLEMS.map((text) => (
+                  <label key={text} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-2 hover:bg-fail-tint">
+                    <input type="radio" name="problem" className="size-5 shrink-0 accent-fail"
+                      checked={problem === text} onChange={() => setProblem(text)} />
+                    <span>{text}</span>
+                  </label>
+                ))}
+              </fieldset>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button type="button" className="btn btn-danger" disabled={!problem}
+                  onClick={handleDispute} data-testid="confirm-problem">
+                  Freeze payment and report
+                </button>
+                <button type="button" className="btn btn-secondary" onClick={() => setReporting(false)}>
+                  Cancel
+                </button>
+              </div>
+            </section>
           )}
         </div>
 

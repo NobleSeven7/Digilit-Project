@@ -22,6 +22,9 @@ export function getTheme() {
 // Show a theme on the page (without saving it).
 export function applyTheme(theme) {
   document.documentElement.dataset.theme = theme
+  // The phone's status bar takes the colour of the green header in this theme.
+  document.querySelector('meta[name="theme-color"]')
+    ?.setAttribute('content', theme === 'dark' ? '#0F7A50' : '#0B6B43')
 }
 
 // Save the user's choice and show it.

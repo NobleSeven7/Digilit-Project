@@ -10,6 +10,9 @@
 //   reached     = how many stops are complete (0 to stops.length)
 //   showCurrent = highlight the next stop as "in progress"
 //   problem     = show the current stop in red (e.g. a dispute)
+//   todo        = optional names for stops not done yet, so the current step
+//                 reads as what happens next ("Pick up") and only finished
+//                 steps read as done ("Picked up")
 
 import { useEffect, useRef } from 'react'
 import { CheckIcon } from './Icons.jsx'
@@ -24,7 +27,7 @@ function position(i, count) {
   return `${(i / (count - 1)) * 100}%`
 }
 
-function Tracker({ stops, reached, showCurrent, problem }) {
+function Tracker({ stops, todo, reached, showCurrent, problem }) {
   const count = stops.length
   const current = showCurrent && reached < count ? reached : -1 // -1 = no current step
   const lastDone = reached - 1
@@ -84,7 +87,7 @@ function Tracker({ stops, reached, showCurrent, problem }) {
             <li key={stop} data-step-state={done ? 'done' : isCurrent ? 'current' : 'upcoming'}
               className={`absolute whitespace-nowrap text-xs sm:text-sm ${colour}`}
               style={{ left: position(i, count), transform: shift }}>
-              {stop}
+              {done || !todo ? stop : todo[i]}
               <span className="sr-only">
                 {done ? ' (done)' : isCurrent ? ' (current step)' : ' (not yet)'}
               </span>
@@ -96,7 +99,7 @@ function Tracker({ stops, reached, showCurrent, problem }) {
   )
 }
 
-export default function RouteLine({ origin, destination, stops, reached = 0, showCurrent = false, problem = false }) {
+export default function RouteLine({ origin, destination, stops, todo, reached = 0, showCurrent = false, problem = false }) {
   return (
     <div>
       {/* City names */}
@@ -106,7 +109,7 @@ export default function RouteLine({ origin, destination, stops, reached = 0, sho
       </div>
 
       {stops ? (
-        <Tracker stops={stops} reached={reached} showCurrent={showCurrent} problem={problem} />
+        <Tracker stops={stops} todo={todo} reached={reached} showCurrent={showCurrent} problem={problem} />
       ) : (
         /* Plain route: a green road with a dashed centre line and two end stops */
         <div className="relative mt-2 h-4 rounded-full bg-brand" aria-hidden="true">

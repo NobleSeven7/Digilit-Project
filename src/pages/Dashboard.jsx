@@ -29,7 +29,9 @@ export default function Dashboard({ state }) {
     : 0
 
   // Cost saved = (PKR 1,000 courier - platform fee), added up over completed deliveries.
-  const costSaved = completed.reduce((sum, d) => sum + (COURIER_FEE - d.price), 0)
+  // A heavy parcel can cost more than the PKR 1,000 baseline; that counts as
+  // no saving rather than taking money off the total.
+  const costSaved = completed.reduce((sum, d) => sum + Math.max(0, COURIER_FEE - d.price), 0)
   const courierTotal = completed.length * COURIER_FEE
   const savedPercent = courierTotal ? Math.round((costSaved / courierTotal) * 100) : 0
 
@@ -62,8 +64,10 @@ export default function Dashboard({ state }) {
         <Metric label="Matches" value={matches.length} testId="metric-matches"
           note={`${completed.length} delivered and paid so far.`} />
         <Metric label="Average matching time" testId="metric-time"
-          value={averageMs < 1000 ? `${Math.round(averageMs * 10) / 10} ms` : `${Math.round(averageMs / 100) / 10} s`}
-          note="From posting to ranked results. Target: under 1 minute." />
+          value={timed.length === 0 ? '—'
+            : averageMs < 1000 ? `${Math.round(averageMs * 10) / 10} ms` : `${Math.round(averageMs / 100) / 10} s`}
+          note={timed.length === 0 ? 'No matches yet, so nothing to measure.'
+            : 'From posting to ranked results. Target: under 1 minute.'} />
         <Metric label="Cost saved" value={formatPKR(costSaved)} testId="metric-saved"
           note={`${savedPercent}% less than a ${formatPKR(COURIER_FEE)} courier, over ${completed.length} completed deliveries.`} />
       </div>
@@ -72,6 +76,7 @@ export default function Dashboard({ state }) {
         {/* Shipments by status: a simple bar list, no chart library needed */}
         <section className="card">
           <h2 className="text-xl font-bold">Shipments by status</h2>
+          {byStatus.length === 0 && <p className="mt-2 text-muted">No shipments yet.</p>}
           <ul className="mt-4 space-y-3">
             {byStatus.map((row) => (
               <li key={row.status}>
@@ -89,7 +94,9 @@ export default function Dashboard({ state }) {
 
         <section className="card">
           <h2 className="text-xl font-bold">Spare capacity used</h2>
-          <p className="mt-2 font-display text-4xl font-bold text-brand-ink">{averageUtilisation}%</p>
+          <p className="mt-2 font-display text-4xl font-bold text-brand-ink">
+            {utilisation.length ? `${averageUtilisation}%` : '—'}
+          </p>
           <p className="mt-2 text-muted">
             Average share of a matched carrier's spare space that the parcel fills
             (parcel kg ÷ spare kg). The proposal's target is 40 to 60%.

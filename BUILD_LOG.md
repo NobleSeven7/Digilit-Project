@@ -681,3 +681,59 @@ menus, the profile picker, Dashboard data). Shown as a preview video first.
 - Two were reworded to match the app as it is now: #5 (both sides accept by
   switching profile with the "Signed in as" picker, added in Stage 17) and #8
   (the admin can also allow or cancel AI-flagged items, added in Stage 18).
+
+## Stage 25: fixes from the stress test, phone, UX and code reviews
+
+Four reviews ran first and changed nothing: a worst-case data stress test
+(break-ui: long Pakistani names, an Urdu name, 30 carriers on one route,
+0.5 to 199.5 kg parcels, empty / one / 1,000-record states), a phone review
+(mobile-native), an Impeccable UX critique (two separate reviewers: 25/40, and
+the detector found only the deliberate large Home headline) and a code and
+security review. The team chose all four groups of fixes below.
+
+- **Bugs**
+  - Journeys that have already departed are no longer offered
+    (`isAvailable` in `src/lib/matching.js`); the four rules are unchanged.
+  - Only the carrier can enter the pickup and delivery codes; others see
+    "Switch to <carrier>".
+  - Limits: parcels 0.5 to 200 kg, car or van spare up to 500 kg.
+  - A double tap on "Post shipment" posts once.
+  - The Request button shows the carrier's full name ("Request Ch." before).
+  - Dashboard: "—" instead of "0 ms" / "0%" with no data; parcels above the
+    courier price count as no saving, not a negative one.
+- **Money and clarity**
+  - "Report a problem" opens a short form: choose what went wrong, then
+    "Freeze payment and report" (one tap froze the money before). The chosen
+    reason is saved.
+  - The Delivery tracker names unfinished steps as things to do ("Accept",
+    "Pick up", "Deliver", "Pay"); done steps keep "Accepted", "Picked up"...
+  - If the parcel check suggested another item type, "Post shipment" asks
+    which to use. A note explains the 8-second wait and the keyword fallback.
+- **Phone**
+  - Link-style buttons get the same hover and press effects as buttons
+    (`enabled:` never matched links).
+  - Hover colours only with a mouse; no grey tap flash; long-press does not
+    select button text; taps answer at once (`touch-action: manipulation`).
+  - Safe-area padding (`viewport-fit=cover`) for the tab bar and edges;
+    `min-h-dvh`; the status-bar colour follows the light/dark theme.
+- **Guidance and ending**
+  - A "Next: ..." line on Delivery says who acts next.
+  - The sender can withdraw a request before both have accepted (the request
+    is removed; no money has moved).
+  - The "Delivered and paid" card ends with what each person got.
+  - Matches shows the first 5 carriers, then "Show all N".
+- **Checked**
+  - All 12 tests pass.
+  - 19 browser checks of the new behaviour pass.
+  - The stress test re-run flags nothing.
+  - axe is clean on all pages in both themes.
+- **Not changed**
+  - Rules, scores, pricing, statuses, design style and sign-in.
+- **Left for later**
+  - Urdu names inside English sentences (`<bdi>`).
+  - Identical-looking picker options.
+  - A limit on wrong-code attempts.
+  - Rounding prices for odd weights.
+- **Make.com**
+  - The Google Sheets module should use Value input option = Raw, so text
+    starting with "=" can never run as a formula in the Sheet.

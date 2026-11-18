@@ -103,12 +103,20 @@ export function evaluateCarrier(shipment, journey) {
   }
 }
 
-// Check ALL open journeys. Returns two lists:
+// A journey can take parcels only while it is open AND has not left yet.
+// Without the time check, a journey posted for "tomorrow 8 am" would still be
+// offered the day after. (This decides which journeys are checked at all;
+// the four rules themselves are unchanged.)
+export function isAvailable(journey, now = Date.now()) {
+  return journey.status === 'Open' && new Date(journey.departure).getTime() > now
+}
+
+// Check ALL available journeys. Returns two lists:
 //   eligible   - passed all four rules, highest score first
 //   ineligible - failed at least one rule (kept so the app can explain why)
 export function findMatches(shipment, journeys) {
   const results = journeys
-    .filter((journey) => journey.status === 'Open')
+    .filter((journey) => isAvailable(journey))
     .map((journey) => evaluateCarrier(shipment, journey))
 
   const eligible = results

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0B6B43" />
     <!-- The app has its own light and dark themes, so browsers should not
          recolour it themselves. -->
@@ -17,6 +17,9 @@
           theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
         }
         document.documentElement.dataset.theme = theme
+        // The phone's status bar matches the green header of this theme.
+        document.querySelector('meta[name="theme-color"]')
+          .setAttribute('content', theme === 'dark' ? '#0F7A50' : '#0B6B43')
       })()
     </script>
     <meta name="description" content="RaastaShare - send parcels with travellers already going your way. Student prototype with fictional data." />
