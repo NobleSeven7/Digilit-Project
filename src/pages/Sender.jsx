@@ -111,6 +111,9 @@ export default function Sender({ state, save, profile, setProfile }) {
     // Same limits as the weight box (0.5 to 200 kg), so a typo such as
     // 999999 kg cannot be posted as a "small parcel".
     if (!(weight >= 0.5 && weight <= 200)) return fail('weight', 'Enter a weight between 0.5 and 200 kg.')
+    // Weights go in 0.5 kg steps (like the arrows on the weight box), so every
+    // price is a whole number of rupees. The pricing itself is unchanged.
+    if (!Number.isInteger(weight * 2)) return fail('weight', 'Use steps of 0.5 kg, for example 1 or 1.5.')
     if (new Date(deadline) <= new Date()) return fail('deadline', 'Choose a deadline in the future.')
     if (!allTicked) return fail('checklist', 'Tick every line of the prohibited-items checklist.')
     setError(null)

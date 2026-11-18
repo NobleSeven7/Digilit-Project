@@ -7,7 +7,7 @@ import { calculatePrice } from '../lib/pricing.js'
 import { startDelivery } from '../lib/delivery.js'
 import { goTo } from '../lib/navigation.js'
 import { sendToWebhook } from '../lib/webhook.js'
-import { dayAt, makeId, formatDateTime, formatPKR } from '../lib/format.js'
+import { dayAt, makeId, formatDateTime, formatPKR, isolate } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import RoleNotice from '../components/RoleNotice.jsx'
 import RouteLine from '../components/RouteLine.jsx'
@@ -63,7 +63,7 @@ function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
     goTo(`delivery/${delivery.id}`)
   }
 
-  const describe = (s) => `${s.weightKg} kg ${s.itemType.toLowerCase()} from ${s.senderName}`
+  const describe = (s) => `${s.weightKg} kg ${s.itemType.toLowerCase()} from ${isolate(s.senderName)}`
 
   return (
     <section className="mt-10" data-testid="journey-parcels">

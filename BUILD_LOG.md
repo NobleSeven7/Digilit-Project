@@ -792,3 +792,28 @@ the following.
   - axe is clean on all pages in both themes; no page errors.
 - **Not changed**
   - Rules, scores, pricing, statuses, sign-in and the brand style.
+
+## Stage 27: the remaining review items
+
+- **Urdu names in sentences.** `isolate()` in `src/lib/format.js` wraps a name
+  in invisible Unicode isolate marks (the text form of `<bdi>`), so a
+  right-to-left name no longer pulls the full stop or nearby words to the
+  wrong side. Used wherever a name sits inside a sentence (Admin, Delivery,
+  Carry, Dashboard). Not used inside picker options, which the phone draws
+  itself.
+- **Pickers that looked alike.** The Matches and Delivery pickers add the
+  sender and the date and time, e.g. "Islamabad to Lahore, 1.5 kg, Ayesha
+  Khan, 18 Nov, 10:16 am (Disputed)" (`formatShort`).
+- **Wrong delivery codes are limited to 3** (`MAX_CODE_TRIES`). The message
+  counts down ("1 try left") and the Escrow panel shows "2 of 3". On the third
+  wrong code the delivery becomes Disputed with the payment frozen, the reason
+  "3 wrong delivery codes were entered" goes to Admin, and a `dispute` record
+  is logged. No new statuses.
+- **Weights in 0.5 kg steps.** 1.27 kg shows "Use steps of 0.5 kg, for example
+  1 or 1.5." under the field, so every price is whole rupees. The pricing
+  formula is unchanged.
+- **Checked**
+  - All 12 tests pass (test 7 now reads "2 tries left").
+  - 9 new browser checks pass, and the 19 earlier checks still pass.
+  - axe is clean; no page errors.
+- README assumptions #11 and #13 updated.

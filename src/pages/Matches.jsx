@@ -6,7 +6,7 @@ import { findMatches } from '../lib/matching.js'
 import { calculatePrice, calculateSaving } from '../lib/pricing.js'
 import { goTo } from '../lib/navigation.js'
 import { startDelivery } from '../lib/delivery.js'
-import { formatPKR, formatDateTime } from '../lib/format.js'
+import { formatPKR, formatDateTime, formatShort } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import RouteLine from '../components/RouteLine.jsx'
 import RuleCheck from '../components/RuleCheck.jsx'
@@ -206,7 +206,7 @@ export default function Matches({ state, save, id }) {
           onChange={(e) => goTo(`matches/${e.target.value}`)}>
           {shipments.map((s) => (
             <option key={s.id} value={s.id}>
-              {s.origin} to {s.destination}, {s.weightKg} kg {s.itemType.toLowerCase()} ({s.status})
+              {s.origin} to {s.destination}, {s.weightKg} kg {s.itemType.toLowerCase()}, {s.senderName}, {formatShort(s.createdAt)} ({s.status})
             </option>
           ))}
         </select>

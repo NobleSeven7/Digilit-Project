@@ -2,7 +2,7 @@
 // are listed here for a person to decide, rather than decided automatically.
 import { STATUS, DELIVERY, ESCROW, FLAG_AFTER_HOURS } from '../data/constants.js'
 import { readSyncLog, isWebhookConfigured } from '../lib/webhook.js'
-import { formatPKR, formatDateTime } from '../lib/format.js'
+import { formatPKR, formatDateTime, isolate } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import { withViewTransition } from '../lib/motion.js'
@@ -73,7 +73,7 @@ export default function Admin({ state, save }) {
         <div>
           <h3 className="text-lg font-bold">{s.origin} to {s.destination}</h3>
           <p className="text-muted">
-            {s.weightKg} kg {s.itemType.toLowerCase()} from {s.senderName}. Waiting {waitingTime(s.createdAt)}.
+            {s.weightKg} kg {s.itemType.toLowerCase()} from {isolate(s.senderName)}. Waiting {waitingTime(s.createdAt)}.
           </p>
         </div>
         <StatusBadge status={s.status} />
@@ -102,7 +102,7 @@ export default function Admin({ state, save }) {
               <div>
                 <h3 className="text-lg font-bold">{s.origin} to {s.destination}</h3>
                 <p className="text-muted">
-                  {s.weightKg} kg {s.itemType.toLowerCase()} from {s.senderName}.
+                  {s.weightKg} kg {s.itemType.toLowerCase()} from {isolate(s.senderName)}.
                 </p>
                 <p className="mt-1">Described as: “{s.aiCheck.description}”</p>
                 <p className="mt-1"><strong>{s.aiCheck.source}:</strong> {s.aiCheck.reason}</p>
@@ -144,7 +144,7 @@ export default function Admin({ state, save }) {
                 <div>
                   <h3 className="text-lg font-bold">{s.origin} to {s.destination}</h3>
                   <p className="text-muted">
-                    {s.weightKg} kg {s.itemType.toLowerCase()}. Sender {s.senderName}, carrier {j.carrierName}.
+                    {s.weightKg} kg {s.itemType.toLowerCase()}. Sender {isolate(s.senderName)}, carrier {isolate(j.carrierName)}.
                   </p>
                   <p className="mt-1">{d.disputeReason}.</p>
                 </div>

@@ -165,8 +165,9 @@ decided while building:
 | 8 | The admin can cancel or re-check an unmatched request, allow or cancel an AI-flagged item, and settle a dispute by paying the carrier or refunding the sender | The proposal says "admin review" without listing the possible decisions |
 | 9 | A carrier's spare capacity is not reduced after a match; each journey carries one parcel in the demo | Keeps the demo simple; several parcels on one trip is future work |
 | 10 | A journey is offered only until its departure time; after that it no longer appears for matching | Without it, yesterday's journeys could still be requested |
-| 11 | A parcel can weigh 0.5 to 200 kg; a car or van can offer up to 500 kg spare (motorbike 10 kg, bus 15 kg as before) | Catches typing mistakes such as 999,999 kg |
+| 11 | A parcel can weigh 0.5 to 200 kg in steps of 0.5 kg; a car or van can offer up to 500 kg spare (motorbike 10 kg, bus 15 kg as before) | Catches typing mistakes such as 999,999 kg, and keeps every price a whole number of rupees |
 | 12 | Only the carrier enters the pickup and delivery codes; anyone else signed in is offered a switch to the carrier | Entering the delivery code releases the money |
+| 13 | After 3 wrong delivery codes the delivery goes to the Admin page (Disputed, payment frozen) | Stops someone guessing the 4-digit code until the money is released |
 
 ## Real vs. simulated
 

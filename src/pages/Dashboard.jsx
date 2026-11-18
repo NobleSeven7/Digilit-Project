@@ -1,7 +1,7 @@
 // Dashboard page: the impact numbers from the proposal, calculated live
 // from the data saved in this browser.
 import { STATUS, DELIVERY, COURIER_FEE } from '../data/constants.js'
-import { formatPKR, formatDateTime } from '../lib/format.js'
+import { formatPKR, formatDateTime, isolate } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import StatusBadge, { statusTone } from '../components/StatusBadge.jsx'
 
@@ -175,7 +175,7 @@ export default function Dashboard({ state }) {
                     <span className="absolute -top-0.5 right-0 size-3 rounded-full border-2 border-brand-ink bg-surface" />
                   </div>
                   <p className="mt-3 text-sm text-muted">
-                    {s.weightKg} kg from {s.senderName}, carried by {j.carrierName}.{' '}
+                    {s.weightKg} kg from {isolate(s.senderName)}, carried by {isolate(j.carrierName)}.{' '}
                     {d.deliveredAt ? `Delivered ${formatDateTime(d.deliveredAt)}.` : ''}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
