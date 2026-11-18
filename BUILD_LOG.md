@@ -745,3 +745,50 @@ security review. The team chose all four groups of fixes below.
   - The formula risk is accepted for the prototype: the Sheet holds only
     fictional demo data. Create a new webhook address after the
     presentation.
+
+## Stage 26: design review with every design skill
+
+Reviews first, no changes: frontend-design, taste-skill, apple-design,
+dataviz, design-system, ux-copy and emil-design-eng; the Impeccable critique
+and the accessibility checks from Stage 25 were reused. The team chose all of
+the following.
+
+- **Dashboard** (dataviz, frontend-design)
+  - "Parcels by status" uses each status's badge as its label and colours
+    its bar by family: green done, amber waiting, red needs a person.
+    Ordered as a parcel moves, then the problem states (all green before).
+  - Spare capacity has a bar with the 40–60% target band marked and a
+    verdict ("Within the target").
+  - Matching time is put in context ("well inside the 1-minute target").
+  - New "Recent deliveries": the four newest, each a small road card linking
+    to the delivery.
+- **One vocabulary** (ux-copy, design-system)
+  - "Parcel" on screen ("Post a parcel", "Post parcel", the "Parcel"
+    picker). Dashboard metric names stay as in the proposal and Looker.
+  - Escrow is explained in plain words on Send and Delivery.
+  - Wrong-code messages say what to do next.
+  - The Matches intro is shorter.
+- **Send page** (apple-design: grouping and inline validation)
+  - Each error appears under its own field, with a red border
+    (`aria-invalid`, `aria-describedby`); the price box only says "Check
+    the field marked in red".
+  - The route map uses its full column, with larger city names.
+  - The check's suggestion also appears under Item type, with "Use
+    Fragile item".
+- **Home** (taste-skill: one hard fact)
+  - One fact under the intro: "Islamabad to Lahore, 5 kg: PKR 500 instead
+    of about PKR 1,000 by courier."
+  - A "Best match" card over the map was previewed and removed at the
+    team's request; the map stays the only picture.
+- **System** (design-system, apple-design, emil-design-eng)
+  - Shadow tokens (`--shadow-rest`, `--shadow-lift`) and one `.card-link`
+    style: only clickable cards rest on a shadow and lift on hover.
+  - `--color-on-hold` replaces a hard-coded colour; the inline easing uses
+    `var(--ease-out)`.
+  - h1 tracking is -0.01em.
+  - Light/dark cross-fades for 300 ms (instant with reduced motion).
+- **Checked**
+  - All 12 tests pass; 19 browser checks of the Stage 25 fixes pass.
+  - axe is clean on all pages in both themes; no page errors.
+- **Not changed**
+  - Rules, scores, pricing, statuses, sign-in and the brand style.

@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { getTheme, saveTheme } from '../lib/theme.js'
 import { PROFILES, profileKey, findProfile } from '../lib/profile.js'
 import { SunIcon, MoonIcon } from './Icons.jsx'
+import { withViewTransition } from '../lib/motion.js'
 
 const NAV_ITEMS = [
   { page: 'sender', label: 'Send' },
@@ -34,9 +35,13 @@ function ThemeSwitch() {
   const [theme, setTheme] = useState(getTheme)
   const next = theme === 'dark' ? 'light' : 'dark'
 
+  // The colours cross-fade instead of flipping in one frame (an abrupt jump
+  // from light to dark is hard on the eyes). Reduced motion: instant.
   function handleClick() {
-    saveTheme(next)
-    setTheme(next)
+    withViewTransition(() => {
+      saveTheme(next)
+      setTheme(next)
+    }, 'theme')
   }
 
   return (

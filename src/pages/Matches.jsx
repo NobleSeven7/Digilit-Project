@@ -159,8 +159,8 @@ export default function Matches({ state, save, id }) {
       <div>
         <PageHeader title="Matches" />
         <div className="card">
-          <p>No shipments yet. Post one to see ranked carriers.</p>
-          <a href="#/sender" className="btn btn-primary mt-4">Post a shipment</a>
+          <p>No parcels yet. Post one to see ranked carriers.</p>
+          <a href="#/sender" className="btn btn-primary mt-4">Post a parcel</a>
         </div>
       </div>
     )
@@ -196,13 +196,12 @@ export default function Matches({ state, save, id }) {
     <div>
       <PageHeader title="Matches">
         Every carrier is checked against four rules. Those that pass all four are
-        ranked by a score out of 100. This is the sender's view; carriers see the
-        parcels that fit their journey on the Carry page.
+        ranked by a score out of 100.
       </PageHeader>
 
       {/* Pick which shipment to look at */}
       <div className="mb-6 max-w-xl">
-        <label className="label" htmlFor="shipmentPicker">Shipment</label>
+        <label className="label" htmlFor="shipmentPicker">Parcel</label>
         <select id="shipmentPicker" className="field" value={shipment.id}
           onChange={(e) => goTo(`matches/${e.target.value}`)}>
           {shipments.map((s) => (

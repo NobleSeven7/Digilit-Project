@@ -172,7 +172,7 @@ export default function Admin({ state, save }) {
             : 'No webhook URL is set, so records stay on this device. The app works the same.'}
         </p>
         {syncLog.length === 0 ? (
-          <p className="card text-muted">Nothing yet. Post a shipment or complete a delivery.</p>
+          <p className="card text-muted">Nothing yet. Post a parcel or complete a delivery.</p>
         ) : (
           <ul className="card divide-y divide-line !py-1">
             {syncLog.map((entry) => (
