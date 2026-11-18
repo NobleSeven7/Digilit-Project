@@ -827,3 +827,15 @@ the following.
 - The two cards in a row are the same height.
 - "1-minute" uses a non-breaking hyphen, so it no longer splits across lines.
 - "Total shipments" stays as it is, matching the proposal and Looker.
+
+## Stage 29: package updates
+
+- `npm install` reports 5 "high" warnings. They are all one advisory in
+  `picomatch` (slow pattern matching on crafted file patterns), reached only
+  through the build tool Vite. None of these packages are in the published
+  site, and Vite only reads the project's own files.
+- `npm audit fix --force` was not used: it would downgrade Vite 8 to 6.2.7,
+  which the Tailwind and React build setup does not support.
+- `npm update` applied small patch releases (Vite 8.3.7 to 8.3.8 and others).
+  The build works and all 12 tests pass. The warning stays until Vite ships a
+  fixed release; run `npm update` again then.
