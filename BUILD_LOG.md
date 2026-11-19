@@ -839,3 +839,24 @@ the following.
 - `npm update` applied small patch releases (Vite 8.3.7 to 8.3.8 and others).
   The build works and all 12 tests pass. The warning stays until Vite ships a
   fixed release; run `npm update` again then.
+
+## Stage 30: sample data stays current
+
+- **Problem:** the sample journeys are dated from the day the data was created
+  ("tomorrow 8 am"). A day later they had departed, so without pressing
+  "Reset demo data" the demo parcel found no carriers.
+- **Fix:** `refreshSampleDates` in `src/lib/storage.js` runs when the app
+  opens. If the sample was made on an earlier day, sample departures and
+  deadlines move forward by whole days, and sample timestamps ("posted 3
+  hours ago", "delivered 20 hours ago") move by the exact time that has
+  passed. Records the user created keep their real dates. Opening the app
+  again the same day changes nothing.
+- **Checked**
+  - A simulated visit two days later: the demo parcel finds its 3 carriers,
+    the flagged parcel is still about 3 hours old, the user's own parcel is
+    unchanged.
+  - All 12 tests and 19 browser checks pass.
+- **Live site check (same day):**
+  - The full journey works on desktop and phone with Make blocked.
+  - Lighthouse scores 99–100 on performance, accessibility, best practices
+    and SEO.
