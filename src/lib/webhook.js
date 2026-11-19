@@ -59,6 +59,12 @@ export function clearSyncLog() {
   localStorage.removeItem(LOG_KEY)
 }
 
+// A note in the sync log for something that happened only on this device
+// (it is not sent to Make.com, so the Google Sheet columns stay the same).
+export function noteInSyncLog(event, summary) {
+  addToSyncLog(event, summary, 'Recorded on this device only')
+}
+
 function addToSyncLog(event, summary, result) {
   const entry = { time: new Date().toISOString(), event, summary, result }
   const log = [entry, ...readSyncLog()].slice(0, 50) // keep the latest 50

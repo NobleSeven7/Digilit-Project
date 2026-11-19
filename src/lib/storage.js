@@ -1,8 +1,9 @@
 // Saves and loads all app data in the browser's localStorage,
 // so the demo keeps its data between visits and works offline.
 import { createSampleData } from '../data/sampleData.js'
-import { STATUS, FLAG_AFTER_HOURS } from '../data/constants.js'
-import { clearSyncLog } from './webhook.js'
+import { STATUS, DELIVERY, FLAG_AFTER_HOURS } from '../data/constants.js'
+import { clearSyncLog, noteInSyncLog } from './webhook.js'
+import { findMatches, isAvailable } from './matching.js'
 import { toInputValue } from './format.js'
 
 const KEY = 'raastashare-data-v1'
@@ -18,6 +19,36 @@ function flagOldUnmatched(state) {
     return shipment
   })
   return { ...state, shipments }
+}
+
+// ---- Keeping statuses true as time passes ---------------------------
+// 1. A request still waiting for both to accept when the carrier's departure
+//    time passes can no longer happen: it ends as declined (no money moved),
+//    that carrier is not offered again, and the parcel goes back to matching.
+// 2. A parcel marked "Carriers found" whose carriers have all left goes back
+//    to "Unmatched – Retrying", so the 2-hour admin flag applies to it.
+export function settleExpired(state, now = Date.now()) {
+  const journeyOf = (id) => state.journeys.find((j) => j.id === id)
+  const expired = state.deliveries.filter((d) => d.status === DELIVERY.AWAITING_ACCEPT
+    && journeyOf(d.journeyId) && !isAvailable(journeyOf(d.journeyId), now))
+  const expiredIds = new Set(expired.map((d) => d.id))
+
+  const deliveries = state.deliveries.map((d) => (expiredIds.has(d.id) ? { ...d, status: DELIVERY.DECLINED, expired: true } : d))
+  const shipments = state.shipments.map((s) => {
+    const lost = expired.filter((d) => d.shipmentId === s.id)
+    if (lost.length === 0 && s.status !== STATUS.FOUND) return s
+    const rejectedJourneyIds = [...s.rejectedJourneyIds, ...lost.map((d) => d.journeyId)]
+    const stillOpen = findMatches(s, state.journeys).eligible
+      .some((r) => !rejectedJourneyIds.includes(r.journey.id))
+    const status = stillOpen ? STATUS.FOUND : STATUS.RETRYING
+    if (lost.length === 0 && status === s.status) return s
+    return { ...s, rejectedJourneyIds, status }
+  })
+  for (const d of expired) {
+    const s = state.shipments.find((x) => x.id === d.shipmentId)
+    noteInSyncLog('request_expired', `Request expired: ${s?.origin} to ${s?.destination}; the carrier left before both accepted`)
+  }
+  return { ...state, deliveries, shipments }
 }
 
 // ---- Keeping the sample data current --------------------------------
@@ -78,7 +109,7 @@ export function loadState() {
   try {
     const saved = localStorage.getItem(KEY)
     if (saved) {
-      const state = flagOldUnmatched(refreshSampleDates(JSON.parse(saved)))
+      const state = flagOldUnmatched(settleExpired(refreshSampleDates(JSON.parse(saved))))
       saveState(state)
       return state
     }

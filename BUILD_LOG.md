@@ -860,3 +860,30 @@ the following.
   - The full journey works on desktop and phone with Make blocked.
   - Lighthouse scores 99–100 on performance, accessibility, best practices
     and SEO.
+
+## Stage 31: fixes from the second code review
+
+A review of all code changed since Stage 22 found six issues. All are fixed:
+
+- **The problem form no longer carries over.** It belongs to one delivery
+  (`reportingFor` holds that delivery's id). Before, opening it on one
+  delivery and switching the picker left it open on the other delivery,
+  with the reason still chosen.
+- **"Carriers found" stays true.** When the app opens, `settleExpired` in
+  `src/lib/storage.js` moves a parcel whose carriers have all left back to
+  "Unmatched – Retrying", so the 2-hour admin flag applies to it.
+- **Requests on departed journeys expire.** A request still waiting for both
+  to accept when the carrier's departure time passes is closed as declined
+  (`expired: true`, no money moved). That carrier is not offered again, and
+  the parcel goes back to matching. The page says "Request expired", and the
+  sync log notes it on this device only (no new Sheet event). Accepting a
+  departed journey is also blocked on the Delivery page.
+- **Quick navigation no longer cuts a page fade short.** Only the newest view
+  transition clears the fade marker.
+- **The same-city error marks From as well as To.**
+- **Withdrawing a request is recorded in the sync log.** If the carrier had
+  already accepted, that carrier is not offered the parcel again.
+- **Checked**
+  - 9 browser checks of these fixes pass.
+  - All 12 tests, 19 earlier checks and the stale-data simulation pass.
+  - axe is clean.
