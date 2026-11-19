@@ -3,10 +3,10 @@
 import { useRef, useState } from 'react'
 import { STATUS, DELIVERY, ESCROW, MAX_CODE_TRIES } from '../data/constants.js'
 import { generateOtp, generateDifferentOtp } from '../lib/otp.js'
-import { sendToWebhook } from '../lib/webhook.js'
+import { sendToWebhook, noteInSyncLog } from '../lib/webhook.js'
 import { goTo } from '../lib/navigation.js'
 import { formatPKR, formatDateTime, formatShort, isolate } from '../lib/format.js'
-import { findMatches } from '../lib/matching.js'
+import { findMatches, isAvailable } from '../lib/matching.js'
 import { calculateSaving } from '../lib/pricing.js'
 import { shake } from '../lib/motion.js'
 import PageHeader from '../components/PageHeader.jsx'
@@ -91,7 +91,9 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
   const [message, setMessage] = useState(null) // { ok: true/false, text }
   // "Report a problem" opens a short form first: nothing is frozen until the
   // reason is chosen and confirmed.
-  const [reporting, setReporting] = useState(false)
+  // The form belongs to one delivery (its id), so it never carries over when
+  // another delivery is picked: the page itself stays open in between.
+  const [reportingFor, setReportingFor] = useState(null)
   const [problem, setProblem] = useState('')
 
   const deliveries = [...state.deliveries].reverse() // newest first
@@ -137,6 +139,11 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
   // ---- Step 1: acceptance ----------------------------------------------
   function handleAccept(who) {
+    // The carrier has already left: this request can no longer go ahead.
+    if (!isAvailable(journey)) {
+      setMessage({ ok: false, text: `${isolate(journey.carrierName)}'s departure time has passed, so this request can no longer be accepted. Choose another carrier on the Matches page.` })
+      return
+    }
     const senderAccepted = who === 'sender' ? true : delivery.senderAccepted
     const carrierAccepted = who === 'carrier' ? true : delivery.carrierAccepted
 
@@ -169,15 +176,21 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
   // The sender changes their mind before both have accepted: the request is
   // removed (no money has moved) and the parcel goes back to its carriers.
+  // If the carrier had already accepted (they offered to carry it), they are
+  // not offered this parcel again. The withdrawal is noted in the sync log.
   function handleWithdraw() {
+    const rejectedJourneyIds = delivery.carrierAccepted
+      ? [...shipment.rejectedJourneyIds, journey.id] : shipment.rejectedJourneyIds
     const { eligible } = findMatches(shipment, state.journeys)
-    const stillOpen = eligible.some((r) => !shipment.rejectedJourneyIds.includes(r.journey.id))
+    const stillOpen = eligible.some((r) => !rejectedJourneyIds.includes(r.journey.id))
     save({
       ...state,
       deliveries: state.deliveries.filter((d) => d.id !== delivery.id),
       shipments: state.shipments.map((s) => (s.id !== shipment.id ? s
-        : { ...s, status: stillOpen ? STATUS.FOUND : STATUS.RETRYING })),
+        : { ...s, rejectedJourneyIds, status: stillOpen ? STATUS.FOUND : STATUS.RETRYING })),
     })
+    noteInSyncLog('request_withdrawn',
+      `Request withdrawn by ${shipment.senderName}: ${shipment.origin} to ${shipment.destination}, carrier ${journey.carrierName}`)
     goTo(`matches/${shipment.id}`)
   }
 
@@ -252,7 +265,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
   // ---- Dispute: freeze the escrow and hand over to a human admin --------
   function handleDispute() {
-    setReporting(false)
+    setReportingFor(null)
     update(
       { status: DELIVERY.DISPUTED, escrow: ESCROW.FROZEN, disputeReason: problem },
       { status: STATUS.DISPUTED },
@@ -263,6 +276,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
   }
 
   const active = [DELIVERY.AWAITING_PICKUP, DELIVERY.IN_TRANSIT].includes(delivery.status)
+  const reporting = reportingFor === delivery.id
 
   return (
     <div>
@@ -437,8 +451,13 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
           )}
           {delivery.status === DELIVERY.DECLINED && (
             <section className="card enter-rise">
-              <h2 className="text-xl font-bold">Carrier declined</h2>
-              <p className="mt-1">No money moved. The next-ranked carrier is offered on the Matches page.</p>
+              <h2 className="text-xl font-bold">{delivery.expired ? 'Request expired' : 'Carrier declined'}</h2>
+              <p className="mt-1">
+                {delivery.expired
+                  ? `${isolate(journey.carrierName)}'s departure time passed before both had accepted. `
+                  : ''}
+                No money moved. The next-ranked carrier is offered on the Matches page.
+              </p>
               <a href={`#/matches/${shipment.id}`} className="btn btn-primary mt-4">See next carrier</a>
             </section>
           )}
@@ -452,7 +471,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
           {/* Report a problem (only while the delivery is under way) */}
           {active && !reporting && (
             <button type="button" className="btn btn-danger" data-testid="report-problem"
-              onClick={() => { setProblem(''); setReporting(true) }}>
+              onClick={() => { setProblem(''); setReportingFor(delivery.id) }}>
               Report a problem
             </button>
           )}
@@ -477,7 +496,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
                   onClick={handleDispute} data-testid="confirm-problem">
                   Freeze payment and report
                 </button>
-                <button type="button" className="btn btn-secondary" onClick={() => setReporting(false)}>
+                <button type="button" className="btn btn-secondary" onClick={() => setReportingFor(null)}>
                   Cancel
                 </button>
               </div>

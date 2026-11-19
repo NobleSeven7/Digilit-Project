@@ -15,15 +15,19 @@ export function prefersReducedMotion() {
 // "kind" is put on <html> while it runs, so the CSS can style each kind
 // differently ("page" = a soft fade between two pages).
 // Browsers without view transitions, and reduced motion, just change at once.
+let latestTransition = 0
 export function withViewTransition(change, kind) {
   if (!document.startViewTransition || prefersReducedMotion()) {
     change()
     return
   }
   const root = document.documentElement
+  const id = ++latestTransition
   if (kind) root.dataset.transition = kind
   const transition = document.startViewTransition(() => flushSync(change))
-  transition.finished.finally(() => { delete root.dataset.transition })
+  // Only the newest transition clears the marker; an older one finishing
+  // late must not cut the newer one's fade short.
+  transition.finished.finally(() => { if (id === latestTransition) delete root.dataset.transition })
 }
 
 // React hook: becomes true the first time the element scrolls into view

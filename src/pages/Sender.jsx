@@ -264,7 +264,7 @@ export default function Sender({ state, save, profile, setProfile }) {
               <div className="space-y-4">
                 <div>
                   <label className="label" htmlFor="origin">From</label>
-                  <select id="origin" className="field" value={origin}
+                  <select id="origin" className="field" value={origin} {...errorProps('route')}
                     onChange={(e) => setOrigin(e.target.value)}>
                     {CITIES.map((city) => <option key={city}>{city}</option>)}
                   </select>
