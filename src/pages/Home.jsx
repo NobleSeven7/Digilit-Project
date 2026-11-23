@@ -153,9 +153,9 @@ function FadeInPhoto({ className = '', ...props }) {
 }
 
 // Credit line for a Wikimedia Commons photo (the licences ask for one).
-function PhotoCredit({ author, licence, licenceUrl, source, className = '' }) {
+function PhotoCredit({ author, licence, licenceUrl, source, className = '', tone = 'text-muted' }) {
   return (
-    <p className={`text-xs text-muted ${className}`}>
+    <p className={`text-xs ${tone} ${className}`}>
       Photo: {author}, <a href={licenceUrl} rel="noopener noreferrer">{licence}</a>, via{' '}
       <a href={source} rel="noopener noreferrer">Wikimedia Commons</a> (cropped).
     </p>
@@ -213,17 +213,17 @@ export default function Home({ profile, setProfile }) {
       </section>
 
       {/* A real photo: the trips already happen, with room to spare */}
-      <section className="grid overflow-hidden rounded-2xl bg-sunk lg:grid-cols-2" data-testid="photo-terminal">
+      <section className="grid overflow-hidden rounded-2xl bg-brand text-white lg:grid-cols-2" data-testid="photo-terminal">
         <FadeInPhoto src={terminalPhoto} width="1280" height="960" loading="lazy"
           alt="Travellers carrying bags outside the Daewoo Express bus terminal in Bahawalpur"
           className="aspect-[4/3] size-full object-cover lg:aspect-auto" />
         <div className="self-center px-5 py-9 sm:px-12 sm:py-14">
           <h2 className="text-4xl font-bold sm:text-6xl">Already on the road</h2>
-          <p className="mt-4 max-w-md text-lg text-muted">
+          <p className="mt-4 max-w-md text-lg text-on-brand-soft">
             Every day people travel between Pakistan's cities by bus, car and van, often with
             room to spare in a bag or a boot. RaastaShare puts that space to use.
           </p>
-          <PhotoCredit className="mt-6" author="Ammarkh" licence="CC BY-SA 3.0"
+          <PhotoCredit className="mt-6 [&_a]:text-white" tone="text-on-brand-soft" author="Ammarkh" licence="CC BY-SA 3.0"
             licenceUrl="https://creativecommons.org/licenses/by-sa/3.0/"
             source="https://commons.wikimedia.org/wiki/File:BahawalpurDaewoo.JPG" />
         </div>
@@ -251,25 +251,25 @@ export default function Home({ profile, setProfile }) {
 
       {/* Closing: the same two choices as buttons, over a photo of the M-2 */}
       <section className="pb-4">
-        <div className="relative overflow-hidden rounded-2xl bg-[#0B1A13] text-center text-white">
+        <div className="relative overflow-hidden rounded-2xl bg-[#0B1A13] text-white">
           <FadeInPhoto src={motorwayPhoto} width="1280" height="960" loading="lazy" alt=""
             className="absolute inset-0 size-full object-cover" />
           {/* Darkens the photo so the white text stays readable */}
           <div className="absolute inset-0 bg-[#0B1A13]/65" aria-hidden="true" />
-          <div className="relative px-5 py-20 sm:py-28">
-            <h2 className="mx-auto max-w-3xl text-balance text-5xl font-bold leading-[0.95] sm:text-7xl">
+          <div className="relative px-5 py-20 sm:px-12 sm:py-28">
+            <h2 className="max-w-3xl text-balance text-5xl font-bold leading-[0.95] sm:text-7xl">
               The trip is happening anyway
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-white/85">
+            <p className="mt-4 max-w-xl text-lg text-white/85">
               Put a parcel on it, or offer the space in your car.
             </p>
-            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <a href="#/sender" className="btn btn-primary" onClick={become('sender')}>Post a parcel</a>
               <a href="#/carrier" className="btn btn-secondary" onClick={become('carrier')}>Post a journey</a>
             </div>
           </div>
         </div>
-        <PhotoCredit className="mt-2 text-center" author="King Eliot" licence="CC BY-SA 4.0"
+        <PhotoCredit className="mt-2" author="King Eliot" licence="CC BY-SA 4.0"
           licenceUrl="https://creativecommons.org/licenses/by-sa/4.0/"
           source="https://commons.wikimedia.org/wiki/File:M-2_Motorway_approaching_Islamabad.jpg" />
       </section>

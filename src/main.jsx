@@ -10,6 +10,11 @@ import '@fontsource/barlow-condensed/700.css'
 import '@fontsource/barlow/400.css'
 import '@fontsource/barlow/500.css'
 import '@fontsource/barlow/700.css'
+// Preview only: fonts for the redesign options (unused ones are removed after the pick).
+import '@fontsource-variable/archivo/wdth.css'
+import '@fontsource/ibm-plex-sans/400.css'
+import '@fontsource/ibm-plex-sans/700.css'
+import '@fontsource/ibm-plex-sans-condensed/700.css'
 
 import './index.css'
 import App from './App.jsx'
