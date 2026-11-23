@@ -8,7 +8,7 @@ import RouteCodes from './RouteCodes.jsx'
 function Field({ label, value }) {
   return (
     <div className="min-w-0">
-      <p className="text-xs uppercase tracking-wide text-on-brand-soft">{label}</p>
+      <p className="text-sm text-on-brand-soft">{label}</p>
       <p className="truncate font-bold">{value}</p>
     </div>
   )

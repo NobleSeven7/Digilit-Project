@@ -128,8 +128,9 @@ function StepRow({ step, index }) {
   return (
     <li ref={ref} className={`reveal-up grid items-center gap-8 lg:grid-cols-2 lg:gap-16 ${seen ? 'is-seen' : ''}`}>
       <div className={`max-w-md ${index % 2 ? 'lg:order-2' : 'lg:justify-self-end'}`}>
-        <p className="text-sm font-bold uppercase tracking-[0.14em] text-brand-ink">
-          <span className="tabular-nums">0{index + 1}</span> / {step.label}
+        {/* Step number and name in normal case (tiny ALL CAPS labels read as templated) */}
+        <p className="font-display text-2xl font-bold text-brand-ink">
+          <span className="tabular-nums text-muted">0{index + 1}</span> {step.label}
         </p>
         <h3 className="mt-3 text-4xl font-bold leading-[0.95] sm:text-6xl">{step.title}</h3>
         <p className="mt-4 text-lg text-muted">{step.text}</p>

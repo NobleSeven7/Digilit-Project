@@ -983,3 +983,19 @@ bursts). The calm sites use one gentle effect everywhere. RaastaShare now has:
   text and smooth-scroll libraries (RCA, Unseen).
 - **Checked:** all 12 tests pass, axe is clean in both themes, and there are no
   console errors.
+
+## Stage 36: no tiny ALL CAPS labels
+
+From a reel the team shared ("20 niche UI tricks to fix an AI slop website").
+RaastaShare already avoided 15 of the 20. This stage fixes trick 16: small,
+widely spaced ALL CAPS labels read as templated.
+
+- **Home steps:** "01 / SUBMIT" is now "01 Submit": the number in grey and
+  the name in green, at a readable size, in normal case.
+- **Parcel pass:** the labels read "Sender", "Carrier", "Parcel", "Departs"
+  instead of SENDER, CARRIER, PARCEL, DEPARTS (Home example and Delivery
+  page).
+- **Checked:** all 12 tests pass and axe is clean in both themes.
+- **Still open from the reel:** one main button in the closing panel, fewer
+  pill shapes on carrier cards, and rounding the hero headline sizes onto the
+  4px grid.
