@@ -65,7 +65,7 @@ function PriceRow({ name, note, price, highlight, order }) {
 // A phone outline. Whatever is inside is its screen.
 function Phone({ label, children }) {
   return (
-    <div className="relative mx-auto w-full max-w-[20rem] overflow-hidden rounded-[2.75rem] border-[10px] border-ink bg-paper shadow-[var(--shadow-lift)]"
+    <div className="relative mx-auto w-full max-w-[20rem] overflow-hidden lg:max-w-[16rem] rounded-[2.75rem] border-[10px] border-ink bg-paper shadow-[var(--shadow-lift)]"
       role="img" aria-label={label}>
       <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-full bg-ink" aria-hidden="true" />
       <div className="pt-9" aria-hidden="true">{children}</div>
@@ -113,7 +113,7 @@ const STEPS = [
     text: 'The parcel gets a pass. The carrier enters the pickup code at the door and the delivery code at the other end. Only then is the money released.',
     phone: 'A phone showing a RaastaShare pickup pass from Islamabad to Lahore',
     screen: (
-      <div className="px-3 pb-4">
+      <div className="px-2 pb-3">
         <ParcelPass kind="Pickup" code="4827" shipment={PASS_PARCEL} journey={PASS_JOURNEY} note="Example pass" />
       </div>
     ),

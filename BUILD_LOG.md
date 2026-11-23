@@ -954,3 +954,7 @@ From the website examples the team liked (Superlist, Hyer, Nakashima):
 - **Checked:** all 12 tests pass, axe is clean in both themes, and there are
   no console errors.
 - **Not changed:** rules, scores, pricing, statuses and sign-in.
+- **Follow-up: smaller phones.** On laptop and desktop screens the step phones
+  are 20% smaller (16rem wide), so each step fits on a 1366×768 screen. On a
+  narrow pass, the "Pickup pass" label moves under the RaastaShare name
+  instead of running into it. All 12 tests still pass.

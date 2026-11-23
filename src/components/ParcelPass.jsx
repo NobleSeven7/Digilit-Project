@@ -21,9 +21,9 @@ export default function ParcelPass({ kind, code, shipment, journey, codeTestId, 
       data-testid="parcel-pass">
       {/* Top: the trip */}
       <div className="bg-brand p-5 text-white">
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-sm">
           <span className="font-display text-lg font-bold">RaastaShare</span>
-          <span className="rounded-full border border-white px-3 py-0.5 font-bold">{kind} pass</span>
+          <span className="whitespace-nowrap rounded-full border border-white px-3 py-0.5 text-sm font-bold">{kind} pass</span>
         </div>
         <RouteCodes origin={shipment.origin} destination={shipment.destination} className="mt-4" tone="text-on-brand-soft" />
         <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
