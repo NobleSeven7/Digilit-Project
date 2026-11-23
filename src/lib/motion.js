@@ -52,6 +52,37 @@ export function useSeenOnce() {
   return [ref, seen]
 }
 
+// React hook: true while the person is scrolling down the page (past the
+// first 120px), false as soon as they scroll back up. The phone header uses
+// it to get out of the way while reading and come back when needed.
+export function useHideOnScroll() {
+  const [hidden, setHidden] = useState(false)
+
+  useEffect(() => {
+    let lastY = window.scrollY
+    let frame = 0
+    const onScroll = () => {
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        const y = window.scrollY
+        if (y < 120) setHidden(false)
+        else if (y > lastY + 6) setHidden(true)
+        else if (y < lastY - 6) setHidden(false)
+        else return // small jitter: keep lastY so slow scrolls still add up
+        lastY = y
+      })
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(frame)
+    }
+  }, [])
+
+  return hidden
+}
+
 // A short side-to-side shake, the familiar "no". Used when a wrong code is
 // entered. Played with element.animate() so it can run again on every wrong
 // try. With reduced motion it does nothing (the red message still appears).

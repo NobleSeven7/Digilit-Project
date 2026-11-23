@@ -259,6 +259,20 @@ test-screenshots/  screenshot of each test result
 BUILD_LOG.md       what was built, which decisions came from the proposal, errors fixed
 ```
 
+## Photo credits
+
+The two photos on the Home page come from Wikimedia Commons. We resized and
+cropped them, and they keep their original licences:
+
+- Daewoo Express terminal, Bahawalpur: photo by Ammarkh,
+  [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/),
+  [source](https://commons.wikimedia.org/wiki/File:BahawalpurDaewoo.JPG).
+- M-2 Motorway approaching Islamabad: photo by King Eliot,
+  [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/),
+  [source](https://commons.wikimedia.org/wiki/File:M-2_Motorway_approaching_Islamabad.jpg).
+
+The phone screens in "How it works" are screenshots of this app.
+
 ## AI-use note
 
 The code for this prototype was generated with Claude (Anthropic), using

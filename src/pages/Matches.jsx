@@ -24,7 +24,7 @@ function ScoreBadge({ total }) {
       </p>
       <div className="ml-auto mt-2 h-2 w-28 rounded-full bg-brand-tint" role="img"
         aria-label={`Score ${rounded} out of 100`}>
-        <div className="h-2 rounded-full bg-brand" style={{ width: `${Math.min(100, total)}%` }} />
+        <div className="h-2 rounded-full bg-brand-ink" style={{ width: `${Math.min(100, total)}%` }} />
       </div>
     </div>
   )
@@ -223,7 +223,7 @@ export default function Matches({ state, save, id }) {
         </div>
         {calculateSaving(shipment.weightKg) > 0 && (
           <p className="mt-2 text-sm text-muted">
-            About {formatPKR(calculateSaving(shipment.weightKg))} less than a PKR 1,000 courier.
+            About {formatPKR(calculateSaving(shipment.weightKg))} less than our PKR 1,000 courier estimate.
           </p>
         )}
         {delivery && (

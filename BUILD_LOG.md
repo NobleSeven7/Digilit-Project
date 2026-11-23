@@ -887,3 +887,183 @@ A review of all code changed since Stage 22 found six issues. All are fixed:
   - 9 browser checks of these fixes pass.
   - All 12 tests, 19 earlier checks and the stale-data simulation pass.
   - axe is clean.
+
+## Stage 32: less "generated", more travel (after Hyer)
+
+The team felt the site looked AI-made. Award-winning sites from Adobe's list
+were reviewed; Hyer (private aviation, flyhyer.com) was the team's favourite.
+From it we took four ideas:
+
+- **City codes.** The luggage-tag codes ISB, RWP, LHE, KHI, PEW, LYP, MUX and
+  UET are the short route labels (`CITY_CODES`, `RouteCodes`), large, with the
+  full city name small underneath. They are used on Matches, Carry and
+  Delivery, the Dashboard delivery cards, the Admin rows and the Home fact
+  line. Display only: the matching rules still compare the city names.
+- **Parcel pass.** The pickup and delivery codes are shown as a boarding-pass
+  style ticket (`ParcelPass`): the trip on green above a tear line, the code
+  below. The Home page shows the pass on a phone ("Codes, not phone calls"),
+  using the demo parcel and an example code.
+- **Fewer cards.** Home's two choices are plain rows between thin lines (no
+  icon circles or boxes). The Dashboard metrics sit in one strip divided by
+  lines, and its sections are open. Admin lists are divided rows. Clickable
+  cards, forms and the Matches carrier cards stay as cards.
+- **A smaller palette.** White page, near-black text (#0B1A13), motorway green
+  for big blocks and actions, amber only for money held or waiting. The dark
+  theme follows the same idea.
+- **Checked**
+  - All 12 tests, 19 earlier checks and 9 code-review checks pass.
+  - axe is clean in both themes; the pass's white-on-green text is 6.6:1
+    (light) and 5.3:1 (dark).
+- **Not changed:** rules, scores, pricing, statuses and sign-in.
+
+## Stage 33: review of the redesign
+
+A code review and a Playwright CLI walkthrough checked Stage 32. The full
+flow (pass at pickup and delivery, Dashboard, Admin, dark mode) worked with
+no console errors. The review found five issues, all fixed:
+
+- **Grey panels returned.** With the page now white, panels that used the
+  page colour vanished (the accept rows, the "only the carrier" box, the Send
+  map backdrop, disabled buttons). They now use `--color-sunk`, a light grey
+  in light mode and a deeper shade in dark mode.
+- **Tablet Dashboard.** The two metric columns get a dividing line at tablet
+  width too.
+- **Admin's import** is back with the other imports.
+- **Screen readers.** The Home fact line reads "Islamabad to Lahore" instead
+  of "ISB right arrow LHE".
+- **Home phone pass.** The sample data for it is worked out once, not on
+  every redraw.
+- **Checked:** all 12 tests, 19 + 9 earlier checks, axe clean, no console
+  errors.
+
+## Stage 34: real screens and real photos on Home
+
+From the website examples the team liked (Superlist, Hyer, Nakashima):
+
+- **Numbered steps.** "How it works" is now three steps, "01 / Submit",
+  "02 / Accept", "03 / Verify". Each step sits beside a phone showing the real
+  screen: the Send form, the ranked carriers, and the parcel pass. The
+  separate "Codes, not phone calls" section became step 03. The screenshots
+  come in a light and a dark copy, and CSS shows the one for the current theme.
+  They need retaking if the Send or Matches page changes.
+- **Real photos.** Two freely licensed Wikimedia Commons photos: travellers at
+  the Daewoo terminal in Bahawalpur ("Already on the road"), and the M-2 near
+  Islamabad behind the closing section. Each photo has a credit line on the
+  page and in the README. They add about 215 KB.
+- **Removed:** the "How it works" road animation and its CSS.
+- **Checked:** all 12 tests pass, axe is clean in both themes, and there are
+  no console errors.
+- **Not changed:** rules, scores, pricing, statuses and sign-in.
+- **Follow-up: smaller phones.** On laptop and desktop screens the step phones
+  are 20% smaller (16rem wide), so each step fits on a 1366×768 screen. On a
+  narrow pass, the "Pickup pass" label moves under the RaastaShare name
+  instead of running into it. All 12 tests still pass.
+
+## Stage 35: motion borrowed from the example sites
+
+Playwright recorded how Hyer, Superlist, Frans Hals, Nakashima, Simply
+Chocolate, NOWNESS, RCA and Unseen move (libraries, durations, easing, frame
+bursts). The calm sites use one gentle effect everywhere. RaastaShare now has:
+
+- **Step reveal (Hyer).** Each "How it works" step fades in and rises 24px the
+  first time it scrolls into view, text first and its phone 150ms later
+  (600ms).
+- **Departure-board code (step 03).** The example code's digits roll up to
+  4827 one after another once the phone has arrived. Only on the Home
+  example. The Delivery page shows its codes as plain text, as the tests
+  expect.
+- **Photo fade (Nakashima).** The two Home photos fade in once they have loaded
+  (600ms). The closing panel is dark before its photo arrives, so the white
+  text is always readable.
+- **Phone header (Simply Chocolate).** On phones the green header now stays at
+  the top, slides away while scrolling down and returns when scrolling up. It
+  never hides while something inside it has keyboard focus.
+- **Reduced motion:** every one of these shows the final state at once.
+- **Left out on purpose:** loading screens, custom cursors, letter-by-letter
+  text and smooth-scroll libraries (RCA, Unseen).
+- **Checked:** all 12 tests pass, axe is clean in both themes, and there are no
+  console errors.
+
+## Stage 36: no tiny ALL CAPS labels
+
+From a reel the team shared ("20 niche UI tricks to fix an AI slop website").
+RaastaShare already avoided 15 of the 20. This stage fixes trick 16: small,
+widely spaced ALL CAPS labels read as templated.
+
+- **Home steps:** "01 / SUBMIT" is now "01 Submit": the number in grey and
+  the name in green, at a readable size, in normal case.
+- **Parcel pass:** the labels read "Sender", "Carrier", "Parcel", "Departs"
+  instead of SENDER, CARRIER, PARCEL, DEPARTS (Home example and Delivery
+  page).
+- **Checked:** all 12 tests pass and axe is clean in both themes.
+- **Still open from the reel:** one main button in the closing panel, fewer
+  pill shapes on carrier cards, and rounding the hero headline sizes onto the
+  4px grid.
+
+## Stage 37: a menu for each role
+
+The team asked whether senders and carriers should be separate. In the real
+product they would be (separate apps, carrier identity checks). That is
+future work, and the proposal keeps sign-in simulated, so a password screen
+would be security for show only. Instead, the one app now feels like two:
+
+- **Menu by role.** A sender sees Send, Matches and Delivery. A carrier sees
+  Carry and Delivery. Admin and Dashboard follow after a thin divider as the
+  team pages, on desktop and in the phone tab bar.
+- **"Sender view" / "Carrier view"** on the "Signed in as" bar, so an
+  audience always knows which side is on screen.
+- **Nothing is locked.** Every page still opens from a link (the tests and the
+  demo rely on this), and the Send and Carry pages already explain what to do
+  if the wrong person opens them.
+- **Checked:** all 12 tests pass, axe is clean in both themes, and there are no
+  console errors.
+
+## Stage 38: say plainly what happens to data
+
+From a second reel ("20 things to have Claude do so your app doesn't get
+sued"). Most items are for real businesses, and RaastaShare already passed
+them: no cookies or tracking, self-hosted fonts, no dark patterns or hidden
+fees, licensed photos and fonts, alt text and contrast. Four needed work:
+
+- **"About this demo" page** (`#/about`, linked from every footer): whose
+  project it is, that people, trips, codes and payments are fictional, what
+  stays in the browser, what is sent to Make.com, the Google Sheet, the team
+  email and Gemini, and how to remove it ("Reset demo data", or ask the team
+  through the course to remove something from the Sheet). No email address
+  is published.
+- **AI box wording:** it now also says the description is saved in the
+  project's Google Sheet, with a "What we keep" link.
+- **Estimates labelled:** the PKR 1,000 courier price and the "about eight
+  steps" are marked as our estimates on Home, Matches, Delivery and the
+  Dashboard.
+- **Checked:** all 12 tests pass, and axe is clean in both themes (the About
+  page included).
+
+## Stage 39: "cargo label" redesign
+
+Brief: redesign only the look so it does not read as AI-generated, using a
+60-30-10 colour scheme and the feel of a practical Pakistani logistics brand
+(bus terminal signs, cargo labels), with strong plain type and left-aligned
+layouts. Three options were previewed with screenshots (Terminal board, Cargo
+label, Motorway + truck art), and the team chose **Cargo label**.
+
+- **Colour, 60-30-10.** 60%: kraft paper `#E2D3B6` for the page. 30%: label
+  black `#1C1A17` for the header, buttons, price band, parcel pass and photo
+  panel. 10%: "fragile tape" red `#D7261E` for the saving badge, money held,
+  the current page and focus rings. Errors and disputes use a darker oxblood
+  `#7A1810`, so they are not confused with the accent.
+- **Dark mode:** a black label with kraft-coloured printing. Bars, routes and
+  map lines use the ink colour, so they stay visible in both themes.
+- **Type:** IBM Plex Sans Condensed for headings and IBM Plex Sans for text
+  (SIL Open Font License, bundled with the site). Barlow and the preview-only
+  Archivo were removed from `package.json`.
+- **Shape:** nearly square corners (3–4px), like a printed label.
+- **Layout:** the closing panel is left-aligned, and the "Already on the
+  road" panel uses the 30% colour.
+- **Also updated:** the "How it works" phone screenshots were retaken in the
+  new style, and photo credit links are underlined (they need to stand out
+  on the black panel).
+- **Not changed:** logic, data, webhooks, the AI check, rules, pricing,
+  statuses, sign-in and tests.
+- **Checked:** all 12 tests pass, axe is clean on all 8 pages in both themes,
+  and there are no console errors.

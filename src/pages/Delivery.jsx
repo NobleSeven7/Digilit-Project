@@ -13,6 +13,7 @@ import PageHeader from '../components/PageHeader.jsx'
 import RouteLine from '../components/RouteLine.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import SuccessTick from '../components/SuccessTick.jsx'
+import ParcelPass from '../components/ParcelPass.jsx'
 
 // Reasons a sender or carrier can give when reporting a problem.
 const PROBLEMS = [
@@ -36,16 +37,6 @@ const REACHED = {
 const STILL_MOVING = [
   DELIVERY.AWAITING_ACCEPT, DELIVERY.AWAITING_PICKUP, DELIVERY.IN_TRANSIT, DELIVERY.DISPUTED,
 ]
-
-// A box that shows a code on screen, standing in for an SMS.
-function CodeBox({ label, code, testId }) {
-  return (
-    <div className="rounded-lg border-2 border-dashed border-hold bg-hold-tint px-4 py-3">
-      <p className="text-sm text-hold-ink">{label}</p>
-      <p className="font-display text-3xl font-bold tracking-[0.3em]" data-testid={testId}>{code}</p>
-    </div>
-  )
-}
 
 // A 4-digit code input with its confirm button. onSubmit returns false for a
 // wrong code, and the box then shakes.
@@ -76,7 +67,7 @@ function CodeForm({ id, label, buttonText, onSubmit }) {
 // money). Anyone else signed in sees a one-tap switch to the carrier instead.
 function CarrierOnly({ carrierName, setProfile }) {
   return (
-    <div className="mt-4 rounded-lg bg-paper px-3 py-3">
+    <div className="mt-4 rounded-lg bg-sunk px-3 py-3">
       <p>Only <strong>{carrierName}</strong> (the carrier) enters this code.</p>
       <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-carrier"
         onClick={() => setProfile({ role: 'carrier', name: carrierName })}>
@@ -341,7 +332,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
               </p>
               <div className="mt-4 space-y-3">
                 {/* The sender's row: only the sender can accept here */}
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-paper px-3 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-sunk px-3 py-3">
                   <p><strong>{shipment.senderName}</strong> (sender)</p>
                   {delivery.senderAccepted ? <StatusBadge status="Accepted" />
                     : isSender ? (
@@ -355,7 +346,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
                     )}
                 </div>
                 {/* The carrier's row: only the carrier can accept or decline here */}
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-paper px-3 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-sunk px-3 py-3">
                   <p><strong>{journey.carrierName}</strong> (carrier)</p>
                   {delivery.carrierAccepted ? <StatusBadge status="Accepted" />
                     : isCarrier ? (
@@ -390,8 +381,9 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
               <p className="mt-1 text-muted">
                 {isolate(shipment.senderName)} reads this code to {isolate(journey.carrierName)} when handing over the parcel.
               </p>
-              <div className="mt-4 max-w-xs">
-                <CodeBox label="Pickup code (would arrive by SMS)" code={delivery.pickupOtp} testId="pickup-otp" />
+              <div className="mt-4">
+                <ParcelPass kind="Pickup" code={delivery.pickupOtp} codeTestId="pickup-otp"
+                  shipment={shipment} journey={journey} />
               </div>
               {isCarrier ? (
                 <CodeForm id="pickup-code" label="Carrier enters the pickup code"
@@ -409,8 +401,9 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
               <p className="mt-1 text-muted">
                 The receiver reads this code to {isolate(journey.carrierName)} once the parcel arrives safely.
               </p>
-              <div className="mt-4 max-w-xs">
-                <CodeBox label="Delivery code (would arrive by SMS)" code={delivery.deliveryOtp} testId="delivery-otp" />
+              <div className="mt-4">
+                <ParcelPass kind="Delivery" code={delivery.deliveryOtp} codeTestId="delivery-otp"
+                  shipment={shipment} journey={journey} />
               </div>
               {isCarrier ? (
                 <CodeForm id="delivery-code" label="Carrier enters the delivery code"
@@ -436,7 +429,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
               </p>
               <p className="mt-2" data-testid="outcome">
                 {saving > 0
-                  ? `${isolate(shipment.senderName)} paid about ${formatPKR(saving)} less than a PKR 1,000 courier, and ${isolate(journey.carrierName)} earned ${amount} on a trip that was happening anyway.`
+                  ? `${isolate(shipment.senderName)} paid about ${formatPKR(saving)} less than our PKR 1,000 courier estimate, and ${isolate(journey.carrierName)} earned ${amount} on a trip that was happening anyway.`
                   : `${isolate(journey.carrierName)} earned ${amount} on a trip that was happening anyway.`}
               </p>
               <a href="#/dashboard" className="btn btn-secondary mt-4">See the dashboard</a>
