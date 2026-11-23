@@ -168,6 +168,7 @@ export default function Sender({ state, save, profile, setProfile }) {
     save({ ...state, shipments: [...state.shipments, shipment] })
     if (posthogEnabled) {
       posthog.capture('shipment_posted', {
+        shipment_ref: shipment.id,
         origin_city: origin,
         destination_city: destination,
         item_type: type,

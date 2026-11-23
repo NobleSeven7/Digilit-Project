@@ -141,6 +141,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
     if (posthogEnabled) {
       posthog.capture('delivery_acceptance_recorded', {
+        shipment_ref: shipment.id,
         accepted_by: who,
         match_confirmed: senderAccepted && carrierAccepted,
       })
@@ -170,7 +171,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
       { status: DELIVERY.DECLINED },
       { status: STATUS.RETRYING, rejectedJourneyIds: [...shipment.rejectedJourneyIds, journey.id] },
     )
-    if (posthogEnabled) posthog.capture('delivery_request_declined')
+    if (posthogEnabled) posthog.capture('delivery_request_declined', { shipment_ref: shipment.id })
     goTo(`matches/${shipment.id}`)
   }
 
@@ -193,6 +194,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
       `Request withdrawn by ${shipment.senderName}: ${shipment.origin} to ${shipment.destination}, carrier ${journey.carrierName}`)
     if (posthogEnabled) {
       posthog.capture('delivery_request_withdrawn', {
+        shipment_ref: shipment.id,
         carrier_had_accepted: delivery.carrierAccepted,
       })
     }
@@ -227,7 +229,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
   function handlePickup(code) {
     if (code === delivery.pickupOtp) {
       update({ status: DELIVERY.IN_TRANSIT })
-      if (posthogEnabled) posthog.capture('pickup_confirmed')
+      if (posthogEnabled) posthog.capture('pickup_confirmed', { shipment_ref: shipment.id })
       setMessage({ ok: true, text: 'Pickup confirmed. The parcel is on its way.' })
     } else {
       setMessage({ ok: false, text: `Wrong pickup code. The parcel has not been handed over. Ask ${isolate(shipment.senderName)} to read the code again.` })
@@ -244,7 +246,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
         { status: STATUS.DELIVERED },
       )
       setMessage({ ok: true, text: `Delivery confirmed. ${amount} released to ${isolate(journey.carrierName)}.` })
-      if (posthogEnabled) posthog.capture('delivery_confirmed')
+      if (posthogEnabled) posthog.capture('delivery_confirmed', { shipment_ref: shipment.id })
       sendToWebhook('delivery', { ...record, escrow: ESCROW.RELEASED, deliveredAt },
         `Delivery completed: ${amount} released to ${journey.carrierName}`)
     } else {
@@ -259,7 +261,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
           { status: STATUS.DISPUTED },
         )
         setMessage({ ok: false, text: `Wrong delivery code again. After ${MAX_CODE_TRIES} wrong codes, ${amount} is frozen and an admin will check this delivery.` })
-        if (posthogEnabled) posthog.capture('delivery_disputed', { dispute_source: 'maximum_delivery_code_attempts' })
+        if (posthogEnabled) posthog.capture('delivery_disputed', { shipment_ref: shipment.id, dispute_source: 'maximum_delivery_code_attempts' })
         sendToWebhook('dispute', { ...record, escrow: ESCROW.FROZEN },
           `Dispute raised: ${reason}, ${shipment.origin} to ${shipment.destination}`)
       } else {
@@ -279,7 +281,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
       { status: STATUS.DISPUTED },
     )
     setMessage({ ok: false, text: `Problem reported. ${amount} is frozen until an admin reviews it.` })
-    if (posthogEnabled) posthog.capture('delivery_disputed', { dispute_source: 'reported_problem', problem_category: problem })
+    if (posthogEnabled) posthog.capture('delivery_disputed', { shipment_ref: shipment.id, dispute_source: 'reported_problem', problem_category: problem })
     sendToWebhook('dispute', { ...record, escrow: ESCROW.FROZEN },
       `Dispute raised: ${shipment.origin} to ${shipment.destination}`)
   }
