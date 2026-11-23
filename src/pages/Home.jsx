@@ -1,4 +1,5 @@
 // Home page: choose whether you are sending a parcel or carrying one.
+import { useCallback, useState } from 'react'
 import { BASE_FEE, FEE_PER_KG, COURIER_FEE } from '../data/constants.js'
 import { calculatePrice, savingPercent } from '../lib/pricing.js'
 import { formatPKR } from '../lib/format.js'
@@ -114,11 +115,41 @@ const STEPS = [
     phone: 'A phone showing a RaastaShare pickup pass from Islamabad to Lahore',
     screen: (
       <div className="px-2 pb-3">
-        <ParcelPass kind="Pickup" code="4827" shipment={PASS_PARCEL} journey={PASS_JOURNEY} note="Example pass" />
+        <ParcelPass kind="Pickup" code="4827" shipment={PASS_PARCEL} journey={PASS_JOURNEY} note="Example pass" rollCode />
       </div>
     ),
   },
 ]
+
+// One step: the text, then its phone. Both rise into place the first time the
+// step scrolls into view (.reveal-up), and the step 03 code starts rolling.
+function StepRow({ step, index }) {
+  const [ref, seen] = useSeenOnce()
+  return (
+    <li ref={ref} className={`reveal-up grid items-center gap-8 lg:grid-cols-2 lg:gap-16 ${seen ? 'is-seen' : ''}`}>
+      <div className={`max-w-md ${index % 2 ? 'lg:order-2' : 'lg:justify-self-end'}`}>
+        <p className="text-sm font-bold uppercase tracking-[0.14em] text-brand-ink">
+          <span className="tabular-nums">0{index + 1}</span> / {step.label}
+        </p>
+        <h3 className="mt-3 text-4xl font-bold leading-[0.95] sm:text-6xl">{step.title}</h3>
+        <p className="mt-4 text-lg text-muted">{step.text}</p>
+      </div>
+      <Phone label={step.phone}>{step.screen}</Phone>
+    </li>
+  )
+}
+
+// A photo that fades in once it has loaded (.photo-fade), instead of popping
+// in. A photo that fails to load also counts as done, so nothing waits on it.
+function FadeInPhoto({ className = '', ...props }) {
+  const [loaded, setLoaded] = useState(false)
+  // Already in the browser's cache: done before React could listen for it.
+  const checkCached = useCallback((img) => { if (img?.complete) setLoaded(true) }, [])
+  return (
+    <img ref={checkCached} {...props} onLoad={() => setLoaded(true)} onError={() => setLoaded(true)}
+      className={`photo-fade ${loaded ? 'is-loaded' : ''} ${className}`} />
+  )
+}
 
 // Credit line for a Wikimedia Commons photo (the licences ask for one).
 function PhotoCredit({ author, licence, licenceUrl, source, className = '' }) {
@@ -176,24 +207,13 @@ export default function Home({ profile, setProfile }) {
           Three steps, where phone calls and bargaining took about eight. A match takes under a minute.
         </p>
         <ol className="mt-10 space-y-16 sm:mt-14 sm:space-y-24" data-testid="steps">
-          {STEPS.map((step, index) => (
-            <li key={step.label} className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
-              <div className={`max-w-md ${index % 2 ? 'lg:order-2' : 'lg:justify-self-end'}`}>
-                <p className="text-sm font-bold uppercase tracking-[0.14em] text-brand-ink">
-                  <span className="tabular-nums">0{index + 1}</span> / {step.label}
-                </p>
-                <h3 className="mt-3 text-4xl font-bold leading-[0.95] sm:text-6xl">{step.title}</h3>
-                <p className="mt-4 text-lg text-muted">{step.text}</p>
-              </div>
-              <Phone label={step.phone}>{step.screen}</Phone>
-            </li>
-          ))}
+          {STEPS.map((step, index) => <StepRow key={step.label} step={step} index={index} />)}
         </ol>
       </section>
 
       {/* A real photo: the trips already happen, with room to spare */}
       <section className="grid overflow-hidden rounded-2xl bg-sunk lg:grid-cols-2" data-testid="photo-terminal">
-        <img src={terminalPhoto} width="1280" height="960" loading="lazy"
+        <FadeInPhoto src={terminalPhoto} width="1280" height="960" loading="lazy"
           alt="Travellers carrying bags outside the Daewoo Express bus terminal in Bahawalpur"
           className="aspect-[4/3] size-full object-cover lg:aspect-auto" />
         <div className="self-center px-5 py-9 sm:px-12 sm:py-14">
@@ -230,8 +250,8 @@ export default function Home({ profile, setProfile }) {
 
       {/* Closing: the same two choices as buttons, over a photo of the M-2 */}
       <section className="pb-4">
-        <div className="relative overflow-hidden rounded-2xl text-center text-white">
-          <img src={motorwayPhoto} width="1280" height="960" loading="lazy" alt=""
+        <div className="relative overflow-hidden rounded-2xl bg-[#0B1A13] text-center text-white">
+          <FadeInPhoto src={motorwayPhoto} width="1280" height="960" loading="lazy" alt=""
             className="absolute inset-0 size-full object-cover" />
           {/* Darkens the photo so the white text stays readable */}
           <div className="absolute inset-0 bg-[#0B1A13]/65" aria-hidden="true" />

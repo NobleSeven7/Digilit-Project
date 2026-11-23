@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { getTheme, saveTheme } from '../lib/theme.js'
 import { PROFILES, profileKey, findProfile } from '../lib/profile.js'
 import { SunIcon, MoonIcon } from './Icons.jsx'
-import { withViewTransition } from '../lib/motion.js'
+import { withViewTransition, useHideOnScroll } from '../lib/motion.js'
 
 const NAV_ITEMS = [
   { page: 'sender', label: 'Send' },
@@ -82,11 +82,13 @@ function ProfileBar({ profile, setProfile }) {
 export default function Layout({ currentPage, onReset, profile, setProfile, children }) {
   // Name of the page we are on (shown in the phone header, where there is no top menu).
   const current = NAV_ITEMS.find((item) => item.page === currentPage)
+  // Phones: the header slides away while scrolling down (see .site-header).
+  const headerHidden = useHideOnScroll()
 
   return (
     <div className="flex min-h-dvh flex-col">
-      {/* Header */}
-      <header className="bg-brand">
+      {/* Header (on phones it stays at the top and hides while scrolling down) */}
+      <header className="site-header bg-brand" data-hidden={headerHidden}>
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 safe-x py-3 sm:gap-4">
           <Logo />
           {/* Phones: show which page you are on */}

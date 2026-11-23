@@ -958,3 +958,28 @@ From the website examples the team liked (Superlist, Hyer, Nakashima):
   are 20% smaller (16rem wide), so each step fits on a 1366×768 screen. On a
   narrow pass, the "Pickup pass" label moves under the RaastaShare name
   instead of running into it. All 12 tests still pass.
+
+## Stage 35: motion borrowed from the example sites
+
+Playwright recorded how Hyer, Superlist, Frans Hals, Nakashima, Simply
+Chocolate, NOWNESS, RCA and Unseen move (libraries, durations, easing, frame
+bursts). The calm sites use one gentle effect everywhere. RaastaShare now has:
+
+- **Step reveal (Hyer).** Each "How it works" step fades in and rises 24px the
+  first time it scrolls into view, text first and its phone 150ms later
+  (600ms).
+- **Departure-board code (step 03).** The example code's digits roll up to
+  4827 one after another once the phone has arrived. Only on the Home
+  example. The Delivery page shows its codes as plain text, as the tests
+  expect.
+- **Photo fade (Nakashima).** The two Home photos fade in once they have loaded
+  (600ms). The closing panel is dark before its photo arrives, so the white
+  text is always readable.
+- **Phone header (Simply Chocolate).** On phones the green header now stays at
+  the top, slides away while scrolling down and returns when scrolling up. It
+  never hides while something inside it has keyboard focus.
+- **Reduced motion:** every one of these shows the final state at once.
+- **Left out on purpose:** loading screens, custom cursors, letter-by-letter
+  text and smooth-scroll libraries (RCA, Unseen).
+- **Checked:** all 12 tests pass, axe is clean in both themes, and there are no
+  console errors.
