@@ -12,6 +12,7 @@ import PageHeader from '../components/PageHeader.jsx'
 import RoleNotice from '../components/RoleNotice.jsx'
 import CityMap from '../components/CityMap.jsx'
 import { CheckIcon } from '../components/Icons.jsx'
+import posthog, { posthogEnabled } from '../lib/posthog.js'
 
 // The sender confirms the parcel contains none of these.
 // Shows how many checklist lines are ticked. Amber while incomplete, green when done.
@@ -93,6 +94,13 @@ export default function Sender({ state, save, profile, setProfile }) {
     const result = await checkParcel(text)
     setChecking(false)
     setAiResult({ ...result, description: text })
+    if (posthogEnabled) {
+      posthog.capture('ai_parcel_check_completed', {
+        result_source: result.source,
+        suggested_item_type: result.suggestedType,
+        is_possibly_prohibited: result.prohibited,
+      })
+    }
 
     // Log the check to Make.com / Google Sheets (skipped if no webhook URL).
     sendToWebhook('ai_check', {
@@ -158,6 +166,18 @@ export default function Sender({ state, save, profile, setProfile }) {
     shipment.matchingMs = eligible.length > 0 ? matchingMs : null
 
     save({ ...state, shipments: [...state.shipments, shipment] })
+    if (posthogEnabled) {
+      posthog.capture('shipment_posted', {
+        origin_city: origin,
+        destination_city: destination,
+        item_type: type,
+        weight_kg: weight,
+        matching_outcome: eligible.length > 0 ? 'eligible_carriers_found' : 'retrying',
+        eligible_carrier_count: eligible.length,
+        ai_check_completed: Boolean(aiResult),
+        ai_flagged_for_review: shipment.aiFlag === 'pending',
+      })
+    }
 
     // Log the shipment to Make.com / Google Sheets (skipped if no webhook URL).
     sendToWebhook('shipment', {

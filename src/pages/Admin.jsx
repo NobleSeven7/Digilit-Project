@@ -6,6 +6,7 @@ import { formatPKR, formatDateTime, isolate } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import { withViewTransition } from '../lib/motion.js'
+import posthog, { posthogEnabled } from '../lib/posthog.js'
 
 // How long ago a shipment was posted, in plain words.
 function waitingTime(createdAt) {
@@ -33,12 +34,18 @@ export default function Admin({ state, save }) {
   const syncLog = readSyncLog()
 
   // Admin cancels a request that could not be matched.
-  function cancelShipment(shipmentId) {
+  function cancelShipment(shipmentId, source = 'unmatched_shipment') {
     withViewTransition(() => save({
       ...state,
       shipments: state.shipments.map((s) =>
         s.id === shipmentId ? { ...s, status: STATUS.CANCELLED } : s),
     }))
+    if (!posthogEnabled) return
+    if (source === 'ai_flag') {
+      posthog.capture('ai_flag_reviewed', { review_outcome: 'cancelled' })
+    } else {
+      posthog.capture('shipment_cancelled_by_admin', { cancellation_source: source })
+    }
   }
 
   // Admin has looked at an AI-flagged parcel and decided it is fine.
@@ -48,6 +55,7 @@ export default function Admin({ state, save }) {
       shipments: state.shipments.map((s) =>
         s.id === shipmentId ? { ...s, aiFlag: 'allowed' } : s),
     }))
+    if (posthogEnabled) posthog.capture('ai_flag_reviewed', { review_outcome: 'allowed' })
   }
 
   // Admin settles a dispute: pay the carrier, or refund the sender.
@@ -64,6 +72,11 @@ export default function Admin({ state, save }) {
         ...s, status: payCarrier ? STATUS.DELIVERED : STATUS.CANCELLED,
       })),
     }))
+    if (posthogEnabled) {
+      posthog.capture('dispute_resolved', {
+        resolution: payCarrier ? 'release_to_carrier' : 'refund_sender',
+      })
+    }
   }
 
   // A shipment row, shared by the flagged and unmatched lists.
@@ -115,7 +128,7 @@ export default function Admin({ state, save }) {
                 Allow
               </button>
               <button type="button" className="btn btn-danger" data-testid="ai-cancel"
-                onClick={() => cancelShipment(s.id)}>
+                onClick={() => cancelShipment(s.id, 'ai_flag')}>
                 Cancel request
               </button>
             </div>

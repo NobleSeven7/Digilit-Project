@@ -14,6 +14,7 @@ import RouteLine from '../components/RouteLine.jsx'
 import RuleCheck from '../components/RuleCheck.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import SuccessTick from '../components/SuccessTick.jsx'
+import posthog, { posthogEnabled } from '../lib/posthog.js'
 
 
 // Largest spare capacity accepted for a car or van (kg).
@@ -60,6 +61,14 @@ function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
   function handleOffer(shipment) {
     const { newState, delivery } = startDelivery(state, shipment, journey, 'carrier')
     save(newState)
+    if (posthogEnabled) {
+      posthog.capture('delivery_request_created', {
+        initiated_by: 'carrier',
+        item_type: shipment.itemType,
+        weight_kg: shipment.weightKg,
+        vehicle_type: journey.vehicleType,
+      })
+    }
     goTo(`delivery/${delivery.id}`)
   }
 
@@ -235,6 +244,15 @@ export default function Carrier({ state, save, profile, setProfile }) {
     })
 
     save({ ...state, journeys, shipments })
+    if (posthogEnabled) {
+      posthog.capture('journey_posted', {
+        origin_city: origin,
+        destination_city: destination,
+        vehicle_type: vehicleType,
+        spare_capacity_kg: spare,
+        shipments_reactivated: helped,
+      })
+    }
     sendToWebhook('journey', {
       journeyId: journey.id, carrierName, origin, destination, departure, vehicleType, spareKg: spare,
     }, `Journey posted: ${origin} to ${destination}, ${spare} kg spare`)

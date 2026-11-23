@@ -1,8 +1,9 @@
 // The top-level component. It owns all the app data and decides which page to show.
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRoute } from './lib/navigation.js'
 import { loadState, saveState, resetState } from './lib/storage.js'
-import { getProfile, saveProfile } from './lib/profile.js'
+import { getProfile, PROFILES, profileKey, saveProfile } from './lib/profile.js'
+import posthog, { posthogEnabled } from './lib/posthog.js'
 import Layout from './components/Layout.jsx'
 import Home from './pages/Home.jsx'
 import Sender from './pages/Sender.jsx'
@@ -20,7 +21,34 @@ export default function App() {
 
   // Who is "signed in": one of the fictional demo people (see src/lib/profile.js).
   const [profile, setProfileState] = useState(getProfile)
+  const identifiedProfile = useRef(null)
+
+  // Demo profiles have no account ids. Their fixed position in the static profile
+  // list gives PostHog a stable, opaque id without sending the person's name.
+  function distinctIdFor(profileToIdentify) {
+    const index = PROFILES.findIndex((candidate) => profileKey(candidate) === profileKey(profileToIdentify))
+    return index === -1 ? null : `demo_profile_${index + 1}`
+  }
+
+  // Restore identity after a refresh. posthog-js retains it thereafter, so this
+  // only runs again when the simulated signed-in person changes.
+  useEffect(() => {
+    if (!posthogEnabled) return
+
+    const distinctId = distinctIdFor(profile)
+    if (!distinctId || identifiedProfile.current === distinctId) return
+
+    posthog.identify(distinctId, { role: profile.role, is_demo_profile: true })
+    identifiedProfile.current = distinctId
+  }, [profile])
+
   function setProfile(newProfile) {
+    if (profileKey(newProfile) !== profileKey(profile)) {
+      // Switching directly between accounts must not retain the prior person's
+      // analytics state. The effect above identifies the newly selected profile.
+      if (posthogEnabled) posthog.reset()
+      identifiedProfile.current = null
+    }
     saveProfile(newProfile)
     setProfileState(newProfile)
   }
