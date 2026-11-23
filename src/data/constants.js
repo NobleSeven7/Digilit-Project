@@ -7,6 +7,13 @@ export const CITIES = [
   'Peshawar', 'Faisalabad', 'Multan', 'Quetta',
 ]
 
+// Three-letter city codes, the ones on airport luggage tags, used as the
+// app's short route labels ("ISB → LHE"). Display only: rules use the names.
+export const CITY_CODES = {
+  Islamabad: 'ISB', Rawalpindi: 'RWP', Lahore: 'LHE', Karachi: 'KHI',
+  Peshawar: 'PEW', Faisalabad: 'LYP', Multan: 'MUX', Quetta: 'UET',
+}
+
 // Item types a sender can choose.
 export const ITEM_TYPES = [
   'Documents', 'Small parcel', 'Fragile item', 'Perishables', 'Bulky item',

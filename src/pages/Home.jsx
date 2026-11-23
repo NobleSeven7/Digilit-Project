@@ -2,7 +2,9 @@
 import { BASE_FEE, FEE_PER_KG, COURIER_FEE } from '../data/constants.js'
 import { calculatePrice, savingPercent } from '../lib/pricing.js'
 import { formatPKR } from '../lib/format.js'
-import { ParcelIcon, CarIcon, ArrowRightIcon } from '../components/Icons.jsx'
+import { ArrowRightIcon } from '../components/Icons.jsx'
+import ParcelPass from '../components/ParcelPass.jsx'
+import { createSampleData } from '../data/sampleData.js'
 import HeroMap from '../components/HeroMap.jsx'
 import { firstWithRole } from '../lib/profile.js'
 import { useSeenOnce } from '../lib/motion.js'
@@ -10,15 +12,12 @@ import { useSeenOnce } from '../lib/motion.js'
 // The demo case from the proposal.
 const DEMO_KG = 5
 
-// One of the two big "who are you?" choices. It is a link that lifts a
-// little when you point at it and presses in when you tap it.
-function ChoiceCard({ href, testId, icon, title, text, onClick }) {
+// One of the two "who are you?" choices: a plain row between two thin lines
+// (no box), whose arrow moves when you point at it.
+function ChoiceRow({ href, testId, title, text, onClick }) {
   return (
     <a href={href} data-testid={testId} onClick={onClick}
-      className="card-link group flex items-center gap-4 rounded-xl border border-line bg-surface p-4 text-ink sm:p-5">
-      <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand-ink">
-        {icon}
-      </span>
+      className="group flex min-h-16 items-center gap-4 border-b border-line py-4 text-ink no-underline active:opacity-80">
       <span className="min-w-0 flex-1">
         <span className="block whitespace-nowrap font-display text-2xl font-bold text-brand-ink">{title}</span>
         <span className="mt-0.5 block text-sm text-muted">{text}</span>
@@ -72,6 +71,24 @@ function PriceRow({ name, note, price, highlight, order }) {
   )
 }
 
+// A phone showing the pickup pass for the demo parcel (Ayesha Khan's 5 kg,
+// carried by Bilal Ahmed). The code is an example; real codes are random.
+function PhonePass() {
+  const sample = createSampleData()
+  const parcel = sample.shipments.find((s) => s.id === 's-demo')
+  const journey = sample.journeys.find((j) => j.id === 'j-bilal')
+  return (
+    <div className="mx-auto w-full max-w-[22rem] rounded-[2.75rem] border-[10px] border-ink bg-surface p-3 shadow-[var(--shadow-lift)]"
+      role="img" aria-label="A phone showing a RaastaShare pickup pass from Islamabad to Lahore">
+      <div className="mx-auto mb-3 h-5 w-24 rounded-full bg-ink" aria-hidden="true" />
+      <div aria-hidden="true">
+        <ParcelPass kind="Pickup" code="4827" shipment={parcel} journey={journey} note="Example pass" />
+      </div>
+      <div className="mx-auto mt-4 h-1.5 w-28 rounded-full bg-ink/70" aria-hidden="true" />
+    </div>
+  )
+}
+
 export default function Home({ profile, setProfile }) {
   // Two animations wait until they are on screen: the "How it works" road
   // lights up stop by stop, and the price bars fill.
@@ -97,14 +114,14 @@ export default function Home({ profile, setProfile }) {
             same intercity route. Payment stays in escrow until delivery is confirmed.
           </p>
           <p className="hero-enter mt-4 max-w-md font-bold [--i:1]" data-testid="hero-fact">
-            Islamabad to Lahore, 5 kg: {formatPKR(calculatePrice(DEMO_KG))} instead of about {formatPKR(COURIER_FEE)} by courier.
+            ISB → LHE, 5 kg: {formatPKR(calculatePrice(DEMO_KG))} instead of about {formatPKR(COURIER_FEE)} by courier.
           </p>
 
           {/* The two profile choices (simulated accounts: no login needed) */}
-          <div className="hero-enter mt-7 grid max-w-md gap-3 [--i:2]">
-            <ChoiceCard href="#/sender" testId="choose-sender" icon={<ParcelIcon size={26} />} onClick={become('sender')}
+          <div className="hero-enter mt-7 max-w-md border-t border-line [--i:2]">
+            <ChoiceRow href="#/sender" testId="choose-sender" onClick={become('sender')}
               title="I am a sender" text="Post a parcel and see ranked carriers" />
-            <ChoiceCard href="#/carrier" testId="choose-carrier" icon={<CarIcon size={26} />} onClick={become('carrier')}
+            <ChoiceRow href="#/carrier" testId="choose-carrier" onClick={become('carrier')}
               title="I am a carrier" text="Post a journey and earn from spare space" />
           </div>
         </div>
@@ -156,6 +173,18 @@ export default function Home({ profile, setProfile }) {
             </li>
           ))}
         </ol>
+      </section>
+
+      {/* The parcel pass on a phone: what the sender and carrier actually get */}
+      <section className="grid items-center gap-10 lg:grid-cols-2" data-testid="pass-showcase">
+        <div className="max-w-md">
+          <h2 className="text-4xl font-bold sm:text-6xl">Codes, not phone calls</h2>
+          <p className="mt-4 text-lg text-muted">
+            Once both sides accept, the parcel gets a pass. The carrier enters the pickup code at
+            the door and the delivery code at the other end. Only then is the money released.
+          </p>
+        </div>
+        <PhonePass />
       </section>
 
       {/* Price comparison from the proposal, on a band of motorway green */}

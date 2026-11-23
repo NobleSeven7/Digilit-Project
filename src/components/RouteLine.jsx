@@ -16,6 +16,7 @@
 
 import { useEffect, useRef } from 'react'
 import { CheckIcon } from './Icons.jsx'
+import RouteCodes from './RouteCodes.jsx'
 
 // A clip-path that shows a full-width road only up to stop number i.
 function cutAt(i, count) {
@@ -102,11 +103,8 @@ function Tracker({ stops, todo, reached, showCurrent, problem }) {
 export default function RouteLine({ origin, destination, stops, todo, reached = 0, showCurrent = false, problem = false }) {
   return (
     <div>
-      {/* City names */}
-      <div className="flex items-baseline justify-between gap-3 font-display text-lg font-bold sm:text-xl">
-        <span>{origin}</span>
-        <span className="text-right">{destination}</span>
-      </div>
+      {/* The two cities as codes, e.g. ISB → LHE, with their names underneath */}
+      <RouteCodes origin={origin} destination={destination} />
 
       {stops ? (
         <Tracker stops={stops} todo={todo} reached={reached} showCurrent={showCurrent} problem={problem} />

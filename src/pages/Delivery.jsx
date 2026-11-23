@@ -13,6 +13,7 @@ import PageHeader from '../components/PageHeader.jsx'
 import RouteLine from '../components/RouteLine.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import SuccessTick from '../components/SuccessTick.jsx'
+import ParcelPass from '../components/ParcelPass.jsx'
 
 // Reasons a sender or carrier can give when reporting a problem.
 const PROBLEMS = [
@@ -36,16 +37,6 @@ const REACHED = {
 const STILL_MOVING = [
   DELIVERY.AWAITING_ACCEPT, DELIVERY.AWAITING_PICKUP, DELIVERY.IN_TRANSIT, DELIVERY.DISPUTED,
 ]
-
-// A box that shows a code on screen, standing in for an SMS.
-function CodeBox({ label, code, testId }) {
-  return (
-    <div className="rounded-lg border-2 border-dashed border-hold bg-hold-tint px-4 py-3">
-      <p className="text-sm text-hold-ink">{label}</p>
-      <p className="font-display text-3xl font-bold tracking-[0.3em]" data-testid={testId}>{code}</p>
-    </div>
-  )
-}
 
 // A 4-digit code input with its confirm button. onSubmit returns false for a
 // wrong code, and the box then shakes.
@@ -390,8 +381,9 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
               <p className="mt-1 text-muted">
                 {isolate(shipment.senderName)} reads this code to {isolate(journey.carrierName)} when handing over the parcel.
               </p>
-              <div className="mt-4 max-w-xs">
-                <CodeBox label="Pickup code (would arrive by SMS)" code={delivery.pickupOtp} testId="pickup-otp" />
+              <div className="mt-4">
+                <ParcelPass kind="Pickup" code={delivery.pickupOtp} codeTestId="pickup-otp"
+                  shipment={shipment} journey={journey} />
               </div>
               {isCarrier ? (
                 <CodeForm id="pickup-code" label="Carrier enters the pickup code"
@@ -409,8 +401,9 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
               <p className="mt-1 text-muted">
                 The receiver reads this code to {isolate(journey.carrierName)} once the parcel arrives safely.
               </p>
-              <div className="mt-4 max-w-xs">
-                <CodeBox label="Delivery code (would arrive by SMS)" code={delivery.deliveryOtp} testId="delivery-otp" />
+              <div className="mt-4">
+                <ParcelPass kind="Delivery" code={delivery.deliveryOtp} codeTestId="delivery-otp"
+                  shipment={shipment} journey={journey} />
               </div>
               {isCarrier ? (
                 <CodeForm id="delivery-code" label="Carrier enters the delivery code"

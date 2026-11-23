@@ -887,3 +887,31 @@ A review of all code changed since Stage 22 found six issues. All are fixed:
   - 9 browser checks of these fixes pass.
   - All 12 tests, 19 earlier checks and the stale-data simulation pass.
   - axe is clean.
+
+## Stage 32: less "generated", more travel (after Hyer)
+
+The team felt the site looked AI-made. Award-winning sites from Adobe's list
+were reviewed; Hyer (private aviation, flyhyer.com) was the team's favourite.
+From it we took four ideas:
+
+- **City codes.** The luggage-tag codes ISB, RWP, LHE, KHI, PEW, LYP, MUX and
+  UET are the short route labels (`CITY_CODES`, `RouteCodes`), large, with the
+  full city name small underneath. They are used on Matches, Carry and
+  Delivery, the Dashboard delivery cards, the Admin rows and the Home fact
+  line. Display only: the matching rules still compare the city names.
+- **Parcel pass.** The pickup and delivery codes are shown as a boarding-pass
+  style ticket (`ParcelPass`): the trip on green above a tear line, the code
+  below. The Home page shows the pass on a phone ("Codes, not phone calls"),
+  using the demo parcel and an example code.
+- **Fewer cards.** Home's two choices are plain rows between thin lines (no
+  icon circles or boxes). The Dashboard metrics sit in one strip divided by
+  lines, and its sections are open. Admin lists are divided rows. Clickable
+  cards, forms and the Matches carrier cards stay as cards.
+- **A smaller palette.** White page, near-black text (#0B1A13), motorway green
+  for big blocks and actions, amber only for money held or waiting. The dark
+  theme follows the same idea.
+- **Checked**
+  - All 12 tests, 19 earlier checks and 9 code-review checks pass.
+  - axe is clean in both themes; the pass's white-on-green text is 6.6:1
+    (light) and 5.3:1 (dark).
+- **Not changed:** rules, scores, pricing, statuses and sign-in.

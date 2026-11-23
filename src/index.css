@@ -12,11 +12,13 @@
   --color-route-3: #A3D2BC;      /* third route colour on the Home map */
   --color-on-hold: #12241B;      /* dark text on an amber background (both themes) */
   --color-brand-tint: #E3F1E9;   /* soft green background */
-  --color-ink: #12241B;          /* main text */
-  --color-muted: #3D4C44;        /* secondary text (dark enough to read easily in a thin font) */
-  --color-paper: #F5F8F4;        /* page background */
+  /* A small palette: white page, near-black text, motorway green for big
+     blocks and actions, amber only for money that is held or waiting. */
+  --color-ink: #0B1A13;          /* main text: near-black with a hint of green */
+  --color-muted: #46524C;        /* secondary text (dark enough to read easily in a thin font) */
+  --color-paper: #FFFFFF;        /* page background */
   --color-surface: #FFFFFF;      /* cards, form fields, menus */
-  --color-line: #D3DDD6;         /* borders */
+  --color-line: #DCE2DE;         /* thin dividing lines and borders */
   --color-hold: #E0A100;         /* road-marking amber: payment held, warnings */
   --color-hold-ink: #7A5600;     /* amber dark enough to read as text */
   --color-hold-tint: #FBF1D3;
@@ -53,11 +55,11 @@
   --color-brand-tint: #16382A;
   --color-route-2: #2F9B70;
   --color-route-3: #1F5C44;
-  --color-ink: #E7EFEA;
+  --color-ink: #EEF3F0;
   --color-muted: #B4C4BB;
-  --color-paper: #0F1613;
-  --color-surface: #18221D;
-  --color-line: #2C3A33;
+  --color-paper: #0B110E;
+  --color-surface: #131B17;
+  --color-line: #28342E;
   --color-hold-ink: #F0C75A;
   --color-hold-tint: #3A2F12;
   --color-fail: #F07A6A;
