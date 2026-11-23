@@ -192,6 +192,7 @@ export default function Matches({ state, save, id }) {
     save(newState)
     if (posthogEnabled) {
       posthog.capture('delivery_request_created', {
+        shipment_ref: shipment.id,
         initiated_by: 'sender',
         item_type: shipment.itemType,
         weight_kg: shipment.weightKg,

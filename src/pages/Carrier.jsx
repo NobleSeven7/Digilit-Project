@@ -63,6 +63,7 @@ function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
     save(newState)
     if (posthogEnabled) {
       posthog.capture('delivery_request_created', {
+        shipment_ref: shipment.id,
         initiated_by: 'carrier',
         item_type: shipment.itemType,
         weight_kg: shipment.weightKg,
