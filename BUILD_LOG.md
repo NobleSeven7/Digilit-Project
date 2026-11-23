@@ -999,3 +999,21 @@ widely spaced ALL CAPS labels read as templated.
 - **Still open from the reel:** one main button in the closing panel, fewer
   pill shapes on carrier cards, and rounding the hero headline sizes onto the
   4px grid.
+
+## Stage 37: a menu for each role
+
+The team asked whether senders and carriers should be separate. In the real
+product they would be (separate apps, carrier identity checks). That is
+future work, and the proposal keeps sign-in simulated, so a password screen
+would be security for show only. Instead, the one app now feels like two:
+
+- **Menu by role.** A sender sees Send, Matches and Delivery. A carrier sees
+  Carry and Delivery. Admin and Dashboard follow after a thin divider as the
+  team pages, on desktop and in the phone tab bar.
+- **"Sender view" / "Carrier view"** on the "Signed in as" bar, so an
+  audience always knows which side is on screen.
+- **Nothing is locked.** Every page still opens from a link (the tests and the
+  demo rely on this), and the Send and Carry pages already explain what to do
+  if the wrong person opens them.
+- **Checked:** all 12 tests pass, axe is clean in both themes, and there are no
+  console errors.
