@@ -125,7 +125,7 @@ export default function Dashboard({ state }) {
             : averageMs < 60000 ? 'From posting to ranked results, well inside the 1\u2011minute target.'
               : 'From posting to ranked results. The target is under 1 minute.'} />
         <Metric label="Cost saved" value={formatPKR(costSaved)} testId="metric-saved"
-          note={`${savedPercent}% less than a ${formatPKR(COURIER_FEE)} courier, over ${completed.length} completed deliveries.`} />
+          note={`${savedPercent}% less than our ${formatPKR(COURIER_FEE)} courier estimate, over ${completed.length} completed deliveries.`} />
       </div>
 
       <div className="mt-10 grid gap-10 lg:grid-cols-2">
@@ -162,7 +162,7 @@ export default function Dashboard({ state }) {
           </p>
           <h2 className="mt-6 text-xl font-bold">Coordination steps</h2>
           <p className="mt-2 text-muted">
-            3 steps here (submit, accept, verify) against about 8 with phone calls,
+            3 steps here (submit, accept, verify) against about 8 (our estimate) with phone calls,
             messages and bargaining.
           </p>
         </section>

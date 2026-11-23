@@ -1017,3 +1017,24 @@ would be security for show only. Instead, the one app now feels like two:
   if the wrong person opens them.
 - **Checked:** all 12 tests pass, axe is clean in both themes, and there are no
   console errors.
+
+## Stage 38: say plainly what happens to data
+
+From a second reel ("20 things to have Claude do so your app doesn't get
+sued"). Most items are for real businesses, and RaastaShare already passed
+them: no cookies or tracking, self-hosted fonts, no dark patterns or hidden
+fees, licensed photos and fonts, alt text and contrast. Four needed work:
+
+- **"About this demo" page** (`#/about`, linked from every footer): whose
+  project it is, that people, trips, codes and payments are fictional, what
+  stays in the browser, what is sent to Make.com, the Google Sheet, the team
+  email and Gemini, and how to remove it ("Reset demo data", or ask the team
+  through the course to remove something from the Sheet). No email address
+  is published.
+- **AI box wording:** it now also says the description is saved in the
+  project's Google Sheet, with a "What we keep" link.
+- **Estimates labelled:** the PKR 1,000 courier price and the "about eight
+  steps" are marked as our estimates on Home, Matches, Delivery and the
+  Dashboard.
+- **Checked:** all 12 tests pass, and axe is clean in both themes (the About
+  page included).

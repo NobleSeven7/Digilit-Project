@@ -223,7 +223,7 @@ export default function Matches({ state, save, id }) {
         </div>
         {calculateSaving(shipment.weightKg) > 0 && (
           <p className="mt-2 text-sm text-muted">
-            About {formatPKR(calculateSaving(shipment.weightKg))} less than a PKR 1,000 courier.
+            About {formatPKR(calculateSaving(shipment.weightKg))} less than our PKR 1,000 courier estimate.
           </p>
         )}
         {delivery && (

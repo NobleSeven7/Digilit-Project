@@ -186,7 +186,7 @@ export default function Home({ profile, setProfile }) {
           </p>
           <p className="hero-enter mt-4 max-w-md font-bold [--i:1]" data-testid="hero-fact">
             <span aria-hidden="true">ISB → LHE</span><span className="sr-only">Islamabad to Lahore</span>, 5 kg:{' '}
-            {formatPKR(calculatePrice(DEMO_KG))} instead of about {formatPKR(COURIER_FEE)} by courier.
+            {formatPKR(calculatePrice(DEMO_KG))} instead of about {formatPKR(COURIER_FEE)} by courier (our estimate).
           </p>
 
           {/* The two profile choices (simulated accounts: no login needed) */}
@@ -205,7 +205,7 @@ export default function Home({ profile, setProfile }) {
       <section>
         <h2 className="text-4xl font-bold sm:text-6xl">How it works</h2>
         <p className="mt-2 max-w-2xl text-lg text-muted">
-          Three steps, where phone calls and bargaining took about eight. A match takes under a minute.
+          Three steps, where we estimate phone calls and bargaining take about eight. A match takes under a minute.
         </p>
         <ol className="mt-10 space-y-16 sm:mt-14 sm:space-y-24" data-testid="steps">
           {STEPS.map((step, index) => <StepRow key={step.label} step={step} index={index} />)}
@@ -243,7 +243,7 @@ export default function Home({ profile, setProfile }) {
           </span>
         </div>
         <ul className="mt-9 space-y-9">
-          <PriceRow name="Courier" note="Typical courier quote" price={COURIER_FEE} order={0} />
+          <PriceRow name="Courier" note="Our estimate of a typical quote" price={COURIER_FEE} order={0} />
           <PriceRow name="RaastaShare" highlight order={1} price={calculatePrice(DEMO_KG)}
             note={`${formatPKR(BASE_FEE)} base + ${formatPKR(FEE_PER_KG)} × ${DEMO_KG} kg`} />
         </ul>

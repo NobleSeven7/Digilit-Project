@@ -429,7 +429,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
               </p>
               <p className="mt-2" data-testid="outcome">
                 {saving > 0
-                  ? `${isolate(shipment.senderName)} paid about ${formatPKR(saving)} less than a PKR 1,000 courier, and ${isolate(journey.carrierName)} earned ${amount} on a trip that was happening anyway.`
+                  ? `${isolate(shipment.senderName)} paid about ${formatPKR(saving)} less than our PKR 1,000 courier estimate, and ${isolate(journey.carrierName)} earned ${amount} on a trip that was happening anyway.`
                   : `${isolate(journey.carrierName)} earned ${amount} on a trip that was happening anyway.`}
               </p>
               <a href="#/dashboard" className="btn btn-secondary mt-4">See the dashboard</a>

@@ -150,7 +150,8 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
       <footer className="border-t border-line pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0">
         <div className="mx-auto flex max-w-5xl flex-col gap-3 safe-x py-5 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
           <p>
-            Student prototype. All people and trips are fictional; codes and payments are simulated.
+            Student prototype. All people and trips are fictional; codes and payments are simulated.{' '}
+            <a href="#/about" data-testid="about-link" className="font-bold text-brand-ink underline underline-offset-2">About this demo</a>
           </p>
           <button type="button" onClick={onReset} data-testid="reset-demo"
             className="btn btn-secondary shrink-0 self-start text-base sm:self-auto">
