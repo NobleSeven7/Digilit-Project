@@ -12,6 +12,7 @@ import RouteLine from '../components/RouteLine.jsx'
 import RuleCheck from '../components/RuleCheck.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import { VehicleIcon, CheckIcon, ChevronDownIcon } from '../components/Icons.jsx'
+import posthog, { posthogEnabled } from '../lib/posthog.js'
 
 // The score out of 100, with a small bar that fills to the same amount.
 function ScoreBadge({ total }) {
@@ -189,6 +190,15 @@ export default function Matches({ state, save, id }) {
   function handleRequest(journey) {
     const { newState, delivery: newDelivery } = startDelivery(state, shipment, journey)
     save(newState)
+    if (posthogEnabled) {
+      posthog.capture('delivery_request_created', {
+        initiated_by: 'sender',
+        item_type: shipment.itemType,
+        weight_kg: shipment.weightKg,
+        vehicle_type: journey.vehicleType,
+        carrier_rank: eligible.findIndex((result) => result.journey.id === journey.id) + 1,
+      })
+    }
     goTo(`delivery/${newDelivery.id}`)
   }
 

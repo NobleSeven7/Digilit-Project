@@ -10,6 +10,7 @@ import '@fontsource/ibm-plex-sans-condensed/600.css'
 import '@fontsource/ibm-plex-sans-condensed/700.css'
 
 import './index.css'
+import './lib/posthog.js'
 import App from './App.jsx'
 
 // Find the <div id="root"> in index.html and draw the App inside it.

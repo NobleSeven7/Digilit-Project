@@ -12,6 +12,8 @@
 // reply that makes no sense), a simple keyword check is used instead and is
 // clearly labelled "Offline check (not AI)". No API key is ever in this code.
 import { ITEM_TYPES } from '../data/constants.js'
+import posthog, { posthogEnabled } from './posthog.js'
+import { posthogLog } from './posthogLogs.js'
 
 // Vite reads VITE_AI_WEBHOOK_URL from .env.local (or a GitHub secret) at build time.
 const AI_WEBHOOK_URL = (import.meta.env.VITE_AI_WEBHOOK_URL || '').trim()
@@ -110,6 +112,26 @@ export function readAiReply(text) {
 
 // ---- The check itself -----------------------------------------------------
 
+// Make.com keeps the model and provider configuration outside this app, so
+// those fields cannot be reported accurately here. Prompt and response content
+// are omitted because the description is user-entered.
+function captureAiGeneration({ traceId, startedAt, status, error }) {
+  if (!posthogEnabled) return
+
+  try {
+    posthog.capture('$ai_generation', {
+      $ai_trace_id: traceId,
+      $ai_session_id: null,
+      $ai_span_name: 'parcel_content_check',
+      $ai_latency: Math.max(0, Math.round(performance.now() - startedAt) / 1000),
+      ...(status !== undefined ? { $ai_http_status: status } : {}),
+      ...(error ? { $ai_is_error: true, $ai_error: error } : {}),
+    })
+  } catch {
+    // Analytics must not affect the parcel check or its offline fallback.
+  }
+}
+
 export function isAiConfigured() {
   return AI_WEBHOOK_URL !== ''
 }
@@ -118,11 +140,19 @@ export function isAiConfigured() {
 // or the offline keyword check if the AI is not available.
 export async function checkParcel(description) {
   const text = description.trim().slice(0, MAX_DESCRIPTION)
-  if (!isAiConfigured()) return offlineCheck(text)
+  if (!isAiConfigured()) {
+    posthogLog.info('ai_parcel_check_completed', {
+      outcome: 'offline_check',
+      webhook_configured: false,
+    })
+    return offlineCheck(text)
+  }
 
   // Give up after 8 seconds so the page never hangs.
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
+  const traceId = crypto.randomUUID()
+  const startedAt = performance.now()
   try {
     // Sent as a plain web form with one field, "description". Browsers send
     // this kind of request directly, without a separate permission check
@@ -132,10 +162,40 @@ export async function checkParcel(description) {
       body: new URLSearchParams({ description: text }),
       signal: controller.signal,
     })
-    if (!response.ok) return offlineCheck(text)
-    return readAiReply(await response.text()) || offlineCheck(text)
-  } catch {
+    const responseText = await response.text()
+    captureAiGeneration({
+      traceId,
+      startedAt,
+      status: response.status,
+      error: response.ok ? undefined : `Webhook returned HTTP ${response.status}`,
+    })
+    const durationMs = Math.max(0, Math.round(performance.now() - startedAt))
+    if (!response.ok) {
+      posthogLog.warn('ai_parcel_check_webhook_completed', {
+        outcome: 'http_error',
+        http_status: response.status,
+        duration_ms: durationMs,
+      })
+      return offlineCheck(text)
+    }
+
+    posthogLog.info('ai_parcel_check_webhook_completed', {
+      outcome: 'success',
+      http_status: response.status,
+      duration_ms: durationMs,
+    })
+    return readAiReply(responseText) || offlineCheck(text)
+  } catch (error) {
     // Offline, blocked, wrong URL or timed out.
+    captureAiGeneration({
+      traceId,
+      startedAt,
+      error: error instanceof Error ? error.message : 'Webhook request failed',
+    })
+    posthogLog.warn('ai_parcel_check_webhook_failed', {
+      outcome: error instanceof DOMException && error.name === 'AbortError' ? 'timeout' : 'request_failed',
+      duration_ms: Math.max(0, Math.round(performance.now() - startedAt)),
+    })
     return offlineCheck(text)
   } finally {
     clearTimeout(timer)
