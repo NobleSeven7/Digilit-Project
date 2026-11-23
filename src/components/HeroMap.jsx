@@ -15,7 +15,7 @@ const ROUTES = [
   { d: 'M70 340 H340', colour: 'var(--color-route-3)' },                     // Quetta - Multan
   { d: 'M290 290 H390 L440 240', colour: 'var(--color-route-2)' },           // Faisalabad - Lahore
   { d: 'M220 80 V220 L340 340', colour: 'var(--color-route-2)' },            // Islamabad - Rawalpindi - Faisalabad - Multan
-  { d: 'M60 80 H220 L300 160 H440 V240 L240 440 H130', colour: 'var(--color-brand)' }, // Peshawar ... Karachi
+  { d: 'M60 80 H220 L300 160 H440 V240 L240 440 H130', colour: 'var(--color-brand-ink)' }, // Peshawar ... Karachi
 ]
 
 // The demo route, drawn on top as a road with a dashed centre line.

@@ -3,17 +3,10 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 // Fonts are bundled with the app (not loaded from the internet), so they work offline.
-// Barlow is modelled on road-sign lettering: the condensed cut is used for
-// headings, the regular cut for everything else. Both have plain zeros.
-import '@fontsource/barlow-condensed/600.css'
-import '@fontsource/barlow-condensed/700.css'
-import '@fontsource/barlow/400.css'
-import '@fontsource/barlow/500.css'
-import '@fontsource/barlow/700.css'
-// Preview only: fonts for the redesign options (unused ones are removed after the pick).
-import '@fontsource-variable/archivo/wdth.css'
+// IBM Plex: the condensed cut for headings, the normal cut for text.
 import '@fontsource/ibm-plex-sans/400.css'
 import '@fontsource/ibm-plex-sans/700.css'
+import '@fontsource/ibm-plex-sans-condensed/600.css'
 import '@fontsource/ibm-plex-sans-condensed/700.css'
 
 import './index.css'

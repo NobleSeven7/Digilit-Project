@@ -1038,3 +1038,32 @@ fees, licensed photos and fonts, alt text and contrast. Four needed work:
   Dashboard.
 - **Checked:** all 12 tests pass, and axe is clean in both themes (the About
   page included).
+
+## Stage 39: "cargo label" redesign
+
+Brief: redesign only the look so it does not read as AI-generated, using a
+60-30-10 colour scheme and the feel of a practical Pakistani logistics brand
+(bus terminal signs, cargo labels), with strong plain type and left-aligned
+layouts. Three options were previewed with screenshots (Terminal board, Cargo
+label, Motorway + truck art), and the team chose **Cargo label**.
+
+- **Colour, 60-30-10.** 60%: kraft paper `#E2D3B6` for the page. 30%: label
+  black `#1C1A17` for the header, buttons, price band, parcel pass and photo
+  panel. 10%: "fragile tape" red `#D7261E` for the saving badge, money held,
+  the current page and focus rings. Errors and disputes use a darker oxblood
+  `#7A1810`, so they are not confused with the accent.
+- **Dark mode:** a black label with kraft-coloured printing. Bars, routes and
+  map lines use the ink colour, so they stay visible in both themes.
+- **Type:** IBM Plex Sans Condensed for headings and IBM Plex Sans for text
+  (SIL Open Font License, bundled with the site). Barlow and the preview-only
+  Archivo were removed from `package.json`.
+- **Shape:** nearly square corners (3–4px), like a printed label.
+- **Layout:** the closing panel is left-aligned, and the "Already on the
+  road" panel uses the 30% colour.
+- **Also updated:** the "How it works" phone screenshots were retaken in the
+  new style, and photo credit links are underlined (they need to stand out
+  on the black panel).
+- **Not changed:** logic, data, webhooks, the AI check, rules, pricing,
+  statuses, sign-in and tests.
+- **Checked:** all 12 tests pass, axe is clean on all 8 pages in both themes,
+  and there are no console errors.

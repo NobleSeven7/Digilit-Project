@@ -35,7 +35,7 @@ export default function CityMap({ origin, destination }) {
         {hasRoute && (
           <>
             <line x1={from.x} y1={from.y} x2={to.x} y2={to.y}
-              stroke="var(--color-brand)" strokeWidth="12" strokeLinecap="round" />
+              stroke="var(--color-brand-ink)" strokeWidth="12" strokeLinecap="round" />
             <line x1={from.x} y1={from.y} x2={to.x} y2={to.y}
               stroke="white" strokeWidth="2" strokeDasharray="6 6" opacity="0.75" />
           </>

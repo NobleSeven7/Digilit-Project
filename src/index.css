@@ -5,37 +5,43 @@
    Defining a colour here creates Tailwind classes for it automatically,
    e.g. --color-brand gives us bg-brand, text-brand-ink and border-brand-ink.   */
 @theme {
-  --color-brand: #0B6B43;        /* motorway-sign green: main brand colour */
-  --color-brand-ink: #0B6B43;    /* green used for text and outlines */
-  --color-brand-dark: #084F32;   /* pressed / hover state */
-  --color-route-2: #3FA37A;      /* second route colour on the Home map */
-  --color-route-3: #A3D2BC;      /* third route colour on the Home map */
-  --color-on-hold: #12241B;      /* dark text on an amber background (both themes) */
-  --color-brand-tint: #E3F1E9;   /* soft green background */
-  /* A small palette: white page, near-black text, motorway green for big
-     blocks and actions, amber only for money that is held or waiting. */
-  --color-ink: #0B1A13;          /* main text: near-black with a hint of green */
-  --color-muted: #46524C;        /* secondary text (dark enough to read easily in a thin font) */
-  --color-paper: #FFFFFF;        /* page background */
-  --color-surface: #FFFFFF;      /* cards, form fields, menus */
-  --color-sunk: #F1F4F2;         /* panels set into a card (accept rows, map backdrop) */
-  --color-line: #DCE2DE;         /* thin dividing lines and borders */
-  --color-hold: #E0A100;         /* road-marking amber: payment held, warnings */
-  --color-hold-ink: #7A5600;     /* amber dark enough to read as text */
-  --color-hold-tint: #FBF1D3;
-  /* Secondary text on the green header, hero and price band. A fixed colour,
-     not see-through white, so its contrast stays 4.5:1 or more. */
-  --color-on-brand-soft: #E2EDE8;
-  --color-fail: #B83228;         /* signal red: failed rule, dispute */
-  --color-fail-tint: #FBE6E3;
+  /* Cargo label: the page is brown kraft paper (60%), blocks and actions are
+     printed label black (30%), and "fragile tape" red marks the few things
+     that need attention (10%): the saving, money held, the current page. */
+  --color-paper: #E2D3B6;        /* kraft paper: page background (60%) */
+  --color-surface: #F6EFE1;      /* label stock: cards, form fields, menus */
+  --color-sunk: #D6C4A3;         /* panels set into a card (accept rows, map backdrop) */
+  --color-line: #B9A385;         /* thin dividing lines and borders */
+  --color-ink: #1C1A17;          /* main text: printing ink */
+  --color-muted: #4E4436;        /* secondary text */
+  --color-brand: #1C1A17;        /* label black: header, buttons, bands (30%) */
+  --color-brand-ink: #1C1A17;    /* black used for text and outlines */
+  --color-brand-dark: #000000;   /* pressed / hover state */
+  --color-brand-tint: #D3C3A4;   /* soft background behind "good" badges */
+  --color-route-2: #6B5B45;      /* second route colour on the Home map */
+  --color-route-3: #A8957A;      /* third route colour on the Home map */
+  --color-on-brand-soft: #E9E0CF;/* secondary text on black blocks (4.5:1 or more) */
+  --color-hold: #D7261E;         /* fragile-tape red: the 10% accent, money held */
+  --color-on-hold: #FFFFFF;      /* text on the red */
+  --color-hold-ink: #A51C15;     /* red dark enough to read as text */
+  --color-hold-tint: #F1D2C6;
+  --color-fail: #7A1810;         /* oxblood: failed rule, dispute (darker than the accent) */
+  --color-fail-tint: #E8C4B8;
 
-  /* Small print is a little larger than Tailwind's defaults (14px and 12px),
-     because Barlow's thin strokes are harder to read at small sizes. */
+  /* Corners: nearly square, like a printed label. */
+  --radius-md: 3px;
+  --radius-lg: 3px;
+  --radius-xl: 4px;
+  --radius-2xl: 4px;
+
+  /* Small print a little larger than Tailwind's defaults (14px and 12px). */
   --text-sm: 0.9375rem;
   --text-xs: 0.8125rem;
 
-  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
-  --font-body: "Barlow", "Segoe UI", sans-serif;
+  /* IBM Plex: plain, industrial lettering, like printing on a shipping label.
+     The condensed cut is for headings, the normal cut for everything else. */
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
 }
 
 /* ---- Base styles ---------------------------------------------------- */
@@ -49,76 +55,27 @@
   color-scheme: light;
 }
 :root[data-theme="dark"] {
+  /* Dark: a black label with kraft-coloured printing. */
   color-scheme: dark;
-  --color-brand: #0F7A50;
-  --color-brand-ink: #63D3A2;
-  --color-brand-dark: #0A5C3C;
-  --color-brand-tint: #16382A;
-  --color-route-2: #2F9B70;
-  --color-route-3: #1F5C44;
-  --color-ink: #EEF3F0;
-  --color-muted: #B4C4BB;
-  --color-paper: #0B110E;
-  --color-surface: #131B17;
-  --color-sunk: #0D1411;
-  --color-line: #28342E;
-  --color-hold-ink: #F0C75A;
-  --color-hold-tint: #3A2F12;
-  --color-fail: #F07A6A;
-  --color-fail-tint: #3D1D19;
-  --color-on-brand-soft: #EEF6F3;
+  --color-paper: #141311;
+  --color-surface: #1F1D1A;
+  --color-sunk: #181715;
+  --color-line: #39342D;
+  --color-ink: #F1E9DA;
+  --color-muted: #C4B8A3;
+  --color-brand: #3B352D;
+  --color-brand-ink: #E8D9BC;
+  --color-brand-dark: #4A4339;
+  --color-brand-tint: #2E2A24;
+  --color-route-2: #8A7759;
+  --color-route-3: #4A4033;
+  --color-on-brand-soft: #EFE6D6;
+  --color-hold: #E5392F;
+  --color-hold-ink: #FF8F85;
+  --color-hold-tint: #3D1C18;
+  --color-fail: #FF9E8F;
+  --color-fail-tint: #3B1F1A;
 }
-/* ---- STYLE OPTIONS (preview only) ------------------------------------
-   Three looks for the redesign, switched by <html data-style="...">, which
-   only the preview screenshots set. 60% = paper, 30% = brand, 10% = hold. */
-/* A. Terminal board: signage navy, departure-board orange, Archivo. */
-:root[data-style="terminal"] {
-  --color-paper: #F4F5F3; --color-surface: #FFFFFF; --color-sunk: #E7EAE6; --color-line: #D2D7D1;
-  --color-ink: #101820; --color-muted: #4A5560;
-  --color-brand: #14305A; --color-brand-ink: #14305A; --color-brand-dark: #0C2242; --color-brand-tint: #E2E8F1;
-  --color-route-2: #4C6E9C; --color-route-3: #A9BBD3; --color-on-brand-soft: #DCE4EF;
-  --color-hold: #F26B1D; --color-on-hold: #101820; --color-hold-ink: #A3410A; --color-hold-tint: #FDE6D6;
-  --font-display: "Archivo Variable", "Arial Narrow", sans-serif;
-  --font-body: "Archivo Variable", "Segoe UI", sans-serif;
-}
-:root[data-style="terminal"][data-theme="dark"] {
-  --color-paper: #0E141C; --color-surface: #16202C; --color-sunk: #101821; --color-line: #2A3646;
-  --color-ink: #ECEFF3; --color-muted: #AAB6C4;
-  --color-brand: #1E4479; --color-brand-ink: #8DB4EC; --color-brand-dark: #163562; --color-brand-tint: #182A42;
-  --color-route-2: #3C6AA6; --color-route-3: #243E60; --color-on-brand-soft: #E3EAF4;
-  --color-hold-ink: #FF9C5E; --color-hold-tint: #3A2213;
-}
-:root[data-style="terminal"] :is(h1, h2, h3, .font-display) { font-stretch: 72%; font-weight: 800; }
-
-/* B. Cargo label: kraft paper, label black, "fragile" red, IBM Plex. */
-:root[data-style="cargo"] {
-  --color-paper: #E2D3B6; --color-surface: #F6EFE1; --color-sunk: #D6C4A3; --color-line: #B9A385;
-  --color-ink: #1C1A17; --color-muted: #4E4436;
-  --color-brand: #1C1A17; --color-brand-ink: #1C1A17; --color-brand-dark: #000000; --color-brand-tint: #D3C3A4;
-  --color-route-2: #6B5B45; --color-route-3: #A8957A; --color-on-brand-soft: #E9E0CF;
-  --color-hold: #D7261E; --color-on-hold: #FFFFFF; --color-hold-ink: #A51C15; --color-hold-tint: #F1D2C6;
-  --color-fail: #8E1B12; --color-fail-tint: #EBC9BE;
-  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
-  --font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
-  --radius-md: 3px; --radius-lg: 3px; --radius-xl: 4px; --radius-2xl: 4px;
-}
-:root[data-style="cargo"][data-theme="dark"] {
-  --color-paper: #1A1713; --color-surface: #24201A; --color-sunk: #1E1A15; --color-line: #3A3329;
-  --color-ink: #F1E9DA; --color-muted: #C2B49C;
-  --color-brand: #2E2922; --color-brand-ink: #E8D9BC; --color-brand-dark: #3A342B; --color-brand-tint: #2E2820;
-  --color-route-2: #8A7759; --color-route-3: #4A4033; --color-on-brand-soft: #EFE6D6;
-  --color-hold: #E5392F; --color-hold-ink: #FF8A80; --color-hold-tint: #3D1C18;
-  --color-fail: #FF7B70; --color-fail-tint: #3D1D19;
-}
-
-/* C. Motorway + truck art: today's green, a truck-art magenta accent, Barlow. */
-:root[data-style="truckart"] {
-  --color-hold: #D4006F; --color-on-hold: #FFFFFF; --color-hold-ink: #A8005A; --color-hold-tint: #FBE0EE;
-}
-:root[data-style="truckart"][data-theme="dark"] {
-  --color-hold: #F0379A; --color-on-hold: #20000F; --color-hold-ink: #FF7FC0; --color-hold-tint: #3D1229;
-}
-
 body {
   background: var(--color-paper);
   color: var(--color-ink);

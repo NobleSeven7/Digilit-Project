@@ -51,7 +51,7 @@ function Tracker({ stops, todo, reached, showCurrent, problem }) {
         <div className={`road-fill absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full ${problem ? 'bg-fail/60' : 'bg-hold/70'}`}
           style={{ clipPath: cutAt(current > 0 ? current : 0, count) }} />
         {/* Green road: from the start to the last completed stop */}
-        <div className="road-fill absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-brand"
+        <div className="road-fill absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-brand-ink"
           style={{ clipPath: cutAt(Math.max(lastDone, 0), count) }} />
 
         {stops.map((stop, i) => {
@@ -109,9 +109,9 @@ export default function RouteLine({ origin, destination, stops, todo, reached = 
       {stops ? (
         <Tracker stops={stops} todo={todo} reached={reached} showCurrent={showCurrent} problem={problem} />
       ) : (
-        /* Plain route: a green road with a dashed centre line and two end stops */
-        <div className="relative mt-2 h-4 rounded-full bg-brand" aria-hidden="true">
-          <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-white/70" />
+        /* Plain route: a road with a dashed centre line and two end stops */
+        <div className="relative mt-2 h-4 rounded-full bg-brand-ink" aria-hidden="true">
+          <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-surface/70" />
           <span className="absolute left-0 top-0 size-4 rounded-full border-[3px] border-brand-ink bg-surface" />
           <span className="absolute right-0 top-0 size-4 rounded-full border-[3px] border-brand-ink bg-surface" />
         </div>

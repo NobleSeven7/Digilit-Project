@@ -156,8 +156,8 @@ function FadeInPhoto({ className = '', ...props }) {
 function PhotoCredit({ author, licence, licenceUrl, source, className = '', tone = 'text-muted' }) {
   return (
     <p className={`text-xs ${tone} ${className}`}>
-      Photo: {author}, <a href={licenceUrl} rel="noopener noreferrer">{licence}</a>, via{' '}
-      <a href={source} rel="noopener noreferrer">Wikimedia Commons</a> (cropped).
+      Photo: {author}, <a href={licenceUrl} rel="noopener noreferrer" className="underline">{licence}</a>, via{' '}
+      <a href={source} rel="noopener noreferrer" className="underline">Wikimedia Commons</a> (cropped).
     </p>
   )
 }
@@ -251,11 +251,11 @@ export default function Home({ profile, setProfile }) {
 
       {/* Closing: the same two choices as buttons, over a photo of the M-2 */}
       <section className="pb-4">
-        <div className="relative overflow-hidden rounded-2xl bg-[#0B1A13] text-white">
+        <div className="relative overflow-hidden rounded-2xl bg-black text-white">
           <FadeInPhoto src={motorwayPhoto} width="1280" height="960" loading="lazy" alt=""
             className="absolute inset-0 size-full object-cover" />
           {/* Darkens the photo so the white text stays readable */}
-          <div className="absolute inset-0 bg-[#0B1A13]/65" aria-hidden="true" />
+          <div className="absolute inset-0 bg-black/65" aria-hidden="true" />
           <div className="relative px-5 py-20 sm:px-12 sm:py-28">
             <h2 className="max-w-3xl text-balance text-5xl font-bold leading-[0.95] sm:text-7xl">
               The trip is happening anyway

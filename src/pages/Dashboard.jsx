@@ -10,7 +10,7 @@ import RouteCodes from '../components/RouteCodes.jsx'
 const STATUS_ORDER = [STATUS.FOUND, STATUS.MATCHED, STATUS.DELIVERED,
   STATUS.RETRYING, STATUS.FLAGGED, STATUS.DISPUTED, STATUS.CANCELLED]
 // Bar colour per status family (same families as the status badges).
-const BAR = { good: 'bg-brand', waiting: 'bg-hold', bad: 'bg-fail' }
+const BAR = { good: 'bg-brand-ink', waiting: 'bg-hold', bad: 'bg-fail' }
 // The road on a delivery card: its colour matches the status badge beside
 // it, and it fills as far as the parcel has got. A delivery that went wrong
 // (disputed, refunded, declined) shows the whole road in red.
@@ -39,7 +39,7 @@ function CapacityMeter({ value }) {
         <div className="absolute inset-y-[-4px] rounded-md border-2 border-dashed border-brand-ink/70"
           style={{ left: `${TARGET_LOW}%`, width: `${TARGET_HIGH - TARGET_LOW}%` }} />
         {/* Value */}
-        <div className="h-4 rounded-full bg-brand" style={{ width: `${Math.min(100, value)}%` }} />
+        <div className="h-4 rounded-full bg-brand-ink" style={{ width: `${Math.min(100, value)}%` }} />
       </div>
       <div className="mt-1 flex justify-between text-sm text-muted" aria-hidden="true">
         <span>0%</span>
