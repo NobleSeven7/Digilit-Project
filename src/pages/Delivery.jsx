@@ -67,7 +67,7 @@ function CodeForm({ id, label, buttonText, onSubmit }) {
 // money). Anyone else signed in sees a one-tap switch to the carrier instead.
 function CarrierOnly({ carrierName, setProfile }) {
   return (
-    <div className="mt-4 rounded-lg bg-paper px-3 py-3">
+    <div className="mt-4 rounded-lg bg-sunk px-3 py-3">
       <p>Only <strong>{carrierName}</strong> (the carrier) enters this code.</p>
       <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-carrier"
         onClick={() => setProfile({ role: 'carrier', name: carrierName })}>
@@ -332,7 +332,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
               </p>
               <div className="mt-4 space-y-3">
                 {/* The sender's row: only the sender can accept here */}
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-paper px-3 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-sunk px-3 py-3">
                   <p><strong>{shipment.senderName}</strong> (sender)</p>
                   {delivery.senderAccepted ? <StatusBadge status="Accepted" />
                     : isSender ? (
@@ -346,7 +346,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
                     )}
                 </div>
                 {/* The carrier's row: only the carrier can accept or decline here */}
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-paper px-3 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-sunk px-3 py-3">
                   <p><strong>{journey.carrierName}</strong> (carrier)</p>
                   {delivery.carrierAccepted ? <StatusBadge status="Accepted" />
                     : isCarrier ? (

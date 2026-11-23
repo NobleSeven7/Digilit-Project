@@ -73,10 +73,14 @@ function PriceRow({ name, note, price, highlight, order }) {
 
 // A phone showing the pickup pass for the demo parcel (Ayesha Khan's 5 kg,
 // carried by Bilal Ahmed). The code is an example; real codes are random.
+// Worked out once, when the page code loads, not on every redraw.
+const SAMPLE = createSampleData()
+const PASS_PARCEL = SAMPLE.shipments.find((s) => s.id === 's-demo')
+const PASS_JOURNEY = SAMPLE.journeys.find((j) => j.id === 'j-bilal')
+
 function PhonePass() {
-  const sample = createSampleData()
-  const parcel = sample.shipments.find((s) => s.id === 's-demo')
-  const journey = sample.journeys.find((j) => j.id === 'j-bilal')
+  const parcel = PASS_PARCEL
+  const journey = PASS_JOURNEY
   return (
     <div className="mx-auto w-full max-w-[22rem] rounded-[2.75rem] border-[10px] border-ink bg-surface p-3 shadow-[var(--shadow-lift)]"
       role="img" aria-label="A phone showing a RaastaShare pickup pass from Islamabad to Lahore">
@@ -114,7 +118,8 @@ export default function Home({ profile, setProfile }) {
             same intercity route. Payment stays in escrow until delivery is confirmed.
           </p>
           <p className="hero-enter mt-4 max-w-md font-bold [--i:1]" data-testid="hero-fact">
-            ISB → LHE, 5 kg: {formatPKR(calculatePrice(DEMO_KG))} instead of about {formatPKR(COURIER_FEE)} by courier.
+            <span aria-hidden="true">ISB → LHE</span><span className="sr-only">Islamabad to Lahore</span>, 5 kg:{' '}
+            {formatPKR(calculatePrice(DEMO_KG))} instead of about {formatPKR(COURIER_FEE)} by courier.
           </p>
 
           {/* The two profile choices (simulated accounts: no login needed) */}

@@ -915,3 +915,23 @@ From it we took four ideas:
   - axe is clean in both themes; the pass's white-on-green text is 6.6:1
     (light) and 5.3:1 (dark).
 - **Not changed:** rules, scores, pricing, statuses and sign-in.
+
+## Stage 33: review of the redesign
+
+A code review and a Playwright CLI walkthrough checked Stage 32. The full
+flow (pass at pickup and delivery, Dashboard, Admin, dark mode) worked with
+no console errors. The review found five issues, all fixed:
+
+- **Grey panels returned.** With the page now white, panels that used the
+  page colour vanished (the accept rows, the "only the carrier" box, the Send
+  map backdrop, disabled buttons). They now use `--color-sunk`, a light grey
+  in light mode and a deeper shade in dark mode.
+- **Tablet Dashboard.** The two metric columns get a dividing line at tablet
+  width too.
+- **Admin's import** is back with the other imports.
+- **Screen readers.** The Home fact line reads "Islamabad to Lahore" instead
+  of "ISB right arrow LHE".
+- **Home phone pass.** The sample data for it is worked out once, not on
+  every redraw.
+- **Checked:** all 12 tests, 19 + 9 earlier checks, axe clean, no console
+  errors.

@@ -18,6 +18,7 @@
   --color-muted: #46524C;        /* secondary text (dark enough to read easily in a thin font) */
   --color-paper: #FFFFFF;        /* page background */
   --color-surface: #FFFFFF;      /* cards, form fields, menus */
+  --color-sunk: #F1F4F2;         /* panels set into a card (accept rows, map backdrop) */
   --color-line: #DCE2DE;         /* thin dividing lines and borders */
   --color-hold: #E0A100;         /* road-marking amber: payment held, warnings */
   --color-hold-ink: #7A5600;     /* amber dark enough to read as text */
@@ -59,6 +60,7 @@
   --color-muted: #B4C4BB;
   --color-paper: #0B110E;
   --color-surface: #131B17;
+  --color-sunk: #0D1411;
   --color-line: #28342E;
   --color-hold-ink: #F0C75A;
   --color-hold-tint: #3A2F12;
@@ -176,7 +178,7 @@ a {
   /* A button that cannot be pressed yet: grey with a dashed outline, so it
      reads as "not ready" instead of a faded version of the real button. */
   .btn:disabled {
-    @apply cursor-not-allowed border-2 border-dashed border-muted/50 bg-paper text-muted;
+    @apply cursor-not-allowed border-2 border-dashed border-muted/50 bg-sunk text-muted;
   }
 
   .label { @apply mb-1 block font-bold; }

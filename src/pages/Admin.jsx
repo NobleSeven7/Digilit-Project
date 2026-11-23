@@ -6,6 +6,7 @@ import { formatPKR, formatDateTime, isolate } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import { codeOf } from '../components/RouteCodes.jsx'
+import { withViewTransition } from '../lib/motion.js'
 
 // A route as a short label: codes first, full names after, e.g.
 // "PEW → MUX Peshawar to Multan".
@@ -17,7 +18,6 @@ function RouteLabel({ origin, destination }) {
     </>
   )
 }
-import { withViewTransition } from '../lib/motion.js'
 
 // How long ago a shipment was posted, in plain words.
 function waitingTime(createdAt) {

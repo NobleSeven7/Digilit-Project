@@ -55,7 +55,7 @@ function CapacityMeter({ value }) {
 // The four metrics sit in one strip divided by thin lines, not in boxes.
 function Metric({ label, value, note, testId }) {
   return (
-    <div className="border-b border-line py-5 sm:pr-5 lg:border-b-0 lg:[&:not(:first-child)]:border-l lg:[&:not(:first-child)]:pl-5">
+    <div className="border-b border-line py-5 sm:pr-5 sm:even:border-l sm:even:pl-5 lg:border-b-0 lg:[&:not(:first-child)]:border-l lg:[&:not(:first-child)]:pl-5">
       <p className="font-bold text-muted">{label}</p>
       <p className="mt-1 font-display text-5xl font-bold tracking-tight" data-testid={testId}>{value}</p>
       <p className="mt-2 text-sm text-muted">{note}</p>
