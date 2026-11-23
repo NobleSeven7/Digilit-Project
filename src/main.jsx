@@ -13,6 +13,10 @@ import '@fontsource/barlow/700.css'
 
 import './index.css'
 import App from './App.jsx'
+import { initAnalytics } from './lib/analytics.js'
+
+// Start product analytics (does nothing if the PostHog settings are missing).
+initAnalytics()
 
 // Find the <div id="root"> in index.html and draw the App inside it.
 createRoot(document.getElementById('root')).render(

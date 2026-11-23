@@ -11,6 +11,7 @@ import Matches from './pages/Matches.jsx'
 import Delivery from './pages/Delivery.jsx'
 import Admin from './pages/Admin.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import { identifyUser } from './lib/analytics.js'
 
 export default function App() {
   // "state" holds { shipments, journeys, deliveries }. It is loaded from
@@ -22,6 +23,7 @@ export default function App() {
   const [profile, setProfileState] = useState(getProfile)
   function setProfile(newProfile) {
     saveProfile(newProfile)
+    identifyUser(newProfile)
     setProfileState(newProfile)
   }
 

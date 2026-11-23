@@ -7,6 +7,7 @@ import { calculatePrice } from '../lib/pricing.js'
 import { sendToWebhook } from '../lib/webhook.js'
 import { checkParcel, MAX_DESCRIPTION, SOURCE } from '../lib/aiCheck.js'
 import { goTo } from '../lib/navigation.js'
+import { track } from '../lib/analytics.js'
 import { formatPKR, dayAt, makeId } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import RoleNotice from '../components/RoleNotice.jsx'
@@ -158,6 +159,11 @@ export default function Sender({ state, save, profile, setProfile }) {
     shipment.matchingMs = eligible.length > 0 ? matchingMs : null
 
     save({ ...state, shipments: [...state.shipments, shipment] })
+    track('parcel_posted', {
+      origin, destination, item_type: type, weight_kg: weight,
+      price_pkr: calculatePrice(weight), eligible_carriers: eligible.length,
+      matched: eligible.length > 0, matching_ms: matchingMs,
+    })
 
     // Log the shipment to Make.com / Google Sheets (skipped if no webhook URL).
     sendToWebhook('shipment', {

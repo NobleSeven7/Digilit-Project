@@ -5,6 +5,7 @@ import { STATUS, DELIVERY, FLAG_AFTER_HOURS } from '../data/constants.js'
 import { findMatches } from '../lib/matching.js'
 import { calculatePrice, calculateSaving } from '../lib/pricing.js'
 import { goTo } from '../lib/navigation.js'
+import { track } from '../lib/analytics.js'
 import { startDelivery } from '../lib/delivery.js'
 import { formatPKR, formatDateTime, formatShort } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
@@ -189,6 +190,11 @@ export default function Matches({ state, save, id }) {
   function handleRequest(journey) {
     const { newState, delivery: newDelivery } = startDelivery(state, shipment, journey)
     save(newState)
+    track('carrier_requested', {
+      origin: shipment.origin, destination: shipment.destination,
+      item_type: shipment.itemType, weight_kg: shipment.weightKg,
+      price_pkr: newDelivery.price,
+    })
     goTo(`delivery/${newDelivery.id}`)
   }
 

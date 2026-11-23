@@ -6,6 +6,7 @@ import { findMatches, evaluateCarrier, isAvailable } from '../lib/matching.js'
 import { calculatePrice } from '../lib/pricing.js'
 import { startDelivery } from '../lib/delivery.js'
 import { goTo } from '../lib/navigation.js'
+import { track } from '../lib/analytics.js'
 import { sendToWebhook } from '../lib/webhook.js'
 import { dayAt, makeId, formatDateTime, formatPKR, isolate } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
@@ -235,6 +236,10 @@ export default function Carrier({ state, save, profile, setProfile }) {
     })
 
     save({ ...state, journeys, shipments })
+    track('journey_posted', {
+      origin, destination, vehicle_type: vehicleType, spare_kg: spare,
+      parcels_unblocked: helped, // waiting parcels this journey made matchable
+    })
     sendToWebhook('journey', {
       journeyId: journey.id, carrierName, origin, destination, departure, vehicleType, spareKg: spare,
     }, `Journey posted: ${origin} to ${destination}, ${spare} kg spare`)

@@ -5,6 +5,7 @@ import { STATUS, DELIVERY, ESCROW, MAX_CODE_TRIES } from '../data/constants.js'
 import { generateOtp, generateDifferentOtp } from '../lib/otp.js'
 import { sendToWebhook, noteInSyncLog } from '../lib/webhook.js'
 import { goTo } from '../lib/navigation.js'
+import { track } from '../lib/analytics.js'
 import { formatPKR, formatDateTime, formatShort, isolate } from '../lib/format.js'
 import { findMatches, isAvailable } from '../lib/matching.js'
 import { calculateSaving } from '../lib/pricing.js'
@@ -156,6 +157,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
         status: DELIVERY.AWAITING_PICKUP, escrow: ESCROW.HELD,
       })
       setMessage({ ok: true, text: `Match confirmed. ${amount} is now held in escrow.` })
+      track('match_confirmed', { origin: shipment.origin, destination: shipment.destination, price_pkr: delivery.price })
       sendToWebhook('match', { ...record, escrow: ESCROW.HELD },
         `Match accepted: ${shipment.senderName} and ${journey.carrierName}`)
     } else {
@@ -167,6 +169,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
   // Carrier declines: the shipment goes back to "Unmatched – Retrying"
   // and the next-ranked carrier is offered on the Matches page.
   function handleDecline() {
+    track('carrier_declined', { origin: shipment.origin, destination: shipment.destination })
     update(
       { status: DELIVERY.DECLINED },
       { status: STATUS.RETRYING, rejectedJourneyIds: [...shipment.rejectedJourneyIds, journey.id] },
@@ -189,6 +192,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
       shipments: state.shipments.map((s) => (s.id !== shipment.id ? s
         : { ...s, rejectedJourneyIds, status: stillOpen ? STATUS.FOUND : STATUS.RETRYING })),
     })
+    track('request_withdrawn', { origin: shipment.origin, destination: shipment.destination })
     noteInSyncLog('request_withdrawn',
       `Request withdrawn by ${shipment.senderName}: ${shipment.origin} to ${shipment.destination}, carrier ${journey.carrierName}`)
     goTo(`matches/${shipment.id}`)
@@ -223,7 +227,9 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
     if (code === delivery.pickupOtp) {
       update({ status: DELIVERY.IN_TRANSIT })
       setMessage({ ok: true, text: 'Pickup confirmed. The parcel is on its way.' })
+      track('pickup_confirmed', { origin: shipment.origin, destination: shipment.destination })
     } else {
+      track('wrong_pickup_code', { origin: shipment.origin, destination: shipment.destination })
       setMessage({ ok: false, text: `Wrong pickup code. The parcel has not been handed over. Ask ${isolate(shipment.senderName)} to read the code again.` })
       return false
     }
@@ -238,6 +244,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
         { status: STATUS.DELIVERED },
       )
       setMessage({ ok: true, text: `Delivery confirmed. ${amount} released to ${isolate(journey.carrierName)}.` })
+      track('delivery_completed', { origin: shipment.origin, destination: shipment.destination, price_pkr: delivery.price })
       sendToWebhook('delivery', { ...record, escrow: ESCROW.RELEASED, deliveredAt },
         `Delivery completed: ${amount} released to ${journey.carrierName}`)
     } else {
@@ -252,10 +259,12 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
           { status: STATUS.DISPUTED },
         )
         setMessage({ ok: false, text: `Wrong delivery code again. After ${MAX_CODE_TRIES} wrong codes, ${amount} is frozen and an admin will check this delivery.` })
+        track('dispute_raised', { origin: shipment.origin, destination: shipment.destination, reason: 'wrong_codes' })
         sendToWebhook('dispute', { ...record, escrow: ESCROW.FROZEN },
           `Dispute raised: ${reason}, ${shipment.origin} to ${shipment.destination}`)
       } else {
         const left = MAX_CODE_TRIES - tries
+        track('wrong_delivery_code', { origin: shipment.origin, destination: shipment.destination, attempt: tries })
         update({ wrongAttempts: tries })
         setMessage({ ok: false, text: `Wrong delivery code. ${amount} stays in escrow. ${left} ${left === 1 ? 'try' : 'tries'} left. Ask the receiver to read the code again.` })
       }
@@ -271,6 +280,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
       { status: STATUS.DISPUTED },
     )
     setMessage({ ok: false, text: `Problem reported. ${amount} is frozen until an admin reviews it.` })
+    track('dispute_raised', { origin: shipment.origin, destination: shipment.destination, reason: 'reported_problem' })
     sendToWebhook('dispute', { ...record, escrow: ESCROW.FROZEN },
       `Dispute raised: ${shipment.origin} to ${shipment.destination}`)
   }
