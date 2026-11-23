@@ -35,6 +35,11 @@ jobs:
           # Same idea for the AI parcel check: a secret named VITE_AI_WEBHOOK_URL.
           # If it is missing, the Send page uses its offline keyword check.
           VITE_AI_WEBHOOK_URL: ${{ secrets.VITE_AI_WEBHOOK_URL }}
+          # PostHog analytics: secrets named VITE_POSTHOG_KEY (the project
+          # token) and VITE_POSTHOG_HOST (https://eu.i.posthog.com). If they
+          # are missing, the live site simply sends no analytics.
+          VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
+          VITE_POSTHOG_HOST: ${{ secrets.VITE_POSTHOG_HOST }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
