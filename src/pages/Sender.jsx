@@ -236,7 +236,8 @@ export default function Sender({ state, save, profile, setProfile }) {
               )}
               <p className="hint">
                 Optional. Describe the item only: no names, addresses or phone numbers. The text is
-                sent to an AI service to suggest an item type and spot prohibited items.
+                sent to an AI service to suggest an item type and spot prohibited items, and saved
+                in the project's Google Sheet. <a href="#/about" className="font-bold text-brand-ink underline underline-offset-2">What we keep</a>
               </p>
 
               {/* The suggestion card */}

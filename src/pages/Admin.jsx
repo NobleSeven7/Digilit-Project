@@ -5,8 +5,20 @@ import { readSyncLog, isWebhookConfigured } from '../lib/webhook.js'
 import { formatPKR, formatDateTime, isolate } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
+import { codeOf } from '../components/RouteCodes.jsx'
 import { withViewTransition } from '../lib/motion.js'
 import posthog, { posthogEnabled } from '../lib/posthog.js'
+
+// A route as a short label: codes first, full names after, e.g.
+// "PEW → MUX Peshawar to Multan".
+function RouteLabel({ origin, destination }) {
+  return (
+    <>
+      <span className="font-display text-2xl tracking-tight">{codeOf(origin)} → {codeOf(destination)}</span>{' '}
+      <span className="font-normal text-muted">{origin} to {destination}</span>
+    </>
+  )
+}
 
 // How long ago a shipment was posted, in plain words.
 function waitingTime(createdAt) {
@@ -19,7 +31,9 @@ function Section({ title, count, emptyText, testId, children }) {
   return (
     <section className="mb-8" data-testid={testId} style={{ viewTransitionName: `admin-${testId}` }}>
       <h2 className="mb-3 text-2xl font-bold">{title} ({count})</h2>
-      {count === 0 ? <p className="card text-muted">{emptyText}</p> : <ul className="space-y-3">{children}</ul>}
+      {count === 0
+        ? <p className="border-t border-line pt-4 text-muted">{emptyText}</p>
+        : <ul className="divide-y divide-line border-y border-line">{children}</ul>}
     </section>
   )
 }
@@ -81,10 +95,10 @@ export default function Admin({ state, save }) {
 
   // A shipment row, shared by the flagged and unmatched lists.
   const shipmentRow = (s) => (
-    <li key={s.id} className="card" style={{ viewTransitionName: `admin-row-${s.id}` }}>
+    <li key={s.id} className="py-5" style={{ viewTransitionName: `admin-row-${s.id}` }}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h3 className="text-lg font-bold">{s.origin} to {s.destination}</h3>
+          <h3 className="text-lg font-bold"><RouteLabel origin={s.origin} destination={s.destination} /></h3>
           <p className="text-muted">
             {s.weightKg} kg {s.itemType.toLowerCase()} from {isolate(s.senderName)}. Waiting {waitingTime(s.createdAt)}.
           </p>
@@ -110,10 +124,10 @@ export default function Admin({ state, save }) {
       <Section title="Possibly prohibited items" count={aiFlagged.length} testId="admin-ai-flagged"
         emptyText="Nothing to review. Parcels the item check marks as possibly prohibited appear here.">
         {aiFlagged.map((s) => (
-          <li key={s.id} className="card" style={{ viewTransitionName: `admin-row-${s.id}` }}>
+          <li key={s.id} className="py-5" style={{ viewTransitionName: `admin-row-${s.id}` }}>
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
-                <h3 className="text-lg font-bold">{s.origin} to {s.destination}</h3>
+                <h3 className="text-lg font-bold"><RouteLabel origin={s.origin} destination={s.destination} /></h3>
                 <p className="text-muted">
                   {s.weightKg} kg {s.itemType.toLowerCase()} from {isolate(s.senderName)}.
                 </p>
@@ -152,10 +166,10 @@ export default function Admin({ state, save }) {
           const s = state.shipments.find((x) => x.id === d.shipmentId)
           const j = state.journeys.find((x) => x.id === d.journeyId)
           return (
-            <li key={d.id} className="card" style={{ viewTransitionName: `admin-dispute-${d.id}` }}>
+            <li key={d.id} className="py-5" style={{ viewTransitionName: `admin-dispute-${d.id}` }}>
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <h3 className="text-lg font-bold">{s.origin} to {s.destination}</h3>
+                  <h3 className="text-lg font-bold"><RouteLabel origin={s.origin} destination={s.destination} /></h3>
                   <p className="text-muted">
                     {s.weightKg} kg {s.itemType.toLowerCase()}. Sender {isolate(s.senderName)}, carrier {isolate(j.carrierName)}.
                   </p>
@@ -185,9 +199,9 @@ export default function Admin({ state, save }) {
             : 'No webhook URL is set, so records stay on this device. The app works the same.'}
         </p>
         {syncLog.length === 0 ? (
-          <p className="card text-muted">Nothing yet. Post a parcel or complete a delivery.</p>
+          <p className="border-t border-line pt-4 text-muted">Nothing yet. Post a parcel or complete a delivery.</p>
         ) : (
-          <ul className="card divide-y divide-line !py-1">
+          <ul className="divide-y divide-line border-y border-line">
             {syncLog.map((entry) => (
               <li key={entry.time + entry.summary} className="py-3" data-event={entry.event}>
                 <p className="font-bold">{entry.summary}</p>

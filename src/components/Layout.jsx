@@ -5,16 +5,27 @@ import { useState } from 'react'
 import { getTheme, saveTheme } from '../lib/theme.js'
 import { PROFILES, profileKey, findProfile } from '../lib/profile.js'
 import { SunIcon, MoonIcon } from './Icons.jsx'
-import { withViewTransition } from '../lib/motion.js'
+import { withViewTransition, useHideOnScroll } from '../lib/motion.js'
 
+// "for" says who sees the page in the menu: a sender, a carrier, both, or the
+// team (Admin and Dashboard, set apart after a divider). Every page still opens
+// from a link whoever you are; the menu just shows what your role needs.
 const NAV_ITEMS = [
-  { page: 'sender', label: 'Send' },
-  { page: 'carrier', label: 'Carry' },
-  { page: 'matches', label: 'Matches' },
-  { page: 'delivery', label: 'Delivery' },
-  { page: 'admin', label: 'Admin' },
-  { page: 'dashboard', label: 'Dashboard' },
+  { page: 'sender', label: 'Send', for: 'sender' },
+  { page: 'carrier', label: 'Carry', for: 'carrier' },
+  { page: 'matches', label: 'Matches', for: 'sender' },
+  { page: 'delivery', label: 'Delivery', for: 'both' },
+  { page: 'admin', label: 'Admin', for: 'team' },
+  { page: 'dashboard', label: 'Dashboard', for: 'team' },
 ]
+
+// The menu for one role: its own pages first, then the team pages.
+function menuFor(role) {
+  return {
+    own: NAV_ITEMS.filter((item) => item.for === role || item.for === 'both'),
+    team: NAV_ITEMS.filter((item) => item.for === 'team'),
+  }
+}
 
 // The RaastaShare logo: two stops joined by a road.
 function Logo() {
@@ -74,6 +85,10 @@ function ProfileBar({ profile, setProfile }) {
           </optgroup>
         </select>
         <span className="hidden text-sm text-muted sm:inline">Demo profile. No password, no real account.</span>
+        {/* Which side of the service you are looking at, so an audience can follow along */}
+        <span className="ml-auto font-display text-xl font-bold text-brand-ink" data-testid="role-view">
+          {profile.role === 'carrier' ? 'Carrier view' : 'Sender view'}
+        </span>
       </div>
     </aside>
   )
@@ -82,11 +97,14 @@ function ProfileBar({ profile, setProfile }) {
 export default function Layout({ currentPage, onReset, profile, setProfile, children }) {
   // Name of the page we are on (shown in the phone header, where there is no top menu).
   const current = NAV_ITEMS.find((item) => item.page === currentPage)
+  const menu = menuFor(profile.role)
+  // Phones: the header slides away while scrolling down (see .site-header).
+  const headerHidden = useHideOnScroll()
 
   return (
     <div className="flex min-h-dvh flex-col">
-      {/* Header */}
-      <header className="bg-brand">
+      {/* Header (on phones it stays at the top and hides while scrolling down) */}
+      <header className="site-header bg-brand" data-hidden={headerHidden}>
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 safe-x py-3 sm:gap-4">
           <Logo />
           {/* Phones: show which page you are on */}
@@ -100,13 +118,14 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
           </div>
           {/* Desktop navigation (hidden on phones). The current page is a white tab
               with a short amber bar under its name; the others are plain text. */}
-          <nav aria-label="Main" className="hidden gap-1 md:ml-auto md:flex">
-            {NAV_ITEMS.map((item) => (
+          <nav aria-label="Main" className="hidden items-center gap-1 md:ml-auto md:flex">
+            {[...menu.own, ...menu.team].map((item, index) => (
               <a
                 key={item.page}
                 href={`#/${item.page}`}
                 aria-current={currentPage === item.page ? 'page' : undefined}
                 className={`relative flex min-h-11 items-center rounded-lg px-3 font-bold ${
+                  index === menu.own.length ? 'ml-3 before:absolute before:-left-2 before:h-6 before:w-px before:bg-white/35' : ''} ${
                   currentPage === item.page
                     ? 'bg-surface text-brand-ink'
                     : 'text-on-brand-soft hover:bg-brand-dark hover:text-white'
@@ -131,7 +150,8 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
       <footer className="border-t border-line pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0">
         <div className="mx-auto flex max-w-5xl flex-col gap-3 safe-x py-5 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
           <p>
-            Student prototype. All people and trips are fictional; codes and payments are simulated.
+            Student prototype. All people and trips are fictional; codes and payments are simulated.{' '}
+            <a href="#/about" data-testid="about-link" className="font-bold text-brand-ink underline underline-offset-2">About this demo</a>
           </p>
           <button type="button" onClick={onReset} data-testid="reset-demo"
             className="btn btn-secondary shrink-0 self-start text-base sm:self-auto">
@@ -144,12 +164,13 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
           padding keeps the tabs above an iPhone's home bar. */}
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-10 flex overflow-hidden border-t border-line bg-surface md:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
-        {NAV_ITEMS.map((item) => (
+        {[...menu.own, ...menu.team].map((item, index) => (
           <a
             key={item.page}
             href={`#/${item.page}`}
             aria-current={currentPage === item.page ? 'page' : undefined}
             className={`flex min-h-14 min-w-0 flex-auto items-center justify-center border-t-4 px-1 text-xs font-bold active:bg-brand-tint ${
+              index === menu.own.length ? 'shadow-[inset_1px_0_0_var(--color-line)]' : ''} ${
               currentPage === item.page ? 'border-brand-ink text-brand-ink' : 'border-transparent text-muted'
             }`}
           >

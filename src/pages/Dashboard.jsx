@@ -4,12 +4,13 @@ import { STATUS, DELIVERY, COURIER_FEE } from '../data/constants.js'
 import { formatPKR, formatDateTime, isolate } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import StatusBadge, { statusTone } from '../components/StatusBadge.jsx'
+import RouteCodes from '../components/RouteCodes.jsx'
 
 // The order a parcel moves through, then the ones that need a person.
 const STATUS_ORDER = [STATUS.FOUND, STATUS.MATCHED, STATUS.DELIVERED,
   STATUS.RETRYING, STATUS.FLAGGED, STATUS.DISPUTED, STATUS.CANCELLED]
 // Bar colour per status family (same families as the status badges).
-const BAR = { good: 'bg-brand', waiting: 'bg-hold', bad: 'bg-fail' }
+const BAR = { good: 'bg-brand-ink', waiting: 'bg-hold', bad: 'bg-fail' }
 // The road on a delivery card: its colour matches the status badge beside
 // it, and it fills as far as the parcel has got. A delivery that went wrong
 // (disputed, refunded, declined) shows the whole road in red.
@@ -38,7 +39,7 @@ function CapacityMeter({ value }) {
         <div className="absolute inset-y-[-4px] rounded-md border-2 border-dashed border-brand-ink/70"
           style={{ left: `${TARGET_LOW}%`, width: `${TARGET_HIGH - TARGET_LOW}%` }} />
         {/* Value */}
-        <div className="h-4 rounded-full bg-brand" style={{ width: `${Math.min(100, value)}%` }} />
+        <div className="h-4 rounded-full bg-brand-ink" style={{ width: `${Math.min(100, value)}%` }} />
       </div>
       <div className="mt-1 flex justify-between text-sm text-muted" aria-hidden="true">
         <span>0%</span>
@@ -51,11 +52,12 @@ function CapacityMeter({ value }) {
 }
 
 // One big number with a label and a short explanation.
+// The four metrics sit in one strip divided by thin lines, not in boxes.
 function Metric({ label, value, note, testId }) {
   return (
-    <div className="card">
+    <div className="border-b border-line py-5 sm:pr-5 sm:even:border-l sm:even:pl-5 lg:border-b-0 lg:[&:not(:first-child)]:border-l lg:[&:not(:first-child)]:pl-5">
       <p className="font-bold text-muted">{label}</p>
-      <p className="mt-1 font-display text-4xl font-bold text-brand-ink" data-testid={testId}>{value}</p>
+      <p className="mt-1 font-display text-5xl font-bold tracking-tight" data-testid={testId}>{value}</p>
       <p className="mt-2 text-sm text-muted">{note}</p>
     </div>
   )
@@ -111,7 +113,7 @@ export default function Dashboard({ state }) {
         Looker Studio from Google Sheets.
       </PageHeader>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid border-y border-line sm:grid-cols-2 lg:grid-cols-4">
         <Metric label="Total shipments" value={shipments.length} testId="metric-shipments"
           note="Every request posted by a sender." />
         <Metric label="Matches" value={matches.length} testId="metric-matches"
@@ -123,12 +125,12 @@ export default function Dashboard({ state }) {
             : averageMs < 60000 ? 'From posting to ranked results, well inside the 1\u2011minute target.'
               : 'From posting to ranked results. The target is under 1 minute.'} />
         <Metric label="Cost saved" value={formatPKR(costSaved)} testId="metric-saved"
-          note={`${savedPercent}% less than a ${formatPKR(COURIER_FEE)} courier, over ${completed.length} completed deliveries.`} />
+          note={`${savedPercent}% less than our ${formatPKR(COURIER_FEE)} courier estimate, over ${completed.length} completed deliveries.`} />
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+      <div className="mt-10 grid gap-10 lg:grid-cols-2">
         {/* Shipments by status: a simple bar list, no chart library needed */}
-        <section className="card">
+        <section>
           <h2 className="text-xl font-bold">Parcels by status</h2>
           <p className="mt-1 text-sm text-muted">In the order a parcel moves, then the ones that need a person.</p>
           {byStatus.length === 0 && <p className="mt-2 text-muted">No parcels yet.</p>}
@@ -148,9 +150,9 @@ export default function Dashboard({ state }) {
           </ul>
         </section>
 
-        <section className="card">
+        <section>
           <h2 className="text-xl font-bold">Spare capacity used</h2>
-          <p className="mt-2 font-display text-4xl font-bold text-brand-ink">
+          <p className="mt-2 font-display text-5xl font-bold tracking-tight">
             {utilisation.length ? `${averageUtilisation}%` : '—'}
           </p>
           {utilisation.length > 0 && <CapacityMeter value={averageUtilisation} />}
@@ -160,27 +162,24 @@ export default function Dashboard({ state }) {
           </p>
           <h2 className="mt-6 text-xl font-bold">Coordination steps</h2>
           <p className="mt-2 text-muted">
-            3 steps here (submit, accept, verify) against about 8 with phone calls,
+            3 steps here (submit, accept, verify) against about 8 (our estimate) with phone calls,
             messages and bargaining.
           </p>
         </section>
       </div>
 
       {/* The newest deliveries, each drawn as its own small road */}
-      <section className="mt-6" data-testid="recent-deliveries">
+      <section className="mt-12" data-testid="recent-deliveries">
         <h2 className="text-2xl font-bold">Recent deliveries</h2>
         {recent.length === 0 ? (
-          <p className="card mt-3 text-muted">No deliveries yet. Request a carrier on the Matches page to start one.</p>
+          <p className="mt-3 text-muted">No deliveries yet. Request a carrier on the Matches page to start one.</p>
         ) : (
           <ul className="mt-3 grid gap-3 sm:grid-cols-2">
             {recent.map(({ d, s, j }) => (
               <li key={d.id}>
                 <a href={`#/delivery/${d.id}`}
                   className="card card-link block h-full text-ink no-underline">
-                  <div className="flex items-baseline justify-between gap-3 font-display text-lg font-bold">
-                    <span>{s.origin}</span>
-                    <span className="text-right">{s.destination}</span>
-                  </div>
+                  <RouteCodes origin={s.origin} destination={s.destination} size="sm" />
                   {/* A short road between the two cities */}
                   <div className="relative mt-1 h-2 rounded-full bg-line" aria-hidden="true">
                     <div className={`h-2 rounded-full ${road(d.status).colour}`} style={{ width: `${road(d.status).fill}%` }} />
@@ -192,7 +191,7 @@ export default function Dashboard({ state }) {
                     {d.deliveredAt ? `Delivered ${formatDateTime(d.deliveredAt)}.` : ''}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-display text-2xl font-bold text-brand-ink">{formatPKR(d.price)}</span>
+                    <span className="font-display text-2xl font-bold">{formatPKR(d.price)}</span>
                     <StatusBadge status={d.status} />
                   </div>
                 </a>

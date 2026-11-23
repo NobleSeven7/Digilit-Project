@@ -12,6 +12,7 @@ import Matches from './pages/Matches.jsx'
 import Delivery from './pages/Delivery.jsx'
 import Admin from './pages/Admin.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import About from './pages/About.jsx'
 
 export default function App() {
   // "state" holds { shipments, journeys, deliveries }. It is loaded from
@@ -79,6 +80,7 @@ export default function App() {
     delivery: <Delivery {...pageProps} />,
     admin: <Admin {...pageProps} />,
     dashboard: <Dashboard {...pageProps} />,
+    about: <About />,
   }
 
   return (
