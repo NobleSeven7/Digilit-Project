@@ -935,3 +935,22 @@ no console errors. The review found five issues, all fixed:
   every redraw.
 - **Checked:** all 12 tests, 19 + 9 earlier checks, axe clean, no console
   errors.
+
+## Stage 34: real screens and real photos on Home
+
+From the website examples the team liked (Superlist, Hyer, Nakashima):
+
+- **Numbered steps.** "How it works" is now three steps, "01 / Submit",
+  "02 / Accept", "03 / Verify". Each step sits beside a phone showing the real
+  screen: the Send form, the ranked carriers, and the parcel pass. The
+  separate "Codes, not phone calls" section became step 03. The screenshots
+  come in a light and a dark copy, and CSS shows the one for the current theme.
+  They need retaking if the Send or Matches page changes.
+- **Real photos.** Two freely licensed Wikimedia Commons photos: travellers at
+  the Daewoo terminal in Bahawalpur ("Already on the road"), and the M-2 near
+  Islamabad behind the closing section. Each photo has a credit line on the
+  page and in the README. They add about 215 KB.
+- **Removed:** the "How it works" road animation and its CSS.
+- **Checked:** all 12 tests pass, axe is clean in both themes, and there are
+  no console errors.
+- **Not changed:** rules, scores, pricing, statuses and sign-in.

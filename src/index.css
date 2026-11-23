@@ -342,28 +342,11 @@ html[data-transition="theme"]::view-transition-group(*) { animation-duration: 30
 }
 .is-seen .bar-grow { clip-path: inset(0); }
 
-/* Home, "How it works": the green road grows from stop to stop and each stop
-   lights up as the road reaches it. One stretch every 550ms. */
-.road-grow {
-  transition: clip-path 500ms var(--ease-in-out);
-  transition-delay: calc(var(--i, 0) * 550ms);
-}
-.road-grow-x { clip-path: inset(0 100% 0 0); }
-.road-grow-y { clip-path: inset(0 0 100% 0); }
-.is-seen .road-grow { clip-path: inset(0); }
-
-.step-stop {
-  border-color: var(--color-line);
-  color: var(--color-muted);
-  scale: 0.9;
-  transition: border-color 250ms ease, color 250ms ease, scale 400ms var(--ease-out);
-  transition-delay: calc(var(--i, 0) * 550ms);
-}
-.is-seen .step-stop {
-  border-color: var(--color-brand-ink);
-  color: var(--color-brand-ink);
-  scale: 1;
-}
+/* Home, "How it works": each screenshot comes in a light and a dark copy;
+   only the one for the current theme is shown (and, being lazy, loaded). */
+.shot-dark { display: none; }
+html[data-theme="dark"] .shot-light { display: none; }
+html[data-theme="dark"] .shot-dark { display: block; }
 
 /* Success: the green circle pops in, then the check mark draws itself.
    It starts at 90% size, never from nothing. */
@@ -379,8 +362,7 @@ html[data-transition="theme"]::view-transition-group(*) { animation-duration: 30
 /* Less motion: the finished picture straight away; the tick just fades in.
    (The wrong-code shake is skipped in src/lib/motion.js.) */
 @media (prefers-reduced-motion: reduce) {
-  .bar-grow, .road-grow, .road-grow-x, .road-grow-y { clip-path: none; transition: none; }
-  .step-stop { border-color: var(--color-brand-ink); color: var(--color-brand-ink); scale: 1; transition: none; }
+  .bar-grow { clip-path: none; transition: none; }
   .tick-pop { animation-name: enter-fade; }
   .tick-draw { animation: none; }
 }

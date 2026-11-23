@@ -8,6 +8,15 @@ import { createSampleData } from '../data/sampleData.js'
 import HeroMap from '../components/HeroMap.jsx'
 import { firstWithRole } from '../lib/profile.js'
 import { useSeenOnce } from '../lib/motion.js'
+// Screenshots of the real pages, in a light and a dark copy
+// (taken from this app at phone width; retake them if those pages change).
+import sendLight from '../assets/home/step-send-light.webp'
+import sendDark from '../assets/home/step-send-dark.webp'
+import matchLight from '../assets/home/step-match-light.webp'
+import matchDark from '../assets/home/step-match-dark.webp'
+// Photos from Wikimedia Commons (credits under each photo and in the README).
+import terminalPhoto from '../assets/home/photo-daewoo-terminal.webp'
+import motorwayPhoto from '../assets/home/photo-m2-motorway.webp'
 
 // The demo case from the proposal.
 const DEMO_KG = 5
@@ -27,24 +36,6 @@ function ChoiceRow({ href, testId, title, text, onClick }) {
         <ArrowRightIcon size={22} />
       </span>
     </a>
-  )
-}
-
-// The three steps of a delivery, in order (from the proposal: Submit, Accept, Verify).
-const STEPS = [
-  ['Submit', 'Post the parcel or the journey. Matching runs straight away.'],
-  ['Accept', 'Sender and carrier both accept. The fee moves into escrow.'],
-  ['Verify', 'One-time codes confirm pickup and delivery, then the carrier is paid.'],
-]
-
-// A numbered stop that sits on the "How it works" road. It starts grey and
-// lights up green when the road reaches it (.step-stop in src/index.css).
-function StepStop({ number, className }) {
-  return (
-    <span style={{ '--i': number - 1 }}
-      className={`step-stop absolute z-10 flex size-8 items-center justify-center rounded-full border-4 bg-surface text-sm font-bold ${className}`}>
-      {number}
-    </span>
   )
 }
 
@@ -71,32 +62,76 @@ function PriceRow({ name, note, price, highlight, order }) {
   )
 }
 
-// A phone showing the pickup pass for the demo parcel (Ayesha Khan's 5 kg,
-// carried by Bilal Ahmed). The code is an example; real codes are random.
+// A phone outline. Whatever is inside is its screen.
+function Phone({ label, children }) {
+  return (
+    <div className="relative mx-auto w-full max-w-[20rem] overflow-hidden rounded-[2.75rem] border-[10px] border-ink bg-paper shadow-[var(--shadow-lift)]"
+      role="img" aria-label={label}>
+      <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-full bg-ink" aria-hidden="true" />
+      <div className="pt-9" aria-hidden="true">{children}</div>
+    </div>
+  )
+}
+
+// A screenshot in both themes; CSS shows the one that matches (.shot-light / .shot-dark).
+function Shot({ light, dark }) {
+  return (
+    <>
+      <img src={light} alt="" width="390" height="720" loading="lazy" className="shot-light block h-auto w-full" />
+      <img src={dark} alt="" width="390" height="720" loading="lazy" className="shot-dark block h-auto w-full" />
+    </>
+  )
+}
+
+// The pickup pass for the demo parcel (Ayesha Khan's 5 kg, carried by Bilal
+// Ahmed). The code is an example; real codes are random.
 // Worked out once, when the page code loads, not on every redraw.
 const SAMPLE = createSampleData()
 const PASS_PARCEL = SAMPLE.shipments.find((s) => s.id === 's-demo')
 const PASS_JOURNEY = SAMPLE.journeys.find((j) => j.id === 'j-bilal')
 
-function PhonePass() {
-  const parcel = PASS_PARCEL
-  const journey = PASS_JOURNEY
-  return (
-    <div className="mx-auto w-full max-w-[22rem] rounded-[2.75rem] border-[10px] border-ink bg-surface p-3 shadow-[var(--shadow-lift)]"
-      role="img" aria-label="A phone showing a RaastaShare pickup pass from Islamabad to Lahore">
-      <div className="mx-auto mb-3 h-5 w-24 rounded-full bg-ink" aria-hidden="true" />
-      <div aria-hidden="true">
-        <ParcelPass kind="Pickup" code="4827" shipment={parcel} journey={journey} note="Example pass" />
+// The three steps of a delivery, in order (from the proposal: Submit, Accept,
+// Verify), each beside the screen it happens on.
+const STEPS = [
+  {
+    label: 'Submit',
+    title: 'Post the parcel',
+    text: 'Say what it is, where it is going and when it must leave. Every carrier on that route is checked against four rules straight away.',
+    phone: 'A phone showing the Post a parcel form',
+    screen: <Shot light={sendLight} dark={sendDark} />,
+  },
+  {
+    label: 'Accept',
+    title: 'Pick a carrier',
+    text: 'Carriers who pass all four rules are ranked by a score out of 100. Once both sides accept, the fee is held in escrow.',
+    phone: 'A phone showing three carriers ranked by score, Bilal Ahmed first with 75 out of 100',
+    screen: <Shot light={matchLight} dark={matchDark} />,
+  },
+  {
+    label: 'Verify',
+    title: 'Codes, not phone calls',
+    text: 'The parcel gets a pass. The carrier enters the pickup code at the door and the delivery code at the other end. Only then is the money released.',
+    phone: 'A phone showing a RaastaShare pickup pass from Islamabad to Lahore',
+    screen: (
+      <div className="px-3 pb-4">
+        <ParcelPass kind="Pickup" code="4827" shipment={PASS_PARCEL} journey={PASS_JOURNEY} note="Example pass" />
       </div>
-      <div className="mx-auto mt-4 h-1.5 w-28 rounded-full bg-ink/70" aria-hidden="true" />
-    </div>
+    ),
+  },
+]
+
+// Credit line for a Wikimedia Commons photo (the licences ask for one).
+function PhotoCredit({ author, licence, licenceUrl, source, className = '' }) {
+  return (
+    <p className={`text-xs text-muted ${className}`}>
+      Photo: {author}, <a href={licenceUrl} rel="noopener noreferrer">{licence}</a>, via{' '}
+      <a href={source} rel="noopener noreferrer">Wikimedia Commons</a> (cropped).
+    </p>
   )
 }
 
 export default function Home({ profile, setProfile }) {
-  // Two animations wait until they are on screen: the "How it works" road
-  // lights up stop by stop, and the price bars fill.
-  const [stepsRef, stepsSeen] = useSeenOnce()
+  // The price bars fill once they are on screen.
   const [pricesRef, pricesSeen] = useSeenOnce()
 
   // Choosing a side also signs you in as a demo person with that role
@@ -134,62 +169,43 @@ export default function Home({ profile, setProfile }) {
         <HeroMap />
       </section>
 
-      {/* How it works: the three steps as stops along one road */}
-      <section ref={stepsRef} className={stepsSeen ? 'is-seen' : ''}>
+      {/* How it works: numbered steps, each beside the real screen */}
+      <section>
         <h2 className="text-4xl font-bold sm:text-6xl">How it works</h2>
         <p className="mt-2 max-w-2xl text-lg text-muted">
           Three steps, where phone calls and bargaining took about eight. A match takes under a minute.
         </p>
-
-        {/* Wide screens: the road runs left to right */}
-        <ol className="mt-8 hidden sm:grid sm:grid-cols-3" data-testid="steps-road">
-          {STEPS.map(([title, text], index) => (
-            <li key={title}>
-              <h3 className="text-3xl font-semibold">{title}</h3>
-              <div className={`relative my-4 h-4 bg-line ${index === 0 ? 'rounded-l-full' : ''} ${
-                index === STEPS.length - 1 ? 'rounded-r-full' : ''}`}>
-                {/* The green road: grows left to right, one stretch after another */}
-                <span aria-hidden="true" style={{ '--i': index }}
-                  className="road-grow road-grow-x absolute inset-0 rounded-[inherit] bg-brand">
-                  <span className="absolute inset-x-2 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-white/70" />
-                </span>
-                <StepStop number={index + 1} className="left-0 top-1/2 -translate-y-1/2" />
+        <ol className="mt-10 space-y-16 sm:mt-14 sm:space-y-24" data-testid="steps">
+          {STEPS.map((step, index) => (
+            <li key={step.label} className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
+              <div className={`max-w-md ${index % 2 ? 'lg:order-2' : 'lg:justify-self-end'}`}>
+                <p className="text-sm font-bold uppercase tracking-[0.14em] text-brand-ink">
+                  <span className="tabular-nums">0{index + 1}</span> / {step.label}
+                </p>
+                <h3 className="mt-3 text-4xl font-bold leading-[0.95] sm:text-6xl">{step.title}</h3>
+                <p className="mt-4 text-lg text-muted">{step.text}</p>
               </div>
-              <p className="pr-8 text-muted">{text}</p>
-            </li>
-          ))}
-        </ol>
-
-        {/* Phones: the same road runs top to bottom */}
-        <ol className="mt-6 sm:hidden">
-          {STEPS.map(([title, text], index) => (
-            <li key={title} className="relative pb-6 pl-12 last:pb-1">
-              <span aria-hidden="true" className={`absolute inset-y-0 left-2.5 w-3 bg-line ${
-                index === 0 ? 'rounded-t-full' : ''} ${index === STEPS.length - 1 ? 'rounded-b-full' : ''}`}>
-                {/* The green road: grows top to bottom on phones */}
-                <span style={{ '--i': index }}
-                  className="road-grow road-grow-y absolute inset-0 rounded-[inherit] bg-brand">
-                  <span className="absolute inset-y-2 left-1/2 -translate-x-1/2 border-l-2 border-dashed border-white/70" />
-                </span>
-              </span>
-              <StepStop number={index + 1} className="left-0 top-0" />
-              <h3 className="text-2xl font-semibold">{title}</h3>
-              <p className="mt-1 text-muted">{text}</p>
+              <Phone label={step.phone}>{step.screen}</Phone>
             </li>
           ))}
         </ol>
       </section>
 
-      {/* The parcel pass on a phone: what the sender and carrier actually get */}
-      <section className="grid items-center gap-10 lg:grid-cols-2" data-testid="pass-showcase">
-        <div className="max-w-md">
-          <h2 className="text-4xl font-bold sm:text-6xl">Codes, not phone calls</h2>
-          <p className="mt-4 text-lg text-muted">
-            Once both sides accept, the parcel gets a pass. The carrier enters the pickup code at
-            the door and the delivery code at the other end. Only then is the money released.
+      {/* A real photo: the trips already happen, with room to spare */}
+      <section className="grid overflow-hidden rounded-2xl bg-sunk lg:grid-cols-2" data-testid="photo-terminal">
+        <img src={terminalPhoto} width="1280" height="960" loading="lazy"
+          alt="Travellers carrying bags outside the Daewoo Express bus terminal in Bahawalpur"
+          className="aspect-[4/3] size-full object-cover lg:aspect-auto" />
+        <div className="self-center px-5 py-9 sm:px-12 sm:py-14">
+          <h2 className="text-4xl font-bold sm:text-6xl">Already on the road</h2>
+          <p className="mt-4 max-w-md text-lg text-muted">
+            Every day people travel between Pakistan's cities by bus, car and van, often with
+            room to spare in a bag or a boot. RaastaShare puts that space to use.
           </p>
+          <PhotoCredit className="mt-6" author="Ammarkh" licence="CC BY-SA 3.0"
+            licenceUrl="https://creativecommons.org/licenses/by-sa/3.0/"
+            source="https://commons.wikimedia.org/wiki/File:BahawalpurDaewoo.JPG" />
         </div>
-        <PhonePass />
       </section>
 
       {/* Price comparison from the proposal, on a band of motorway green */}
@@ -212,18 +228,29 @@ export default function Home({ profile, setProfile }) {
         </ul>
       </section>
 
-      {/* Closing: the same two choices as buttons */}
-      <section className="pb-4 text-center">
-        <h2 className="mx-auto max-w-3xl text-balance text-5xl font-bold leading-[0.95] sm:text-7xl">
-          The trip is happening anyway
-        </h2>
-        <p className="mx-auto mt-4 max-w-xl text-lg text-muted">
-          Put a parcel on it, or offer the space in your car.
-        </p>
-        <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-          <a href="#/sender" className="btn btn-primary" onClick={become('sender')}>Post a parcel</a>
-          <a href="#/carrier" className="btn btn-secondary" onClick={become('carrier')}>Post a journey</a>
+      {/* Closing: the same two choices as buttons, over a photo of the M-2 */}
+      <section className="pb-4">
+        <div className="relative overflow-hidden rounded-2xl text-center text-white">
+          <img src={motorwayPhoto} width="1280" height="960" loading="lazy" alt=""
+            className="absolute inset-0 size-full object-cover" />
+          {/* Darkens the photo so the white text stays readable */}
+          <div className="absolute inset-0 bg-[#0B1A13]/65" aria-hidden="true" />
+          <div className="relative px-5 py-20 sm:py-28">
+            <h2 className="mx-auto max-w-3xl text-balance text-5xl font-bold leading-[0.95] sm:text-7xl">
+              The trip is happening anyway
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-lg text-white/85">
+              Put a parcel on it, or offer the space in your car.
+            </p>
+            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+              <a href="#/sender" className="btn btn-primary" onClick={become('sender')}>Post a parcel</a>
+              <a href="#/carrier" className="btn btn-secondary" onClick={become('carrier')}>Post a journey</a>
+            </div>
+          </div>
         </div>
+        <PhotoCredit className="mt-2 text-center" author="King Eliot" licence="CC BY-SA 4.0"
+          licenceUrl="https://creativecommons.org/licenses/by-sa/4.0/"
+          source="https://commons.wikimedia.org/wiki/File:M-2_Motorway_approaching_Islamabad.jpg" />
       </section>
     </div>
   )
