@@ -150,9 +150,10 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
       <footer className="border-t border-line pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0">
         <div className="mx-auto flex max-w-5xl flex-col gap-3 safe-x py-5 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
-            {/* Customs and liability note, always visible. There is no terms
-                page in this demo, so it has no link to one. */}
-            <p className="font-bold text-ink" data-testid="customs-note">Check customs rules before you send anything.</p>
+            {/* What-you-can-send note, always visible. Every route is within
+                Pakistan, so it speaks to what is allowed rather than customs.
+                There is no terms page in this demo, so it has no link to one. */}
+            <p className="font-bold text-ink" data-testid="customs-note">Check what you&rsquo;re allowed to send.</p>
             <p>
               Student prototype. All people and trips are fictional; codes and payments are simulated.{' '}
               <a href="#/about" data-testid="about-link" className="font-bold text-brand-ink underline underline-offset-2">About this demo</a>

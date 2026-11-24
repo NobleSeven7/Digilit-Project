@@ -1383,3 +1383,12 @@ choices (stack the hero halves; hide an empty routes list):
   - posting from ISB → KHI lands on Matches for Karachi;
   - all 12 tests pass, with no console errors;
   - the private preview was rebuilt and republished.
+
+## Stage 50: footer note wording (branch ccr-7df6bb23-nw9pnq)
+
+- **Footer note:** now "Check what you're allowed to send." (it was "Check
+  customs rules before you send anything."). Every route is within Pakistan,
+  where customs rarely applies. There is still no terms page, so there is no
+  link. The `data-testid="customs-note"` is unchanged.
+- **Checked:** build, all 12 tests and the design check. The private preview
+  was rebuilt and republished.
