@@ -106,7 +106,7 @@ function CarrierCard({ result, rank, shipment, declined, canRequest, onRequest }
                                 [&::-webkit-details-marker]:hidden">
               <span className="group-open:hidden">See details</span>
               <span className="hidden group-open:inline">Hide details</span>
-              <ChevronDownIcon size={18} className="transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none" />
+              <ChevronDownIcon size={18} className="transition-transform duration-[250ms] ease-[var(--ease-out)] group-open:rotate-180 motion-reduce:transition-none" />
             </summary>
             <ul className="mt-2 grid gap-2 sm:grid-cols-2">
               {rules.map((rule) => <RuleCheck key={rule.key} rule={rule} />)}

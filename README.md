@@ -259,6 +259,68 @@ test-screenshots/  screenshot of each test result
 BUILD_LOG.md       what was built, which decisions came from the proposal, errors fixed
 ```
 
+## Work report: 23 November 2026
+
+A day spent on how RaastaShare looks and explains itself. The matching rules,
+scores, pricing, statuses, simulated sign-in, webhooks and AI check did not
+change. Full details are in `BUILD_LOG.md`, Stages 32–39. Everything shipped
+in pull request #37.
+
+### Research
+
+- **Example websites.** Playwright opened the sites from Adobe's "best website
+  design examples" article. Hyer (a private-flight site) was the team's
+  favourite. Its city codes, boarding pass, real photos and short copy shaped
+  the redesign. Superlist, Nakashima, Frans Hals, Simply Chocolate, NOWNESS,
+  RCA Records and Unseen were studied for layout and motion. Zillow and
+  Lacoste block automated browsers, and Mubasic now redirects to a spam page.
+- **Two Instagram reels**, read frame by frame. "20 niche UI tricks to fix an
+  AI slop website": RaastaShare already passed 15 of the 20. "20 things to
+  have Claude do so your app doesn't get sued": most items are for real
+  businesses, and four applied to us.
+
+### What changed
+
+| Area | Change |
+|---|---|
+| Look | **Cargo label design** in a 60-30-10 scheme: kraft paper `#E2D3B6` (60%), label black `#1C1A17` (30%), "fragile tape" red `#D7261E` (10%). Oxblood for errors, IBM Plex type, nearly square corners, left-aligned layouts. Chosen from three previewed options. |
+| Routes and codes | Routes read as city codes ("ISB → LHE"). Pickup and delivery codes appear on a boarding-pass style **parcel pass**. Fewer boxed cards and a smaller palette. |
+| Home page | "How it works" is three numbered steps beside **real screenshots** of the app. Two **real photos** from Wikimedia Commons (Daewoo terminal, M-2 motorway). |
+| Motion | Steps rise into view, the example code **rolls like a departure board**, photos fade in, and on phones the header hides while scrolling down. Reduced motion shows the final state at once. |
+| Labels | No tiny ALL CAPS labels: "01 Submit", and Sender, Carrier, Parcel, Departs on the pass. |
+| Menu | **Menu by role.** A sender sees Send, Matches and Delivery; a carrier sees Carry and Delivery; Admin and Dashboard follow after a divider. A "Sender view" / "Carrier view" marker shows which side is on screen. Nothing is locked. |
+| Honesty | New **About this demo** page (`#/about`, linked in the footer): what is fictional, what stays in the browser, what is sent to Make.com, the Google Sheet and Gemini, and how to remove it. The AI box mentions the Sheet. The PKR 1,000 courier price and "about eight steps" are labelled as estimates. |
+
+### Checks
+
+- All 12 browser tests pass.
+- The axe accessibility check is clean on all 8 pages in light and dark mode.
+- No console errors.
+- The live site was checked after the merge.
+
+### Found after the merge: PostHog
+
+Pull request #36 ("Set up PostHog", opened by PostHog's setup bot) was merged
+straight after #37.
+
+- **Deploy fixed.** Its merge left `package.json` and `package-lock.json` out of
+  step, so the GitHub Pages deploy failed at `npm ci`. The live site stayed on
+  the #37 version. The lock file is now synced, and the Barlow font packages
+  the merge brought back (no longer used) were removed again.
+- **Not switched on.** The deploy does not pass a PostHog key, so the live site
+  sends nothing to PostHog. If a key is added, the About page's "no tracking
+  and no analytics" must be changed.
+- **Local development needs a key.** `src/lib/posthog.js` throws an error in
+  development mode (`npm run dev`) when `VITE_POSTHOG_KEY` is missing. Add a
+  key to `.env.local`, or decide as a team to remove PostHog.
+
+### Before and after the presentation
+
+- **Before:** press "Reset demo data", run one practice journey, and practise
+  switching between "Sender view" and "Carrier view".
+- **After:** clear the Google Sheet (as the About page promises) and rotate
+  the Make.com webhooks.
+
 ## Photo credits
 
 The two photos on the Home page come from Wikimedia Commons. We resized and

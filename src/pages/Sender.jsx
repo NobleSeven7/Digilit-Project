@@ -344,7 +344,7 @@ export default function Sender({ state, save, profile, setProfile }) {
             <p className="mt-1 text-muted">Tick each line to confirm what is not in your parcel.</p>
             <div className="mt-3 space-y-1">
               {PROHIBITED.map((text, index) => (
-                <label key={text} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-2 hover:bg-brand-tint">
+                <label key={text} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-2 active:bg-brand-tint hover:bg-brand-tint">
                   <input type="checkbox" className="size-6 shrink-0 accent-brand"
                     checked={ticked[index]} onChange={() => toggle(index)} />
                   <span>{text}</span>

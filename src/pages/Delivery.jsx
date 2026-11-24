@@ -497,7 +497,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
               <fieldset className="mt-3 space-y-1">
                 <legend className="label">What went wrong?</legend>
                 {PROBLEMS.map((text) => (
-                  <label key={text} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-2 hover:bg-fail-tint">
+                  <label key={text} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-2 active:bg-fail-tint hover:bg-fail-tint">
                     <input type="radio" name="problem" className="size-5 shrink-0 accent-fail"
                       checked={problem === text} onChange={() => setProblem(text)} />
                     <span>{text}</span>

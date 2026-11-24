@@ -156,7 +156,8 @@ a {
      pointed at (mouse only) and presses in when tapped. */
   .card-link {
     box-shadow: var(--shadow-rest);
-    transition: translate 200ms var(--ease-out), scale 160ms var(--ease-out), box-shadow 200ms var(--ease-out);
+    transition: translate 200ms var(--ease-out), scale 160ms var(--ease-out), box-shadow 200ms var(--ease-out),
+                border-color 200ms var(--ease-out);
   }
   .card-link:active { scale: 0.98; }
   @media (hover: hover) and (pointer: fine) {
@@ -169,11 +170,11 @@ a {
            px-5 py-2.5 text-center font-bold;
     /* Colour changes softly; a press shrinks the button a touch, so it feels
        like it answers the finger. */
-    transition: background-color 150ms ease, transform 160ms var(--ease-out);
+    transition: background-color 150ms ease, scale 160ms var(--ease-out);
   }
   /* ":not(:disabled)" (not "enabled") so that links styled as buttons get
      the same press and hover effects as real buttons. */
-  .btn:not(:disabled):active { transform: scale(0.97); }
+  .btn:not(:disabled):active { scale: 0.97; }
   .btn-primary { @apply bg-brand text-white; }
   .btn-secondary { @apply border-2 border-brand-ink bg-surface text-brand-ink; }
   .btn-danger { @apply border-2 border-fail bg-surface text-fail; }
@@ -205,8 +206,8 @@ a {
    rides from Islamabad to Lahore once.
    Each piece sets --i (0, 1, 2 ...) to say when its turn comes. */
 .hero-enter {
-  animation: hero-enter 700ms var(--ease-out) backwards;
-  animation-delay: calc(var(--i, 0) * 100ms);
+  animation: hero-enter 500ms var(--ease-out) backwards;
+  animation-delay: var(--d, 0ms); /* 0, 60, 110, 150ms: each gap a little shorter */
 }
 @keyframes hero-enter {
   from { opacity: 0; transform: translateY(10px); }
@@ -247,6 +248,10 @@ a {
 }
 
 /* People who ask for less motion get the finished picture straight away. */
+/* The intro plays once per visit; coming back to Home shows the finished
+   picture at once (src/pages/Home.jsx sets .intro-done). */
+.intro-done :is(.hero-enter, .route-draw, .stop-enter, .map-parcel) { animation: none; }
+
 @media (prefers-reduced-motion: reduce) {
   .hero-enter, .route-draw, .stop-enter, .map-parcel { animation: none; }
   .btn { transition: none; }
@@ -290,7 +295,7 @@ a {
    the road arrives (the delay matches the road's 450ms). */
 .stop-settle { animation: stop-settle 450ms var(--ease-out) 400ms both; }
 @keyframes stop-settle {
-  from { transform: scale(0.8); }
+  from { transform: scale(0.9); }
 }
 
 /* "See details" on a match card opens smoothly in browsers that support it;
@@ -299,7 +304,7 @@ details.rule-details { interpolate-size: allow-keywords; }
 details.rule-details::details-content {
   block-size: 0;
   overflow: clip;
-  transition: block-size 320ms var(--ease-out), content-visibility 320ms allow-discrete;
+  transition: block-size 250ms var(--ease-out), content-visibility 250ms allow-discrete;
 }
 details.rule-details[open]::details-content { block-size: auto; }
 
@@ -321,17 +326,18 @@ details.rule-details[open]::details-content { block-size: auto; }
 
 /* ---- Motion: added in Stage 22 ---------------------------------------- */
 
-/* Moving between pages: the new page softly fades in over the old one
-   (src/lib/navigation.js). Fade only, nothing slides. The old page leaves
-   faster than the new one arrives, and blurs slightly as it goes so the two
-   pages never read as two overlapping pictures. */
+/* Moving between pages with a link: the new page quickly fades in over the
+   old one (src/lib/navigation.js). Fade only, nothing slides, and short,
+   because people change pages all the time. The old page leaves faster than
+   the new one arrives, and blurs slightly as it goes so the two pages never
+   read as two overlapping pictures. Back and Forward change at once. */
 html[data-transition="page"]::view-transition-old(root) {
-  animation: page-out 180ms ease both;
+  animation: page-out 120ms ease both;
 }
 html[data-transition="page"]::view-transition-new(root) {
-  animation: page-in 260ms var(--ease-out) both;
+  animation: page-in 150ms var(--ease-out) both;
 }
-html[data-transition="page"]::view-transition-group(*) { animation-duration: 260ms; }
+html[data-transition="page"]::view-transition-group(*) { animation-duration: 150ms; }
 @keyframes page-out { to { opacity: 0; filter: blur(2px); } }
 
 /* Switching light/dark: the old colours fade out as the new ones fade in. */

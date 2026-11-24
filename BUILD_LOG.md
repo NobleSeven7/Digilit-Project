@@ -1067,3 +1067,29 @@ label, Motorway + truck art), and the team chose **Cargo label**.
   statuses, sign-in and tests.
 - **Checked:** all 12 tests pass, axe is clean on all 8 pages in both themes,
   and there are no console errors.
+
+## Stage 40: motion polish (design-engineering review)
+
+A review of every animation and press effect, following Emil Kowalski's
+design-engineering advice: animate only what helps, keep frequent actions
+fast, and keep moving parts in step. Eight small fixes:
+
+- **Changing pages:** the fade is shorter (150ms instead of 260ms), and
+  Back/Forward now change at once. People change pages all the time, and
+  the page cannot be clicked while it fades (`src/lib/navigation.js`).
+- **Home intro:** it plays on the first visit only. Coming back to Home (in
+  the same tab) shows the finished map at once, instead of waiting about 4.7
+  seconds for the parcel again.
+- **Home headline:** each line rises in 500ms instead of 700ms, with gaps that
+  get shorter (0, 60, 110, 150ms), so it reads as one movement.
+- **Cards:** the border colour now changes together with the lift on hover.
+- **"See details":** the panel and its arrow both take 250ms on the same
+  curve (before: 320ms and 200ms).
+- **Final stop:** the "paid" stop settles in from 90% size instead of 80%.
+- **Buttons:** the press uses `scale`, the same as cards.
+- **Checklist and problem choices:** they now darken when tapped, so a phone
+  shows the tap (before, only a mouse hover did).
+- **Not changed:** logic, data, webhooks, the AI check and tests. Reduced
+  motion still turns movement off.
+- **Checked:** all 12 tests pass. Playwright confirmed Back no longer fades and
+  that nothing is still animating 0.3 seconds after returning to Home.
