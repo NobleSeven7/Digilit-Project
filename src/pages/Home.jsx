@@ -70,7 +70,9 @@ function TrustStrip({ items }) {
 
 // "Routes we cover": Islamabad to each of the other seven cities, built from
 // the city list and city codes in src/data/constants.js. Any two of the eight
-// cities work the same way. Each row opens the Send page.
+// cities work the same way. Each row opens the Send page with that route
+// already chosen (#/sender/ISB-KHI; see routeFromAddress in Sender.jsx). A
+// route missing a code opens the Send page on its usual route.
 const HUB = 'Islamabad'
 const ROUTES = CITIES.filter((city) => city !== HUB).map((to) => ({
   from: HUB, to, fromCode: CITY_CODES[HUB], toCode: CITY_CODES[to], hours: tripHours(HUB, to),
@@ -95,7 +97,7 @@ function RouteList({ routes, onChoose }) {
         const time = roadTime(hours)
         return (
         <li key={to}>
-          <a href="#/sender" onClick={onChoose} data-testid="route-link"
+          <a href={fromCode && toCode ? `#/sender/${fromCode}-${toCode}` : '#/sender'} onClick={onChoose} data-testid="route-link"
             className="flex min-h-16 items-center gap-4 border-b border-line py-3 text-ink no-underline transition-colors
                        duration-100 ease-[ease] hover:bg-surface/60 active:bg-sunk">
             <span className="min-w-0 flex-1">
@@ -317,7 +319,8 @@ export default function Home({ profile, setProfile }) {
         </ol>
       </section>
 
-      {/* Routes we cover: one list, no cards. Each route opens the Send page.
+      {/* Routes we cover: one list, no cards. Each route opens the Send page,
+          with that route chosen.
           With no routes the section is left out (an empty list says nothing);
           the counts in the line under the heading come from the data. */}
       {routes.length > 0 && (

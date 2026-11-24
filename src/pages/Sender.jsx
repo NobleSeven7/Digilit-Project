@@ -1,7 +1,7 @@
 // Sender page: post a shipment. The sender must tick every line of the
 // prohibited-items checklist before the parcel can be posted.
 import { useRef, useState } from 'react'
-import { CITIES, ITEM_TYPES, STATUS } from '../data/constants.js'
+import { CITIES, CITY_CODES, ITEM_TYPES, STATUS } from '../data/constants.js'
 import { findMatches } from '../lib/matching.js'
 import { calculatePrice } from '../lib/pricing.js'
 import { sendToWebhook } from '../lib/webhook.js'
@@ -50,11 +50,23 @@ const PROHIBITED = [
   'No live animals',
 ]
 
-export default function Sender({ state, save, profile, setProfile }) {
+// A route picked on the Home page ("Routes we cover") arrives in the address
+// as city codes: #/sender/ISB-KHI. Unknown codes, or the same city twice, are
+// ignored and the form starts on its usual Islamabad to Lahore.
+function routeFromAddress(id) {
+  const [fromCode, toCode] = String(id || '').toUpperCase().split('-')
+  const cityFor = (code) => CITIES.find((city) => CITY_CODES[city] === code)
+  const from = cityFor(fromCode)
+  const to = cityFor(toCode)
+  return from && to && from !== to ? { from, to } : null
+}
+
+export default function Sender({ state, save, id, profile, setProfile }) {
   // One piece of state per form field.
   const senderName = profile.name // the signed-in demo sender
-  const [origin, setOrigin] = useState('Islamabad')
-  const [destination, setDestination] = useState('Lahore')
+  const chosenRoute = routeFromAddress(id)
+  const [origin, setOrigin] = useState(chosenRoute?.from ?? 'Islamabad')
+  const [destination, setDestination] = useState(chosenRoute?.to ?? 'Lahore')
   const [weightKg, setWeightKg] = useState('5')
   const [itemType, setItemType] = useState('Small parcel')
   const [deadline, setDeadline] = useState(dayAt(1, 18)) // default: tomorrow 6 pm

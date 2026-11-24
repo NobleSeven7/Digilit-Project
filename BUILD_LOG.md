@@ -1365,3 +1365,21 @@ choices (stack the hero halves; hide an empty routes list):
     in dark mode;
   - the demo data looks as before, apart from "Sender" now being indented to
     match "Traveller".
+
+## Stage 49: routes open with that route chosen (branch ccr-7df6bb23-nw9pnq)
+
+- **Home:** each row in "Routes we cover" links to `#/sender/<from code>-<to
+  code>` (for example `#/sender/ISB-KHI`). A route missing a code links to
+  plain `#/sender`.
+- **Send page:** reads those codes from the page id the router already passes
+  (the Matches page uses the same id) and starts the form on that route. It
+  ignores unknown codes, the same city twice or a missing part, and then
+  starts on the usual Islamabad to Lahore. `navigation.js`, `App.jsx` and the
+  profile logic are unchanged.
+- **Checked:**
+  - all seven routes open with the right cities;
+  - `#/sender`, `#/sender/XXX-LHE`, `#/sender/LHE-LHE` and `#/sender/LHE` fall
+    back to Islamabad to Lahore, and lowercase `isb-khi` works;
+  - posting from ISB → KHI lands on Matches for Karachi;
+  - all 12 tests pass, with no console errors;
+  - the private preview was rebuilt and republished.
