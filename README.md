@@ -356,10 +356,16 @@ straight after #37.
 
 ## Work report: 24 November 2026
 
-A shorter day: smoother motion, and PostHog analytics made honest. The
-matching rules, scores, pricing, statuses, simulated sign-in, webhooks, AI
-check and tests did not change. Full details are in `BUILD_LOG.md`, Stages
-40–41. Pull requests #40 and #41 were merged and deployed.
+A day on how RaastaShare moves and feels:
+- a motion review, then a deeper animation audit;
+- PostHog analytics made honest;
+- an Apple-style design pass;
+- fixes for phones;
+- the team's design rules, written down.
+
+The matching rules, scores, pricing, statuses, simulated sign-in, webhooks,
+AI check and tests did not change. Full details are in `BUILD_LOG.md`, Stages
+40–45. Pull requests #40, #41, #42 and #43 were merged and deployed.
 
 ### Motion review (#40)
 
@@ -382,6 +388,9 @@ Playwright compared the old and new builds: Back no longer fades, and 0.3
 seconds after returning to Home, 0 animations are still running (before: 23).
 The same pull request carried the 23 November report and a synced lock file.
 
+Later in the day (#43), the animation audit went further: the page fade and
+the card hover lift were removed altogether (see "Animation clean-up" below).
+
 ### PostHog analytics (#41)
 
 Pull requests #38 and #39 (from another session) switched PostHog on for the
@@ -399,6 +408,67 @@ page and the setup:
 - **Teammates.** `npm run dev` works without a PostHog key (a warning instead
   of an error).
 - **README.** A new "Optional: PostHog usage statistics" setup section.
+
+### Apple design pass (#43)
+
+Reviewed and changed using Apple's design guidance (WWDC *Designing Fluid
+Interfaces* and *The Details of UI Typography*):
+
+| Area | Change |
+| --- | --- |
+| Parcel pass | The notches are real holes, so they work on any background (on Home they used to show as cream bumps). A two-layer paper-ticket shadow, and equal-width code digits. |
+| Status badges | One height, a touch more letter spacing, equal-width digits. Still flat, so they never look like buttons. |
+| Success tick | The circle settles on a no-bounce spring, and the check finishes about 0.6s after the press. Android phones give two light taps on that frame. |
+| Send page | Mistakes show as you go, not only after "Post parcel". The message next to Post names the field. A progress bar shows the AI check's 8-second limit. Required fields come first. The price no longer jiggles. |
+| Type, all pages | Letter spacing and line height depend on text size. Fixed a hidden rule that overrode every heading's own line height. Prices, scores and totals use equal-width digits. |
+| Materials | The phone tab bar fades softly into the page. The "more contrast" phone setting gets darker lines and fields. |
+
+### Animation clean-up (#43)
+
+A deep animation audit (Emil Kowalski's animation skills) found ten issues.
+Five became step-by-step plans in `plans/`; `plans/README.md` shows which are
+done.
+
+- **Removed:**
+  - the page fade between pages (the most frequent action, so any fade read as
+    delay);
+  - the scroll reveals on Home's steps (they held the content back);
+  - the Dashboard cards' hover lift.
+- **Shortened:** the tracker road (350ms) and the Admin reorder (250ms, so
+  quick clicks are not lost).
+- **Animate only what is new:** opening or revisiting Matches or Delivery
+  shows everything in place. A card rises only when its step changes.
+- **Matches:** the results arrive as one 300ms wave, best match first, and
+  only the first time.
+- **Booked:** when both sides accept, the "Match confirmed" message carries
+  the success tick.
+- **Five small additions:** form errors, the "which item type?" question,
+  "Accepted", "How the score is calculated", and the checklist tick at 5 of 5.
+
+### Phone fixes (#43)
+
+- The phone status bar colour and the tab icon were still the old green. They
+  now match the header in both themes.
+- Press feedback on the theme switch, the logo and "See details".
+- The code keyboard's return key says "Go".
+- A long press on a checklist row no longer selects its text.
+
+### Design rules written down (#43)
+
+The design corrections and choices from this project are now rules, so future
+work follows them:
+
+- **`DESIGN.md`:** 11 rules, each with its reason. They cover:
+  - colour (60/30/10, tokens only);
+  - surfaces (no gradients, glows or emoji icons; left-aligned);
+  - typography (IBM Plex; no small ALL CAPS);
+  - copy (no marketing phrases; "our estimate"; an honest About page);
+  - motion (no page or scroll animations; 300ms or less);
+  - interaction (phone first; separate sender and carrier pages).
+- **`CLAUDE.md`:** read DESIGN.md before UI work, and show before/after
+  screenshots before anything goes live.
+- **`npm run check:design`:** checks six of the rules automatically. It finds
+  0 problems today.
 
 ### Value proposition lines
 
@@ -418,13 +488,30 @@ For the presentation (the courier price and step count are our estimates):
 
 - All 12 browser tests pass.
 - The axe accessibility check is clean on all 8 pages in light and dark mode.
-- Live site after #41: the "Usage statistics" section is there, 0 cookies,
-  events still reach PostHog EU, no console errors.
+- `npm run check:design` finds no problems.
+- Playwright measured:
+  - the Matches wave at 0, 60 and 100ms, with nothing animating on a revisit;
+  - no page fade;
+  - the booked haptic firing on the same millisecond the check completes.
+- Live site after #43 (on a simulated iPhone 13):
+  - the status bar is `#1C1A17`, matching the header;
+  - the pass notches are real holes, and the scroll reveals are gone;
+  - the Send page starts with "From";
+  - 0 cookies and no errors.
+  (The first try got GitHub Pages' temporary "503 Unicorn!" page; reloading
+  fixed it.)
 
 ### Still to do
 
 - Visitors from before #41 keep the old PostHog cookies until they expire or
   are cleared.
+- **Check on a real phone** (device simulation cannot show these):
+  - the status bar is the same black as the header, in light and dark mode;
+  - on Android, booking a parcel gives two light taps as the tick finishes;
+  - presses feel immediate.
+- **Animation plans left** (optional polish, see `plans/README.md`):
+  - plan 003 step 1, the message banner's 200ms fade;
+  - plan 004, the price bars and code roll once per visit.
 - Before the presentation: press "Reset demo data" and do one practice run.
   After it: clear the Google Sheet and rotate the Make.com webhooks.
 
