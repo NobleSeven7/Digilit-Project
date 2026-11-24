@@ -1,6 +1,6 @@
 # 004 — Play Home's scroll animations once per visit, like the intro
 
-- **Status**: PARTLY SUPERSEDED (.reveal-up deleted; drop its rule)
+- **Status**: DONE (`.reveal-up` was deleted in Stage 44; only the `.bar-grow` and `.code-roll` rules were needed)
 - **Commit**: ecf4645
 - **Severity**: LOW
 - **Category**: Purpose & frequency

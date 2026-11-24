@@ -349,8 +349,13 @@ a {
 
 /* People who ask for less motion get the finished picture straight away. */
 /* The intro plays once per visit; coming back to Home shows the finished
-   picture at once (src/pages/Home.jsx sets .intro-done). */
+   picture at once (src/pages/Home.jsx sets .intro-done). The scroll
+   animations further down (the price bars and the example code) also show
+   finished after the first visit: the same values as the reduced-motion
+   block, so it is "finished, no motion". */
 .intro-done :is(.hero-enter, .route-draw, .stop-enter, .map-parcel) { animation: none; }
+.intro-done .bar-grow { clip-path: none; transition: none; }
+.intro-done .code-roll > span { translate: 0 var(--end); transition: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .hero-enter, .route-draw, .stop-enter, .map-parcel { animation: none; }
@@ -374,7 +379,7 @@ a {
 }
 
 /* A message banner appears: fade only, it is secondary to the card. */
-.enter-fade { animation: enter-fade 300ms ease both; }
+.enter-fade { animation: enter-fade 200ms var(--ease-out) both; }
 @keyframes enter-fade {
   from { opacity: 0; }
 }

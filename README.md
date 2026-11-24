@@ -509,9 +509,9 @@ For the presentation (the courier price and step count are our estimates):
   - the status bar is the same black as the header, in light and dark mode;
   - on Android, booking a parcel gives two light taps as the tick finishes;
   - presses feel immediate.
-- **Animation plans left** (optional polish, see `plans/README.md`):
-  - plan 003 step 1, the message banner's 200ms fade;
-  - plan 004, the price bars and code roll once per visit.
+- **Animation plans:** all four are now done (see `plans/README.md`). The
+  last two finished after #44: the message banner's 200ms fade, and the price
+  bars and code roll playing once per visit.
 - Before the presentation: press "Reset demo data" and do one practice run.
   After it: clear the Google Sheet and rotate the Make.com webhooks.
 
