@@ -69,10 +69,12 @@ function ProfileBar({ profile, setProfile }) {
   return (
     <aside aria-label="Demo profile" className="border-b border-line bg-surface">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 safe-x py-2">
+        {/* The picker is never wider than the screen (max-w-full): with very
+            large text the longest name would otherwise push the page sideways. */}
         <label htmlFor="profilePicker" className="text-sm font-bold">Signed in as</label>
         <select id="profilePicker" data-testid="profile-picker" value={profileKey(profile)}
           onChange={(e) => setProfile(findProfile(e.target.value))}
-          className="min-h-11 rounded-lg border border-muted/60 bg-surface px-2 py-1 font-bold text-brand-ink">
+          className="min-h-11 min-w-0 max-w-full rounded-lg border border-muted/60 bg-surface px-2 py-1 font-bold text-brand-ink">
           <optgroup label="Senders">
             {PROFILES.filter((p) => p.role === 'sender').map((p) => (
               <option key={profileKey(p)} value={profileKey(p)}>{p.name} (sender)</option>
@@ -105,7 +107,10 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
     <div className="flex min-h-dvh flex-col">
       {/* Header (on phones it stays at the top and hides while scrolling down) */}
       <header className="site-header bg-brand" data-hidden={headerHidden}>
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 safe-x py-3 sm:gap-4">
+        {/* flex-wrap: if the menu does not fit beside the logo (very large text
+            on a tablet), it moves onto its own line instead of pushing the
+            page sideways. At normal sizes everything fits on one line. */}
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-2 gap-y-2 safe-x py-3 sm:gap-x-4">
           <Logo />
           {/* Phones: show which page you are on */}
           <div className="flex shrink-0 items-center gap-1 md:order-last">
@@ -118,7 +123,7 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
           </div>
           {/* Desktop navigation (hidden on phones). The current page is a white tab
               with a short amber bar under its name; the others are plain text. */}
-          <nav aria-label="Main" className="hidden items-center gap-1 md:ml-auto md:flex">
+          <nav aria-label="Main" className="hidden flex-wrap items-center gap-1 md:ml-auto md:flex">
             {[...menu.own, ...menu.team].map((item, index) => (
               <a
                 key={item.page}

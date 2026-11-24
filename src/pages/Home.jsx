@@ -278,7 +278,12 @@ export default function Home({ profile, setProfile }) {
       <div>
       <section className="grid items-center gap-8 pt-2 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-6 lg:pt-6">
         <div>
-          <h1 className="hero-enter text-balance text-[3.4rem] font-bold leading-none tracking-[-0.02em] sm:text-7xl lg:text-[5.6rem]">
+          {/* Each size is also capped by the screen width (vw), so with very large
+              text "someone" still fits on one line; at normal text sizes the caps
+              are above the sizes used, so nothing changes. break-word is a last
+              resort for anything still too wide. */}
+          <h1 className="hero-enter text-balance text-[min(3.4rem,15vw)] font-bold leading-none tracking-[-0.02em] [overflow-wrap:break-word]
+                         sm:text-[min(4.5rem,11.5vw)] lg:text-[min(5.6rem,9vw)]">
             Send it with someone already going that way
           </h1>
           <p className="hero-enter mt-5 max-w-md text-lg text-muted [--d:60ms] sm:text-xl sm:leading-normal">

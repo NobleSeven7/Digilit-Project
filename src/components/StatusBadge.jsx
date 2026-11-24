@@ -23,11 +23,14 @@ const COLOURS = {
 // is never mistaken for a button. Small bold type gets a touch of extra letter
 // spacing and a tight line height, so every badge is the same height and stays
 // on one line; numbers (e.g. "PKR 500 frozen") use equal-width digits.
+// shrink-0 keeps it on one line in a row; max-w-full lets it wrap only when it
+// is wider than the whole space it has (very large text), instead of pushing
+// the page sideways.
 export default function StatusBadge({ status }) {
   const colours = COLOURS[statusTone(status)]
 
   return (
-    <span data-testid="status" className={`inline-flex items-center whitespace-nowrap rounded-full border px-3 py-1 text-sm font-bold leading-tight tracking-[0.01em] tabular-nums transition-colors duration-200 ${colours}`}>
+    <span data-testid="status" className={`inline-flex max-w-full shrink-0 items-center rounded-full border px-3 py-1 text-sm font-bold leading-tight tracking-[0.01em] tabular-nums transition-colors duration-200 ${colours}`}>
       {status}
     </span>
   )

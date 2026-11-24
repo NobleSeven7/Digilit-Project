@@ -1392,3 +1392,83 @@ choices (stack the hero halves; hide an empty routes list):
   link. The `data-testid="customs-note"` is unchanged.
 - **Checked:** build, all 12 tests and the design check. The private preview
   was rebuilt and republished.
+
+## Stage 51: very large text (200%) on Home, the profile picker and the parcel pass
+
+At 390px with text at 200%, every page scrolled sideways by 129px. Three
+parts of the page caused it; all three are fixed. At normal text sizes
+nothing changes: the same font sizes and heights, and pixel-identical page
+tops at 390px and 1440px.
+
+1. **Profile picker** (`Layout.jsx`): `min-w-0 max-w-full`, so the longest
+   name can no longer make it wider than the screen (it reached 519px; now
+   358px).
+2. **Hero headline** (`Home.jsx`): each size is also capped by the screen
+   width (`min(3.4rem, 15vw)`, `min(4.5rem, 11.5vw)` from `sm`,
+   `min(5.6rem, 9vw)` from `lg`), plus `overflow-wrap: break-word` as a last
+   resort. At normal text sizes the caps are above the sizes used. At 200%
+   it is 58.5px (was 108.8px), so "someone" fits. The wording is unchanged.
+3. **Parcel pass** (`ParcelPass.jsx`, `RouteCodes.jsx`, `index.css`):
+   - the pass is a size container, so its big type is capped by its own
+     width in `cqi` units: the route codes at `min(2.25rem, 17cqi)`, the arrow
+     at `min(1.5rem, 11cqi)`, the code at `min(3rem, 22cqi)`;
+   - the route wraps onto two lines if the cities cannot sit side by side;
+   - the details use two columns while each has at least 5rem, otherwise
+     one;
+   - names and labels wrap instead of being cut short with "…";
+   - the note moves under the code only when the code fills the row.
+   At 200% nothing spills out (it was 156px).
+
+- **After:** at 200%, Home, Carrier, Delivery and About no longer scroll
+  sideways. Send (219px), Dashboard (100px), Admin (56px) and Matches (22px)
+  still do because of their own content, which was not part of this fix.
+- **Checked:** all 12 tests pass; the design check and axe on all pages in
+  both themes are clean.
+
+## Stage 52: very large text (200%) on Send, Matches, Admin and Dashboard
+
+The last four pages that scrolled sideways at 390px with text at 200% (Send
+219px, Dashboard 100px, Admin 56px, Matches 22px) now fit. All eight pages
+are at 0. At normal text sizes the four pages keep the same heights and are
+pixel-identical at 390px and 1440px (the only differences are sample-data
+timestamps a minute apart).
+
+- **Send** (`Sender.jsx`): the form's grids use `minmax(0, 1fr)` columns, so
+  a city list or the map can no longer make a column wider than the screen.
+  The route map is drawn to a fixed scale, so its labels do not grow with
+  large text; the route is also written out in text under it.
+- **Matches** (`RuleCheck.jsx`): a rule's text sits beside its icon while
+  there is at least 12rem for it; with very large text it moves under the
+  icon and uses the full row, so words do not break mid-way.
+- **Status badges** (`StatusBadge.jsx`): `shrink-0 max-w-full` replaces
+  `whitespace-nowrap`. A badge stays on one line when it fits, and wraps only
+  when it is wider than all the space it has.
+- **Dashboard** (`Dashboard.jsx`):
+  - its two content columns use `minmax(0, 1fr)`;
+  - a status row's count drops under its badge only when they cannot fit
+    side by side;
+  - the "0% / Target / 100%" scale labels keep a minimum gap so they cannot
+    run into each other.
+- **Checked:**
+  - all 12 tests pass, and the design check and axe on all pages in both
+    themes are clean;
+  - all 8 pages: 0px sideways at 200%.
+
+## Stage 53: very large text on tablets (the header)
+
+From 768px (where the full menu bar replaces the phone tab bar) up to about
+1180px, doubled text made the header too wide: 338px sideways at 768px,
+206px at 900px and 82px at 1024px, on every page. At 768px the menu was also
+drawn over the logo.
+
+- **Header** (`Layout.jsx`): the header row and the menu may wrap. When the
+  menu does not fit beside the logo it moves onto its own line, and its links
+  wrap if needed. At normal text sizes everything fits on one line as before
+  (the header is pixel-identical at 390px, 768px, 1024px and 1440px).
+- **Known compromise:** at tablet width with doubled text, the light/dark
+  switch ends up alone on the header's last line. Moving it up would mean
+  rearranging the header, with a risk to how it looks at normal sizes.
+- **Checked:**
+  - all 8 pages at 390, 640, 768, 900, 1024, 1180 and 1440px with text at
+    200%: 0px sideways everywhere;
+  - all 12 tests pass, and the design check and axe in both themes are clean.
