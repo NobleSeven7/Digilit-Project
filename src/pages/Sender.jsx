@@ -20,7 +20,7 @@ function CheckCounter({ count, total }) {
   const done = count === total
   return (
     <p data-testid="checklist-count"
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold tabular-nums transition-colors duration-150 ease-[ease] motion-reduce:transition-none ${
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold tabular-nums transition-colors duration-150 ease-[ease] ${
         done ? 'bg-brand text-white' : 'bg-hold-tint text-hold-ink'
       }`}>
       {/* At 5 of 5 the tick grows in (.tick-in): a small moment, once per parcel */}
