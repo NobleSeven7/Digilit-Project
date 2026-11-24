@@ -269,7 +269,7 @@ src/
   data/            constants (cities, vehicles, prices) and sample data
   lib/             matching, pricing, storage, webhook, AI parcel check, OTP, helpers
   components/      Layout, RouteLine, RuleCheck, StatusBadge, PageHeader
-  pages/           Home, Sender, Carrier, Matches, Delivery, Admin, Dashboard
+  pages/           Home, Sender, Carrier, Matches, Delivery, Admin, Dashboard, About
 tests/             browser tests for the 8 proposal test cases
 test-screenshots/  screenshot of each test result
 BUILD_LOG.md       what was built, which decisions came from the proposal, errors fixed
@@ -328,10 +328,9 @@ straight after #37.
   live site now sends anonymous usage events to PostHog (EU), and #39 added
   the parcel reference to delivery events. A check of the live site showed it
   also set two PostHog cookies, which the About page said it did not.
-- **Fixed in the PostHog privacy pull request.** PostHog now keeps its visitor
-  ID in local storage instead of cookies, respects "Do Not Track" and "Global
-  Privacy Control", and has
-  session replay (screen recording) and surveys turned off. The About page
+- **Fixed in #41 (24 November).** PostHog now keeps its visitor ID in local
+  storage instead of cookies, respects "Do Not Track" and "Global Privacy
+  Control", and has session replay (screen recording) and surveys turned off. The About page
   has a "Usage statistics" section saying what is sent: page views, button
   presses, step events with cities, weights, item types and outcomes, errors
   and AI-check timings. Demo people are "demo profile 1–10", and nothing typed
@@ -345,6 +344,80 @@ straight after #37.
   switching between "Sender view" and "Carrier view".
 - **After:** clear the Google Sheet (as the About page promises) and rotate
   the Make.com webhooks.
+
+## Work report: 24 November 2026
+
+A shorter day: smoother motion, and PostHog analytics made honest. The
+matching rules, scores, pricing, statuses, simulated sign-in, webhooks, AI
+check and tests did not change. Full details are in `BUILD_LOG.md`, Stages
+40–41. Pull requests #40 and #41 were merged and deployed.
+
+### Motion review (#40)
+
+Every animation and press effect was reviewed against Emil Kowalski's
+design-engineering advice (animate only what helps, keep frequent actions fast,
+keep moving parts in step). Eight small fixes:
+
+| Area | Change |
+| --- | --- |
+| Changing pages | The fade is shorter (150ms, was 260ms). Back and Forward change at once. |
+| Home intro | Plays on the first visit in a tab only; coming back shows the finished map. |
+| Home headline | Each line rises in 500ms (was 700ms), with shrinking gaps (0, 60, 110, 150ms). |
+| Cards | The border colour changes together with the hover lift. |
+| "See details" | The panel and its arrow both take 250ms on the same curve. |
+| Final "paid" stop | Settles in from 90% size (was 80%). |
+| Buttons | The press uses `scale`, the same as cards. |
+| Checklist and problem choices | Darken when tapped, so a phone shows the tap. |
+
+Playwright compared the old and new builds: Back no longer fades, and 0.3
+seconds after returning to Home, 0 animations are still running (before: 23).
+The same pull request carried the 23 November report and a synced lock file.
+
+### PostHog analytics (#41)
+
+Pull requests #38 and #39 (from another session) switched PostHog on for the
+live site and added the parcel reference to delivery events. A check of the
+live site found two PostHog cookies, while the About page said "no cookies,
+no tracking and no analytics". The team chose to keep PostHog and fix the
+page and the setup:
+
+- **No cookies.** PostHog keeps its anonymous visitor ID in local storage.
+- **Less collected.** "Do Not Track" and "Global Privacy Control" are
+  respected; screen recording (session replay) and surveys are off.
+- **About page.** A new "Usage statistics" section says what goes to PostHog
+  (EU), that demo people are "demo profile 1–10", and that nothing typed is
+  sent, not even the item description.
+- **Teammates.** `npm run dev` works without a PostHog key (a warning instead
+  of an error).
+- **README.** A new "Optional: PostHog usage statistics" setup section.
+
+### Value proposition lines
+
+For the presentation (the courier price and step count are our estimates):
+
+- **Customer job:** "When I need to get a parcel to another city, I want to
+  hand it to someone already making that trip, so it arrives quickly and
+  cheaply and I know it got there." Carriers' job: earn from spare space on a
+  trip they are already making.
+- **Pain:** sending a parcel between cities means calls, bargaining and about
+  PKR 1,000 by courier (our estimate), while travellers' spare space goes unused.
+- **Gain:** a traveller already going that way carries it, for example
+  PKR 500 for 5 kg from Islamabad to Lahore, with payment held until the
+  delivery code confirms it arrived.
+
+### Checks
+
+- All 12 browser tests pass.
+- The axe accessibility check is clean on all 8 pages in light and dark mode.
+- Live site after #41: the "Usage statistics" section is there, 0 cookies,
+  events still reach PostHog EU, no console errors.
+
+### Still to do
+
+- Visitors from before #41 keep the old PostHog cookies until they expire or
+  are cleared.
+- Before the presentation: press "Reset demo data" and do one practice run.
+  After it: clear the Google Sheet and rotate the Make.com webhooks.
 
 ## Photo credits
 
