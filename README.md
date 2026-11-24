@@ -364,12 +364,13 @@ A day on how RaastaShare moves and feels:
 - the team's design rules, written down;
 - the last animation plans;
 - a restructured home page;
-- fixes for very large text.
+- fixes for very large text;
+- a final animation review against the written standards.
 
 The matching rules, scores, pricing, statuses, simulated sign-in, webhooks,
 AI check and tests did not change. Full details are in `BUILD_LOG.md`, Stages
-40–53. Pull requests #40 to #48 were merged and deployed. This report was
-written in the README-only pull requests #42, #44 and #47.
+40–54. Pull requests #40 to #50 were merged and deployed. This report was
+written in the README-only pull requests #42, #44, #47 and #49.
 
 ### Motion review (#40)
 
@@ -540,6 +541,34 @@ also drawn over the logo).
   written out in text);
 - on a tablet, the light/dark switch sits alone on the header's last line.
 
+### Animation review (#50)
+
+The earlier animation review had skipped two steps of the `review-animations`
+skill: reading its standards file, and giving a full findings table with a
+verdict. This pass did both. Verdict: **Approve** (nothing blocking), with
+eight fixes:
+
+| Change | Before | After |
+| --- | --- | --- |
+| Trust strip entrance | fade only | fade + 6px rise |
+| Delivery message banner | 200ms plain fade | 150ms fade with a 2px drop |
+| Hover colours | "can hover" only | "can hover" **and** a mouse, so none stick after a tap |
+| Reduced motion on buttons, card borders, checklist count | all transitions off | colour still fades; only the press-shrink is off |
+| AI suggestion card | 300ms | 250ms |
+| Code roll curve | hand-typed | the shared `--ease-out` |
+| Phone header show / hide | 250 / 250ms | 250 / 200ms |
+| Colour changes | ease-out curve | `ease` |
+
+Kept on purpose:
+- the delivery road (350ms);
+- the wrong-code shake;
+- the success tick;
+- the Home marketing motion (once per visit);
+- colour press feedback on full-width rows.
+
+The first version of the hover fix silently removed every hover colour; a
+check of the built stylesheet caught it before it shipped.
+
 ### Value proposition lines
 
 For the presentation (the courier price and step count are our estimates):
@@ -588,6 +617,13 @@ For the presentation (the courier price and step count are our estimates):
   - all 12 tests pass; the design check and axe are clean.
 - Live site after #48: all 8 pages at 390px, 768px and 1440px, with normal
   text and at 200%: 0px sideways, no errors.
+- Animation review (#50):
+  - before and after measured in the browser;
+  - all 12 tests pass; the design check and axe are clean.
+- Live site after #50:
+  - the trust strip rises on a first visit and is simply there on a return;
+  - hover colours apply only with a mouse;
+  - no sideways scrolling and no errors.
 
 ### Still to do
 
@@ -598,6 +634,8 @@ For the presentation (the courier price and step count are our estimates):
   - on Android, booking a parcel gives two light taps as the tick finishes;
   - presses feel immediate.
 - **Animation plans:** all four are done (see `plans/README.md`).
+- **Check on a phone after #50:** the facts under the hero rise into place on a
+  first visit, and nothing stays highlighted after tapping a route.
 - **Large text:** fixed in #48. To check on a phone, turn up Text scaling in
   Android Chrome's Accessibility settings and open the site.
 - **Tidy-up:** the `ccr-7df6bb23-nw9pnq` branch is fully merged and can be
