@@ -363,11 +363,13 @@ A day on how RaastaShare moves and feels:
 - fixes for phones;
 - the team's design rules, written down;
 - the last animation plans;
-- a restructured home page.
+- a restructured home page;
+- fixes for very large text.
 
 The matching rules, scores, pricing, statuses, simulated sign-in, webhooks,
 AI check and tests did not change. Full details are in `BUILD_LOG.md`, Stages
-40–50. Pull requests #40 to #46 were merged and deployed.
+40–53. Pull requests #40 to #48 were merged and deployed. This report was
+written in the README-only pull requests #42, #44 and #47.
 
 ### Motion review (#40)
 
@@ -512,6 +514,32 @@ in the live build). Six problems were fixed:
 - counts that were typed in by hand;
 - a trust fact with no detail.
 
+### Very large text (#48)
+
+For people who use a larger text size: Android Chrome's Text scaling, or a
+bigger default font in browser settings. At 200% text, every page used to
+scroll sideways (129px on phones, up to 338px on tablets, where the menu was
+also drawn over the logo).
+
+| Where | Fix |
+| --- | --- |
+| Profile picker | Can no longer be wider than the screen. |
+| Home headline | Each size is also capped by the screen width; at 200% it stays its normal phone size. The wording is unchanged. |
+| Parcel pass | Its big type is capped by the pass's own width. The route and the details move onto separate lines, and names are no longer cut short with "…". |
+| Send, Dashboard | Layout columns can no longer be pushed wider than the screen by their contents. |
+| Status badges | One line when they fit; they wrap only when wider than all the space they have. |
+| Matches rule rows | The text moves under the tick or cross, so words do not break mid-way. |
+| Header (tablets) | The menu moves onto its own line when it does not fit beside the logo. |
+
+**Normal text sizes are unchanged:** the pages are pixel-identical at 390px,
+768px, 1024px and 1440px. The only differences were sample-data timestamps.
+
+**Known compromises (large text only):**
+- the Home headline does not grow past its phone size;
+- the Send page's route map labels stay their normal size (the route is also
+  written out in text);
+- on a tablet, the light/dark switch sits alone on the header's last line.
+
 ### Value proposition lines
 
 For the presentation (the courier price and step count are our estimates):
@@ -554,6 +582,12 @@ For the presentation (the courier price and step count are our estimates):
   - the photo panel is hidden on phones;
   - ISB → KHI opens the Send page set to Islamabad to Karachi;
   - no sideways scrolling, 0 cookies and no errors.
+- Large-text work (#48):
+  - all 8 pages at 390, 640, 768, 900, 1024, 1180 and 1440px with text at
+    200%: 0px sideways;
+  - all 12 tests pass; the design check and axe are clean.
+- Live site after #48: all 8 pages at 390px, 768px and 1440px, with normal
+  text and at 200%: 0px sideways, no errors.
 
 ### Still to do
 
@@ -564,9 +598,8 @@ For the presentation (the courier price and step count are our estimates):
   - on Android, booking a parcel gives two light taps as the tick finishes;
   - presses feel immediate.
 - **Animation plans:** all four are done (see `plans/README.md`).
-- **Large text:** at 200% text size the profile picker, the hero headline and
-  the example parcel pass still make the page scroll sideways. These are older
-  parts of the page; the new home sections fit.
+- **Large text:** fixed in #48. To check on a phone, turn up Text scaling in
+  Android Chrome's Accessibility settings and open the site.
 - **Tidy-up:** the `ccr-7df6bb23-nw9pnq` branch is fully merged and can be
   deleted on GitHub. The private preview link is now out of date; use the
   live site.
