@@ -41,9 +41,11 @@ function CapacityMeter({ value }) {
         {/* Value */}
         <div className="h-4 rounded-full bg-brand-ink" style={{ width: `${Math.min(100, value)}%` }} />
       </div>
-      <div className="mt-1 flex justify-between text-sm text-muted" aria-hidden="true">
+      {/* gap-x-3 is only a minimum (justify-between spreads them anyway): with
+          very large text the labels wrap instead of running into each other. */}
+      <div className="mt-1 flex justify-between gap-x-3 text-sm text-muted" aria-hidden="true">
         <span>0%</span>
-        <span>Target {TARGET_LOW}–{TARGET_HIGH}%</span>
+        <span className="text-center">Target {TARGET_LOW}–{TARGET_HIGH}%</span>
         <span>100%</span>
       </div>
       <p className="mt-2 font-bold">{verdict}.</p>
@@ -128,7 +130,8 @@ export default function Dashboard({ state }) {
           note={`${savedPercent}% less than our ${formatPKR(COURIER_FEE)} courier estimate, over ${completed.length} completed deliveries.`} />
       </div>
 
-      <div className="mt-10 grid gap-10 lg:grid-cols-2">
+      {/* minmax(0, 1fr): columns never grow past the screen because of their contents */}
+      <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[repeat(2,minmax(0,1fr))]">
         {/* Shipments by status: a simple bar list, no chart library needed */}
         <section>
           <h2 className="text-xl font-bold">Parcels by status</h2>
@@ -137,7 +140,9 @@ export default function Dashboard({ state }) {
           <ul className="mt-4 space-y-3" data-testid="status-bars">
             {byStatus.map((row) => (
               <li key={row.status}>
-                <div className="flex items-center justify-between gap-3">
+                {/* flex-wrap: the count drops under the badge only when both
+                    cannot fit side by side (very large text) */}
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                   <StatusBadge status={row.status} />
                   <span className="font-bold tabular-nums">{row.count}</span>
                 </div>

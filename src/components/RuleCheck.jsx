@@ -8,7 +8,7 @@ export default function RuleCheck({ rule }) {
     <li
       data-rule={rule.key}
       data-pass={rule.pass}
-      className={`flex gap-3 rounded-lg px-3 py-2 ${rule.pass ? 'bg-brand-tint' : 'bg-fail-tint'}`}
+      className={`flex flex-wrap gap-x-3 gap-y-1 rounded-lg px-3 py-2 ${rule.pass ? 'bg-brand-tint' : 'bg-fail-tint'}`}
     >
       <span
         aria-hidden="true"
@@ -18,7 +18,11 @@ export default function RuleCheck({ rule }) {
       >
         {rule.pass ? <CheckIcon size={14} /> : <CrossIcon size={14} />}
       </span>
-      <div>
+      {/* The text takes the room beside the icon while that room is at least
+          12rem; with very large text (12rem grows with it) it moves under the
+          icon and uses the full row, so words do not have to break.
+          overflow-wrap is only a last resort for a single word wider than that. */}
+      <div className="min-w-0 grow basis-[min(100%,12rem)] [overflow-wrap:anywhere]">
         <p className="font-bold">
           {rule.label}: <span className={rule.pass ? 'text-brand-ink' : 'text-fail'}>{rule.pass ? 'Pass' : 'Fail'}</span>
         </p>

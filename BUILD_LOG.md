@@ -1424,3 +1424,32 @@ tops at 390px and 1440px.
   still do because of their own content, which was not part of this fix.
 - **Checked:** all 12 tests pass; the design check and axe on all pages in
   both themes are clean.
+
+## Stage 52: very large text (200%) on Send, Matches, Admin and Dashboard
+
+The last four pages that scrolled sideways at 390px with text at 200% (Send
+219px, Dashboard 100px, Admin 56px, Matches 22px) now fit. All eight pages
+are at 0. At normal text sizes the four pages keep the same heights and are
+pixel-identical at 390px and 1440px (the only differences are sample-data
+timestamps a minute apart).
+
+- **Send** (`Sender.jsx`): the form's grids use `minmax(0, 1fr)` columns, so
+  a city list or the map can no longer make a column wider than the screen.
+  The route map is drawn to a fixed scale, so its labels do not grow with
+  large text; the route is also written out in text under it.
+- **Matches** (`RuleCheck.jsx`): a rule's text sits beside its icon while
+  there is at least 12rem for it; with very large text it moves under the
+  icon and uses the full row, so words do not break mid-way.
+- **Status badges** (`StatusBadge.jsx`): `shrink-0 max-w-full` replaces
+  `whitespace-nowrap`. A badge stays on one line when it fits, and wraps only
+  when it is wider than all the space it has.
+- **Dashboard** (`Dashboard.jsx`):
+  - its two content columns use `minmax(0, 1fr)`;
+  - a status row's count drops under its badge only when they cannot fit
+    side by side;
+  - the "0% / Target / 100%" scale labels keep a minimum gap so they cannot
+    run into each other.
+- **Checked:**
+  - all 12 tests pass, and the design check and axe on all pages in both
+    themes are clean;
+  - all 8 pages: 0px sideways at 200%.

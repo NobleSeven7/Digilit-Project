@@ -248,7 +248,10 @@ export default function Sender({ state, save, id, profile, setProfile }) {
         on that route and rank the ones that fit.
       </PageHeader>
 
-      <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1fr_20rem]" noValidate>
+      {/* minmax(0, 1fr): a column never grows past the screen because of what is
+          in it (with very large text, a city list or the map would otherwise
+          push the whole form sideways). */}
+      <form onSubmit={handleSubmit} className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]" noValidate>
         <div className="space-y-6">
           <div role="group" aria-labelledby="parcel-heading" className="card space-y-4">
             <h2 id="parcel-heading" className="text-xl font-bold">Parcel details</h2>
@@ -259,7 +262,7 @@ export default function Sender({ state, save, id, profile, setProfile }) {
 
             {/* The route and parcel fields on the left, with a map of the chosen route
                 beside them (below them on phones) */}
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
               <div className="space-y-4">
                 <div>
                   <label className="label" htmlFor="origin">From</label>
