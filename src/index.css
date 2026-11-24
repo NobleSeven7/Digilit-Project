@@ -174,16 +174,16 @@ a {
 /* ---- Reusable building blocks (used all over the pages) ------------- */
 @layer components {
   .card { @apply rounded-xl border border-line bg-surface p-4 sm:p-5; }
-  /* A whole card that is a link: rests on a soft shadow, lifts a little when
-     pointed at (mouse only) and presses in when tapped. */
+  /* A whole card that is a link: rests on a soft shadow, its border darkens
+     when pointed at (mouse only) and it presses in when tapped. No lift: these
+     sit on the Dashboard, among numbers people are reading. */
   .card-link {
     box-shadow: var(--shadow-rest);
-    transition: translate 200ms var(--ease-out), scale 160ms var(--ease-out), box-shadow 200ms var(--ease-out),
-                border-color 200ms var(--ease-out);
+    transition: scale 160ms var(--ease-out), border-color 150ms var(--ease-out);
   }
   .card-link:active { scale: 0.98; }
   @media (hover: hover) and (pointer: fine) {
-    .card-link:hover { translate: 0 -2px; border-color: var(--color-brand-ink); box-shadow: var(--shadow-lift); }
+    .card-link:hover { border-color: var(--color-brand-ink); }
   }
   @media (prefers-reduced-motion: reduce) { .card-link { transition: none; } }
 
@@ -361,9 +361,10 @@ a {
    across the screen); each lasts about a third to half a second. */
 
 /* A new card arrives (the next delivery step, ranked carriers): it rises a
-   little and fades in. --rise sets how far, --delay when (Matches page). */
+   little and fades in. --rise sets how far, --delay when and --duration how
+   long (the Matches page sets all three for its wave). */
 .enter-rise {
-  animation: enter-rise 360ms var(--ease-out) both;
+  animation: enter-rise var(--duration, 280ms) var(--ease-out) both;
   animation-delay: var(--delay, 0ms);
 }
 @keyframes enter-rise {
@@ -387,11 +388,11 @@ a {
 
 /* Delivery tracker: the green and amber road grows to its new stop. clip-path
    is used instead of width so nothing has to be laid out again. */
-.road-fill { transition: clip-path 450ms var(--ease-in-out); }
+.road-fill { transition: clip-path 350ms var(--ease-in-out); }
 
 /* The one celebration: when the parcel is paid, the last stop settles in as
-   the road arrives (the delay matches the road's 450ms). */
-.stop-settle { animation: stop-settle 450ms var(--ease-out) 400ms both; }
+   the road arrives (the 300ms delay lands it just before the road's 350ms). */
+.stop-settle { animation: stop-settle 450ms var(--ease-out) 300ms both; }
 @keyframes stop-settle {
   from { transform: scale(0.9); }
 }
@@ -407,16 +408,48 @@ details.rule-details::details-content {
 details.rule-details[open]::details-content { block-size: auto; }
 
 /* Admin page (see withViewTransition in src/lib/motion.js): the rows slide to
-   their new places while a removed row fades. The page itself does not fade. */
+   their new places while a removed row fades. The page itself does not fade.
+   Kept short (250ms): the page cannot be clicked while it runs, and admins
+   click down a list. */
 ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
 ::view-transition-group(*) {
-  animation-duration: 380ms;
+  animation-duration: 250ms;
   animation-timing-function: var(--ease-in-out);
+}
+
+/* Small answers to a person's action, each under 200ms with the ease-out curve:
+   - .fade-in-quick: a message under a form field (or a new banner, or cards
+     shown by "Show all") drops 2px into place as it fades in, so it reads as
+     coming from what is above it, and the form moving down reads as an answer;
+   - .settle-in: "Accepted" takes the Accept button's place, settling in
+     from the button's side (origin set where it is used);
+   - .grow-from-button: the "which item type?" question unfolds downward from
+     the spot where "Post parcel" was (its top edge is where the button was);
+   - .tick-in: the checklist's tick appears at 5 of 5. */
+.fade-in-quick { animation: fade-drop 150ms var(--ease-out) both; }
+@keyframes fade-drop {
+  from { opacity: 0; transform: translateY(-2px); }
+}
+.settle-in { animation: settle-in 160ms var(--ease-out) both; }
+@keyframes settle-in {
+  from { opacity: 0; transform: scale(0.97); }
+}
+.grow-from-button {
+  transform-origin: top center;
+  animation: grow-from-button 200ms var(--ease-out) both;
+}
+@keyframes grow-from-button {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+}
+.tick-in { animation: tick-in 160ms var(--ease-out) both; }
+@keyframes tick-in {
+  from { opacity: 0; transform: scale(0.9); }
 }
 
 /* Less motion: nothing moves or slides, things simply fade in. */
 @media (prefers-reduced-motion: reduce) {
   .enter-rise, .enter-pop { animation-name: enter-fade; animation-delay: 0ms; }
+  .fade-in-quick, .settle-in, .grow-from-button, .tick-in { animation: enter-fade 150ms var(--ease-out) both; }
   .stop-settle { animation: none; }
   .road-fill { transition: none; }
   details.rule-details::details-content { transition: none; }
@@ -424,26 +457,12 @@ details.rule-details[open]::details-content { block-size: auto; }
 
 /* ---- Motion: added in Stage 22 ---------------------------------------- */
 
-/* Moving between pages with a link: the new page quickly fades in over the
-   old one (src/lib/navigation.js). Fade only, nothing slides, and short,
-   because people change pages all the time. The old page leaves faster than
-   the new one arrives, and blurs slightly as it goes so the two pages never
-   read as two overlapping pictures. Back and Forward change at once. */
-html[data-transition="page"]::view-transition-old(root) {
-  animation: page-out 120ms ease both;
-}
-html[data-transition="page"]::view-transition-new(root) {
-  animation: page-in 150ms var(--ease-out) both;
-}
-html[data-transition="page"]::view-transition-group(*) { animation-duration: 150ms; }
-@keyframes page-out { to { opacity: 0; filter: blur(2px); } }
-
 /* Switching light/dark: the old colours fade out as the new ones fade in. */
 html[data-transition="theme"]::view-transition-old(root) { animation: theme-out 300ms ease both; }
-html[data-transition="theme"]::view-transition-new(root) { animation: page-in 300ms ease both; }
+html[data-transition="theme"]::view-transition-new(root) { animation: theme-in 300ms ease both; }
 html[data-transition="theme"]::view-transition-group(*) { animation-duration: 300ms; }
 @keyframes theme-out { to { opacity: 0; } }
-@keyframes page-in { from { opacity: 0; } }
+@keyframes theme-in { from { opacity: 0; } }
 
 /* Home, "What it costs": each bar fills from the left once the band is on
    screen, the courier first, then RaastaShare stopping at half. */
@@ -459,16 +478,6 @@ html[data-transition="theme"]::view-transition-group(*) { animation-duration: 30
 .shot-dark { display: none; }
 html[data-theme="dark"] .shot-light { display: none; }
 html[data-theme="dark"] .shot-dark { display: block; }
-
-/* Home, "How it works": as a step scrolls into view its text rises 24px and
-   fades in, then its phone follows 150ms later (as on Hyer's site). Once only. */
-.reveal-up > * {
-  opacity: 0;
-  translate: 0 24px;
-  transition: opacity 600ms var(--ease-out), translate 600ms var(--ease-out);
-}
-.reveal-up > :nth-child(2) { transition-delay: 150ms; }
-.reveal-up.is-seen > * { opacity: 1; translate: 0 0; }
 
 /* Home, step 03: each digit of the example code rolls up to its number like a
    departure board, left to right, starting once the phone has arrived.
@@ -498,7 +507,7 @@ html[data-theme="dark"] .shot-dark { display: block; }
   .site-header[data-hidden="true"]:not(:focus-within) { translate: 0 -100%; }
 }
 
-/* Success (src/components/SuccessTick.jsx): the circle grows from 60% on a
+/* Success (src/components/SuccessTick.jsx): the circle grows from 90% on a
    critically damped spring (Apple's default: damping 1, response 0.35s, no
    bounce), written out as a linear() curve. Browsers without linear() use the
    same ease-out curve as the rest of the app. Once the circle is about 90% of the way
@@ -515,8 +524,9 @@ html[data-theme="dark"] .shot-dark { display: block; }
 }
 @keyframes tick-pop {
   /* The circle is fully visible by a quarter of the way, so it reads as one
-     object growing, not something fading in from nothing. */
-  from { opacity: 0; transform: scale(0.6); }
+     object settling, not something fading in from nothing. It starts at 90%:
+     the drawing check carries the moment, the circle only settles. */
+  from { opacity: 0; transform: scale(0.9); }
   25% { opacity: 1; }
 }
 .tick-draw {
@@ -528,7 +538,6 @@ html[data-theme="dark"] .shot-dark { display: block; }
    (The wrong-code shake is skipped in src/lib/motion.js.) */
 @media (prefers-reduced-motion: reduce) {
   .bar-grow { clip-path: none; transition: none; }
-  .reveal-up > * { opacity: 1; translate: none; transition: none; }
   .code-roll > span { translate: 0 var(--end); transition: none; }
   .photo-fade { transition: none; }
   .site-header { transition: none; }

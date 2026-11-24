@@ -1,8 +1,8 @@
-// A green circle with a check mark, shown next to "Delivered and paid" and
-// "Journey posted". With animate, it plays one short confirmation, timed the
+// A green circle with a check mark, shown when a parcel is booked (both sides
+// accepted), next to "Delivered and paid", and next to "Journey posted". With animate, it plays one short confirmation, timed the
 // way Apple times its "done" moments (see .tick-pop and .tick-draw in
 // src/index.css):
-//   1. the circle grows into place on a spring that settles without bouncing
+//   1. the circle settles from 90% on a spring that does not bounce
 //      (nothing was thrown, so nothing should overshoot);
 //   2. once the circle has nearly landed, the check mark draws itself;
 //   3. on the frame the check mark is complete, phones that support it give

@@ -1,6 +1,6 @@
 # 001 — Animate Matches and Delivery cards only when something is new
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: ecf4645
 - **Severity**: MEDIUM
 - **Category**: Purpose & frequency

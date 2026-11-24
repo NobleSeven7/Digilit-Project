@@ -121,12 +121,13 @@ const STEPS = [
   },
 ]
 
-// One step: the text, then its phone. Both rise into place the first time the
-// step scrolls into view (.reveal-up), and the step 03 code starts rolling.
+// One step: the text, then its phone. They are simply there (no scroll
+// reveal: it held the content back); the first time step 03 scrolls into view,
+// its code rolls to its digits.
 function StepRow({ step, index }) {
   const [ref, seen] = useSeenOnce()
   return (
-    <li ref={ref} className={`reveal-up grid items-center gap-8 lg:grid-cols-2 lg:gap-16 ${seen ? 'is-seen' : ''}`}>
+    <li ref={ref} className={`grid items-center gap-8 lg:grid-cols-2 lg:gap-16 ${seen ? 'is-seen' : ''}`}>
       <div className={`max-w-md ${index % 2 ? 'lg:order-2' : 'lg:justify-self-end'}`}>
         {/* Step number and name in normal case (tiny ALL CAPS labels read as templated) */}
         <p className="font-display text-2xl font-bold text-brand-ink">

@@ -5,10 +5,10 @@ Each plan stands alone, with exact files, current code, target values and checks
 
 | # | Plan | Severity | Status |
 | --- | --- | --- | --- |
-| 001 | [Animate Matches and Delivery cards only when something is new](001-animate-only-what-is-new.md) | MEDIUM | TODO |
-| 002 | [Shorten the Admin reorder so quick clicks are not lost](002-admin-reorder-250ms.md) | MEDIUM | TODO |
-| 003 | [Retune message, card and road timings to the UI budget](003-message-and-card-timing.md) | LOW | TODO |
-| 004 | [Play Home's scroll animations once per visit, like the intro](004-home-scroll-reveals-once.md) | LOW | TODO |
+| 001 | [Animate Matches and Delivery cards only when something is new](001-animate-only-what-is-new.md) | MEDIUM | DONE (Matches as part of the wave choreography) |
+| 002 | [Shorten the Admin reorder so quick clicks are not lost](002-admin-reorder-250ms.md) | MEDIUM | DONE |
+| 003 | [Retune message, card and road timings to the UI budget](003-message-and-card-timing.md) | LOW | PARTLY DONE: steps 2–4 done; step 1 (`.enter-fade` 200ms ease-out) still TODO |
+| 004 | [Play Home's scroll animations once per visit, like the intro](004-home-scroll-reveals-once.md) | LOW | PARTLY SUPERSEDED: `.reveal-up` was deleted; the `.bar-grow` and `.code-roll` rules are still TODO |
 
 Plan 003 covers two audit findings (3 and 4); there are four plans for five findings.
 

@@ -20,10 +20,11 @@ function CheckCounter({ count, total }) {
   const done = count === total
   return (
     <p data-testid="checklist-count"
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold tabular-nums ${
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold tabular-nums transition-colors duration-150 ease-[ease] motion-reduce:transition-none ${
         done ? 'bg-brand text-white' : 'bg-hold-tint text-hold-ink'
       }`}>
-      {done && <CheckIcon size={14} />}
+      {/* At 5 of 5 the tick grows in (.tick-in): a small moment, once per parcel */}
+      {done && <CheckIcon size={14} className="tick-in" />}
       {count} of {total} checks ticked
     </p>
   )
@@ -37,7 +38,8 @@ const FIELD_NAMES = { route: 'From and To', weight: 'the weight', deadline: 'the
 function FieldError({ error, field }) {
   if (error?.field !== field) return null
   // role="alert": read out by screen readers as soon as it appears.
-  return <p id={`${field}-error`} role="alert" className="mt-1 font-bold text-fail">{error.text}</p>
+  // It fades in (.fade-in-quick) so the form moving down reads as an answer.
+  return <p id={`${field}-error`} role="alert" className="fade-in-quick mt-1 font-bold text-fail">{error.text}</p>
 }
 
 const PROHIBITED = [
@@ -425,8 +427,10 @@ export default function Sender({ state, save, profile, setProfile }) {
           </div>
 
           {askType && aiResult && aiResult.suggestedType !== itemType ? (
-            /* The check suggested another item type: the sender picks one */
-            <div role="alert" data-testid="type-question" className="space-y-3 rounded-lg border border-hold bg-hold-tint p-3">
+            /* The check suggested another item type: the sender picks one. The
+               question unfolds from the spot where "Post parcel" was
+               (.grow-from-button), so it reads as that button's answer. */
+            <div role="alert" data-testid="type-question" className="grow-from-button space-y-3 rounded-lg border border-hold bg-hold-tint p-3">
               <p>
                 The check suggested <strong>{aiResult.suggestedType}</strong>, but the item type
                 is <strong>{itemType}</strong>. Which one should we post?

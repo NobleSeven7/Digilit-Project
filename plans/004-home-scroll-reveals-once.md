@@ -1,6 +1,6 @@
 # 004 — Play Home's scroll animations once per visit, like the intro
 
-- **Status**: TODO
+- **Status**: PARTLY SUPERSEDED (.reveal-up deleted; drop its rule)
 - **Commit**: ecf4645
 - **Severity**: LOW
 - **Category**: Purpose & frequency

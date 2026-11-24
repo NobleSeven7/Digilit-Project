@@ -1,6 +1,6 @@
 # 002 — Shorten the Admin reorder so quick clicks are not lost
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: ecf4645
 - **Severity**: MEDIUM
 - **Category**: Interruptibility
