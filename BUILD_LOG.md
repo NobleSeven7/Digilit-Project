@@ -1276,3 +1276,22 @@ future work follows them without being corrected again.
   libraries) checks six of the rules. It finds 0 problems in today's code. A
   test file with one problem of each kind was flagged six times, and the
   check was then run clean again.
+
+## Stage 46: the last two animation plans
+
+- **Plan 003, step 1:** the message banner on the Delivery page (a wrong
+  code, a confirmed pickup and so on) now fades in over 200ms on the ease-out
+  curve. It was 300ms with plain `ease`.
+- **Plan 004:** Home's price bars and its example code now play once per
+  visit, like the intro. Coming back to Home shows the bars full and the code
+  finished, using the same values as the reduced-motion version. The step
+  scroll reveals this plan also covered were already deleted in Stage 44.
+- **Checked:** all 12 tests pass, and `npm run check:design` finds no
+  problems. In Playwright:
+  - on the first visit the bars and code move;
+  - on a return, nothing moves (bars full, code at its final digits);
+  - the banner measured 200ms on `cubic-bezier(0.23, 1, 0.32, 1)`.
+  (The first Playwright run wrongly showed movement on the return. The test
+  had cleared storage while Home was already open; re-run from a fresh load,
+  it was correct.)
+- All four plans in `plans/` are now done.

@@ -1,6 +1,6 @@
 # 003 — Retune message, card and road timings to the UI budget
 
-- **Status**: PARTLY DONE (step 1 left)
+- **Status**: DONE
 - **Commit**: ecf4645
 - **Severity**: LOW
 - **Category**: Easing & duration
