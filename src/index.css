@@ -348,6 +348,20 @@ a {
 }
 
 /* People who ask for less motion get the finished picture straight away. */
+/* The trust strip under the hero joins the intro as its last, quietest
+   beat: it only fades in (no movement), over 200ms, once the hero's lines
+   have started rising. A CSS transition from @starting-style, so it is a
+   one-off on first show and never loops. Skipped with the rest of the intro
+   on a return visit, and with reduced motion. */
+.trust-strip {
+  transition: opacity 200ms var(--ease-out) 200ms;
+  @starting-style { opacity: 0; }
+}
+.intro-done .trust-strip { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .trust-strip { transition: none; }
+}
+
 /* The intro plays once per visit; coming back to Home shows the finished
    picture at once (src/pages/Home.jsx sets .intro-done). The scroll
    animations further down (the price bars and the example code) also show

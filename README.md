@@ -142,7 +142,7 @@ shows what was sent.
 
 | Page | What it does |
 |---|---|
-| Home | Choose a Sender or Carrier profile (this also signs you in as a demo person with that role) |
+| Home | Choose Sender or Traveller (the carrier role; this also signs you in as a demo person with that role). Also: three checked facts, the routes from Islamabad, the price comparison, and a closing split for senders and travellers |
 | Send | Post a parcel, including the prohibited-items checklist. An optional AI parcel check suggests an item type and spots possibly prohibited items |
 | Carry | Post a journey with vehicle type and spare capacity; see the parcels that fit a journey and offer to carry one |
 | Matches | The sender's view: ranked carriers, with a pass or fail for each of the four rules |
@@ -517,15 +517,16 @@ For the presentation (the courier price and step count are our estimates):
 
 ## Photo credits
 
-The two photos on the Home page come from Wikimedia Commons. We resized and
-cropped them, and they keep their original licences:
+The photo on the Home page comes from Wikimedia Commons. We resized and
+cropped it, and it keeps its original licence:
 
 - Daewoo Express terminal, Bahawalpur: photo by Ammarkh,
   [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/),
   [source](https://commons.wikimedia.org/wiki/File:BahawalpurDaewoo.JPG).
-- M-2 Motorway approaching Islamabad: photo by King Eliot,
-  [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/),
-  [source](https://commons.wikimedia.org/wiki/File:M-2_Motorway_approaching_Islamabad.jpg).
+
+(The M-2 Motorway photo by King Eliot, CC BY-SA 4.0, is no longer shown. Its
+file, `src/assets/home/photo-m2-motorway.webp`, is still in the repository,
+unused.)
 
 The phone screens in "How it works" are screenshots of this app.
 

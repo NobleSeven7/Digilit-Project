@@ -1295,3 +1295,100 @@ future work follows them without being corrected again.
   had cleared storage while Home was already open; re-run from a fresh load,
   it was correct.)
 - All four plans in `plans/` are now done.
+
+## Stage 47: home page restructure (branch ccr-7df6bb23-nw9pnq)
+
+Done on branch `ccr-7df6bb23-nw9pnq`, after merging `main` (#40–#45) into it
+so the work builds on the latest app. Not merged to `main`.
+
+- **Hero:** the two choices are now a side-by-side split, "Sender" and
+  "Traveller", with thin rules and no boxes. Links, `data-testid`s and the
+  profile switch are unchanged. The arrow's hover nudge was removed (no
+  hover-only motion); pressing a half darkens it (colour, 100ms).
+- **Trust strip** (new, under the hero): three facts, each checked in the code:
+  - four checks on every traveller (`matching.js`);
+  - a pickup code and a delivery code (`Delivery.jsx`);
+  - money held until the delivery code is entered (`Delivery.jsx`).
+  It fades in as the intro's last beat (200ms, a transition from
+  `@starting-style`), once per visit.
+- **Routes we cover** (new, one list): Islamabad to each of the other seven
+  cities, from `CITIES`, `CITY_CODES` and `tripHours` in `constants.js`, with
+  the road time. Each row opens the Send page as a sender. The team chose the
+  heading over "Live routes", because the list is fixed, not live.
+- **Already on the road:** text cut to one sentence; moved below the routes;
+  hidden on phones (below `sm`). The photo and its credit are kept.
+- **Closing:** a two-colour split (label black for senders, kraft for
+  travellers), each half with one line and one button. The motorway photo
+  is gone, so its credit was removed from the page, the About page and the
+  README's photo credits. The file stays in the repository, unused.
+- **Footer:** "Check customs rules before you send anything." is always
+  visible. There is no terms page, so there is no link.
+- **break-ui:**
+  - a dev-only Demo / Worst case / Empty / One route toggle
+    (`src/dev/`, `?data=…`), not in the production build;
+  - findings reported and waiting for the team's decision.
+- **Design check:** `npm run check:design` now skips `src/dev/`. The toggle
+  is plain grey browser chrome on purpose, and it never ships.
+- **Checked:**
+  - build;
+  - all 12 tests;
+  - the design check;
+  - axe on all 8 pages in both themes;
+  - no sideways scrolling at 390px and 1440px;
+  - full-page screenshots at both widths.
+
+## Stage 48: break-ui fixes on the new home sections (branch ccr-7df6bb23-nw9pnq)
+
+The six problems the worst-case data found, all fixed, with the team's
+choices (stack the hero halves; hide an empty routes list):
+
+1. **A city without a code** shows its name ("ISB → Mandi Bahauddin"), not "ISB →".
+2. **An unknown road time** (a pair missing from the trip-time table gives
+   0) is left out, instead of "about undefined hours" or "about 0 minutes".
+3. **The hero split** puts the halves side by side while each has at least
+   10rem, and stacks them when there is not room (for example at 200% text
+   size, where "Traveller" was cut off). The rule between them is a 1px gap,
+   so it works across or down.
+4. **No routes:** the "Routes we cover" section is left out.
+5. **Counts from the data:** the line under the heading counts the routes
+   and cities ("the seven other cities", "one other city") instead of
+   having them typed in.
+6. **A trust fact with no detail** has no empty line under it.
+
+- **Still open, not part of this work:** at 200% text size the page scrolls
+  sideways because of older parts of the page: the profile picker, the hero
+  headline (the long word "someone") and the example parcel pass. With the
+  headline allowed to wrap, every new section fits.
+- **Checked:**
+  - build, all 12 tests, the design check, and axe on all pages in both themes;
+  - all four toggle states at 320px, 390px and 1440px, at 200% text size and
+    in dark mode;
+  - the demo data looks as before, apart from "Sender" now being indented to
+    match "Traveller".
+
+## Stage 49: routes open with that route chosen (branch ccr-7df6bb23-nw9pnq)
+
+- **Home:** each row in "Routes we cover" links to `#/sender/<from code>-<to
+  code>` (for example `#/sender/ISB-KHI`). A route missing a code links to
+  plain `#/sender`.
+- **Send page:** reads those codes from the page id the router already passes
+  (the Matches page uses the same id) and starts the form on that route. It
+  ignores unknown codes, the same city twice or a missing part, and then
+  starts on the usual Islamabad to Lahore. `navigation.js`, `App.jsx` and the
+  profile logic are unchanged.
+- **Checked:**
+  - all seven routes open with the right cities;
+  - `#/sender`, `#/sender/XXX-LHE`, `#/sender/LHE-LHE` and `#/sender/LHE` fall
+    back to Islamabad to Lahore, and lowercase `isb-khi` works;
+  - posting from ISB → KHI lands on Matches for Karachi;
+  - all 12 tests pass, with no console errors;
+  - the private preview was rebuilt and republished.
+
+## Stage 50: footer note wording (branch ccr-7df6bb23-nw9pnq)
+
+- **Footer note:** now "Check what you're allowed to send." (it was "Check
+  customs rules before you send anything."). Every route is within Pakistan,
+  where customs rarely applies. There is still no terms page, so there is no
+  link. The `data-testid="customs-note"` is unchanged.
+- **Checked:** build, all 12 tests and the design check. The private preview
+  was rebuilt and republished.

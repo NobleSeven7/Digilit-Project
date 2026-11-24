@@ -105,8 +105,8 @@ export default function About() {
 
       <Topic title="Photos and fonts">
         <p>
-          The two photos on the Home page are from Wikimedia Commons under CC BY-SA licences,
-          credited under each photo. The fonts, IBM Plex Sans and IBM Plex Sans Condensed, are free under the
+          The photo on the Home page is from Wikimedia Commons under a CC BY-SA licence,
+          credited under the photo. The fonts, IBM Plex Sans and IBM Plex Sans Condensed, are free under the
           SIL Open Font License.
         </p>
       </Topic>
