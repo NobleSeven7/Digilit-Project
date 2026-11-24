@@ -361,11 +361,13 @@ A day on how RaastaShare moves and feels:
 - PostHog analytics made honest;
 - an Apple-style design pass;
 - fixes for phones;
-- the team's design rules, written down.
+- the team's design rules, written down;
+- the last animation plans;
+- a restructured home page.
 
 The matching rules, scores, pricing, statuses, simulated sign-in, webhooks,
 AI check and tests did not change. Full details are in `BUILD_LOG.md`, Stages
-40–45. Pull requests #40, #41, #42 and #43 were merged and deployed.
+40–50. Pull requests #40 to #46 were merged and deployed.
 
 ### Motion review (#40)
 
@@ -470,6 +472,46 @@ work follows them:
 - **`npm run check:design`:** checks six of the rules automatically. It finds
   0 problems today.
 
+### Last animation plans (#45)
+
+- **Message banner:** the Delivery page's banner (a wrong code, a confirmed
+  pickup) fades in over 200ms on the ease-out curve (was 300ms).
+- **Home:** the price bars and the example code play once per visit, like the
+  intro. Coming back to Home shows them finished.
+- All four plans in `plans/` are done.
+
+### New home page (#46)
+
+The home page was rebuilt from a written plan, on its own branch
+(`ccr-7df6bb23-nw9pnq`), and previewed privately before going live.
+
+| Section | Change |
+| --- | --- |
+| Hero | Headline, map and price line kept. The two choices are now a side-by-side **Sender \| Traveller** split, which stacks when there is not room (for example with large text). Same links and profile switch. |
+| Trust strip (new) | Three facts, each checked in the code: four checks on every traveller, a code at each end, money held until delivery. It fades in once, as the last part of the intro. |
+| How it works | Unchanged. |
+| Routes we cover (new) | Islamabad to the seven other cities, from the city list and codes in `constants.js`, with road times. Each route opens the Send page with that route chosen (`#/sender/ISB-KHI`). |
+| Already on the road | One sentence, moved below the routes, hidden on phones. |
+| What it costs | Unchanged. |
+| Closing | A two-colour split: black for senders ("Post a parcel"), kraft for travellers ("Post a journey"). The motorway photo was removed, along with its credit on the About page and in the README. |
+| Footer | "Check what you're allowed to send." on every page. There is no terms page, so there is no link. |
+
+The team's choices along the way:
+- "Routes we cover" instead of "Live routes", because the list is fixed;
+- Islamabad routes only;
+- "Traveller" on Home, while the rest of the app keeps "Carrier";
+- the softer footer wording, because every route is within Pakistan.
+
+**Robustness (break-ui):** the new sections were tested with worst-case data
+through a dev-only switch (`?data=worst | empty | one`, in `src/dev/`, never
+in the live build). Six problems were fixed:
+- a city with no code;
+- an unknown road time;
+- the hero split at 200% text size;
+- an empty routes list (the section is now hidden);
+- counts that were typed in by hand;
+- a trust fact with no detail.
+
 ### Value proposition lines
 
 For the presentation (the courier price and step count are our estimates):
@@ -500,6 +542,18 @@ For the presentation (the courier price and step count are our estimates):
   - 0 cookies and no errors.
   (The first try got GitHub Pages' temporary "503 Unicorn!" page; reloading
   fixed it.)
+- Home page work (#46):
+  - build and all 12 tests pass;
+  - the design check finds no problems, and axe is clean on all 8 pages in
+    both themes;
+  - full-page screenshots at 1440px and 390px;
+  - review-animations: Approve.
+- Live site after #46, at 1440px and 390px:
+  - the split, the 3 trust facts, the 7 routes, the closing split and the
+    footer note all show;
+  - the photo panel is hidden on phones;
+  - ISB → KHI opens the Send page set to Islamabad to Karachi;
+  - no sideways scrolling, 0 cookies and no errors.
 
 ### Still to do
 
@@ -509,9 +563,13 @@ For the presentation (the courier price and step count are our estimates):
   - the status bar is the same black as the header, in light and dark mode;
   - on Android, booking a parcel gives two light taps as the tick finishes;
   - presses feel immediate.
-- **Animation plans:** all four are now done (see `plans/README.md`). The
-  last two finished after #44: the message banner's 200ms fade, and the price
-  bars and code roll playing once per visit.
+- **Animation plans:** all four are done (see `plans/README.md`).
+- **Large text:** at 200% text size the profile picker, the hero headline and
+  the example parcel pass still make the page scroll sideways. These are older
+  parts of the page; the new home sections fit.
+- **Tidy-up:** the `ccr-7df6bb23-nw9pnq` branch is fully merged and can be
+  deleted on GitHub. The private preview link is now out of date; use the
+  live site.
 - Before the presentation: press "Reset demo data" and do one practice run.
   After it: clear the Google Sheet and rotate the Make.com webhooks.
 
