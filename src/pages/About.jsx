@@ -51,8 +51,24 @@ export default function About() {
       <Topic title="What stays in your browser">
         <p>
           Everything you post (parcels, journeys, deliveries, disputes) is saved in this
-          browser only. There are <strong>no cookies, no tracking and no analytics</strong>, and the
-          fonts come with the site, so opening it contacts no one else.
+          browser only. The site sets <strong>no cookies</strong>, and the fonts come with the site.
+        </p>
+      </Topic>
+
+      <Topic title="Usage statistics">
+        <p>
+          To see how the demo is used, the site sends <strong>anonymous usage events to
+          PostHog</strong>, an analytics service, on its servers in the EU: pages visited, buttons
+          pressed, and steps such as a parcel posted or a delivery confirmed, with their cities,
+          weights, item types and outcomes. It also reports errors, and how long the AI check took.
+        </p>
+        <p>
+          Each demo person is counted as &ldquo;demo profile 1&rdquo; to &ldquo;10&rdquo;, never by name,
+          and <strong>nothing you type is sent to PostHog</strong>, not even your item description.
+          The screen is not recorded. A random visitor number is kept in this browser&rsquo;s
+          storage; &ldquo;Reset demo data&rdquo; does not remove it, but clearing the site&rsquo;s data
+          in your browser does. If your browser asks sites not to track you (&ldquo;Do Not
+          Track&rdquo; or &ldquo;Global Privacy Control&rdquo;), nothing is sent.
         </p>
       </Topic>
 

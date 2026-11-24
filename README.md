@@ -102,6 +102,22 @@ webhook response. No API key is stored in this app; the key lives in Make.com.
    the three new fields in the Google Sheets module. Checks are logged with
    `event` = `ai_check`.
 
+### Optional: PostHog usage statistics
+
+The app can send anonymous usage events to PostHog (see "Usage statistics" on
+the About page). It is off unless both values are set, and the app works the
+same without them. Locally, add them to `.env.local`:
+
+```
+VITE_POSTHOG_KEY=phc_your_project_token
+VITE_POSTHOG_HOST=https://eu.i.posthog.com
+```
+
+For the live site, add GitHub secrets with the same two names (Settings >
+Secrets and variables > Actions); the deploy workflow passes them to the build.
+The project token is meant to be public (it can only send events), but keep it
+in secrets anyway so the code holds no keys.
+
 ### Optional: connect the live site to Make.com
 
 The live GitHub Pages site gets the webhook URL from a repository secret:
@@ -216,7 +232,16 @@ the real AI model.
 The script opens the app in a real browser, clicks through it and saves a
 screenshot of each result in `test-screenshots/`.
 
-To run them yourself, install the browser tool once:
+**Design rules.** `DESIGN.md` lists the team's design rules and the reason for
+each. Six of them are checked automatically: no small ALL-CAPS labels, no
+marketing phrases, no `ease-in` or `transition: all`, no decorative gradients
+or emoji icons, and no raw hex colours in components. Run:
+
+```bash
+npm run check:design
+```
+
+To run the browser tests yourself, install the browser tool once:
 
 ```bash
 npm install --save-dev playwright
@@ -253,11 +278,242 @@ src/
   data/            constants (cities, vehicles, prices) and sample data
   lib/             matching, pricing, storage, webhook, AI parcel check, OTP, helpers
   components/      Layout, RouteLine, RuleCheck, StatusBadge, PageHeader
-  pages/           Home, Sender, Carrier, Matches, Delivery, Admin, Dashboard
+  pages/           Home, Sender, Carrier, Matches, Delivery, Admin, Dashboard, About
 tests/             browser tests for the 8 proposal test cases
 test-screenshots/  screenshot of each test result
 BUILD_LOG.md       what was built, which decisions came from the proposal, errors fixed
 ```
+
+## Work report: 23 November 2026
+
+A day spent on how RaastaShare looks and explains itself. The matching rules,
+scores, pricing, statuses, simulated sign-in, webhooks and AI check did not
+change. Full details are in `BUILD_LOG.md`, Stages 32–39. Everything shipped
+in pull request #37.
+
+### Research
+
+- **Example websites.** Playwright opened the sites from Adobe's "best website
+  design examples" article. Hyer (a private-flight site) was the team's
+  favourite. Its city codes, boarding pass, real photos and short copy shaped
+  the redesign. Superlist, Nakashima, Frans Hals, Simply Chocolate, NOWNESS,
+  RCA Records and Unseen were studied for layout and motion. Zillow and
+  Lacoste block automated browsers, and Mubasic now redirects to a spam page.
+- **Two Instagram reels**, read frame by frame. "20 niche UI tricks to fix an
+  AI slop website": RaastaShare already passed 15 of the 20. "20 things to
+  have Claude do so your app doesn't get sued": most items are for real
+  businesses, and four applied to us.
+
+### What changed
+
+| Area | Change |
+|---|---|
+| Look | **Cargo label design** in a 60-30-10 scheme: kraft paper `#E2D3B6` (60%), label black `#1C1A17` (30%), "fragile tape" red `#D7261E` (10%). Oxblood for errors, IBM Plex type, nearly square corners, left-aligned layouts. Chosen from three previewed options. |
+| Routes and codes | Routes read as city codes ("ISB → LHE"). Pickup and delivery codes appear on a boarding-pass style **parcel pass**. Fewer boxed cards and a smaller palette. |
+| Home page | "How it works" is three numbered steps beside **real screenshots** of the app. Two **real photos** from Wikimedia Commons (Daewoo terminal, M-2 motorway). |
+| Motion | Steps rise into view, the example code **rolls like a departure board**, photos fade in, and on phones the header hides while scrolling down. Reduced motion shows the final state at once. |
+| Labels | No tiny ALL CAPS labels: "01 Submit", and Sender, Carrier, Parcel, Departs on the pass. |
+| Menu | **Menu by role.** A sender sees Send, Matches and Delivery; a carrier sees Carry and Delivery; Admin and Dashboard follow after a divider. A "Sender view" / "Carrier view" marker shows which side is on screen. Nothing is locked. |
+| Honesty | New **About this demo** page (`#/about`, linked in the footer): what is fictional, what stays in the browser, what is sent to Make.com, the Google Sheet and Gemini, and how to remove it. The AI box mentions the Sheet. The PKR 1,000 courier price and "about eight steps" are labelled as estimates. |
+
+### Checks
+
+- All 12 browser tests pass.
+- The axe accessibility check is clean on all 8 pages in light and dark mode.
+- No console errors.
+- The live site was checked after the merge.
+
+### Found after the merge: PostHog
+
+Pull request #36 ("Set up PostHog", opened by PostHog's setup bot) was merged
+straight after #37.
+
+- **Deploy fixed.** Its merge left `package.json` and `package-lock.json` out of
+  step, so the GitHub Pages deploy failed at `npm ci`. The live site stayed on
+  the #37 version. The lock file is now synced, and the Barlow font packages
+  the merge brought back (no longer used) were removed again.
+- **Switched on by #38 (24 November update).** A separate pull request, #38,
+  passed the PostHog key and host to the deploy from GitHub secrets, so the
+  live site now sends anonymous usage events to PostHog (EU), and #39 added
+  the parcel reference to delivery events. A check of the live site showed it
+  also set two PostHog cookies, which the About page said it did not.
+- **Fixed in #41 (24 November).** PostHog now keeps its visitor ID in local
+  storage instead of cookies, respects "Do Not Track" and "Global Privacy
+  Control", and has session replay (screen recording) and surveys turned off. The About page
+  has a "Usage statistics" section saying what is sent: page views, button
+  presses, step events with cities, weights, item types and outcomes, errors
+  and AI-check timings. Demo people are "demo profile 1–10", and nothing typed
+  (not even the item description) is sent.
+- **Local development works without a key.** A missing PostHog key now gives a
+  console warning in `npm run dev` and leaves PostHog off, instead of an error.
+
+### Before and after the presentation
+
+- **Before:** press "Reset demo data", run one practice journey, and practise
+  switching between "Sender view" and "Carrier view".
+- **After:** clear the Google Sheet (as the About page promises) and rotate
+  the Make.com webhooks.
+
+## Work report: 24 November 2026
+
+A day on how RaastaShare moves and feels:
+- a motion review, then a deeper animation audit;
+- PostHog analytics made honest;
+- an Apple-style design pass;
+- fixes for phones;
+- the team's design rules, written down.
+
+The matching rules, scores, pricing, statuses, simulated sign-in, webhooks,
+AI check and tests did not change. Full details are in `BUILD_LOG.md`, Stages
+40–45. Pull requests #40, #41, #42 and #43 were merged and deployed.
+
+### Motion review (#40)
+
+Every animation and press effect was reviewed against Emil Kowalski's
+design-engineering advice (animate only what helps, keep frequent actions fast,
+keep moving parts in step). Eight small fixes:
+
+| Area | Change |
+| --- | --- |
+| Changing pages | The fade is shorter (150ms, was 260ms). Back and Forward change at once. |
+| Home intro | Plays on the first visit in a tab only; coming back shows the finished map. |
+| Home headline | Each line rises in 500ms (was 700ms), with shrinking gaps (0, 60, 110, 150ms). |
+| Cards | The border colour changes together with the hover lift. |
+| "See details" | The panel and its arrow both take 250ms on the same curve. |
+| Final "paid" stop | Settles in from 90% size (was 80%). |
+| Buttons | The press uses `scale`, the same as cards. |
+| Checklist and problem choices | Darken when tapped, so a phone shows the tap. |
+
+Playwright compared the old and new builds: Back no longer fades, and 0.3
+seconds after returning to Home, 0 animations are still running (before: 23).
+The same pull request carried the 23 November report and a synced lock file.
+
+Later in the day (#43), the animation audit went further: the page fade and
+the card hover lift were removed altogether (see "Animation clean-up" below).
+
+### PostHog analytics (#41)
+
+Pull requests #38 and #39 (from another session) switched PostHog on for the
+live site and added the parcel reference to delivery events. A check of the
+live site found two PostHog cookies, while the About page said "no cookies,
+no tracking and no analytics". The team chose to keep PostHog and fix the
+page and the setup:
+
+- **No cookies.** PostHog keeps its anonymous visitor ID in local storage.
+- **Less collected.** "Do Not Track" and "Global Privacy Control" are
+  respected; screen recording (session replay) and surveys are off.
+- **About page.** A new "Usage statistics" section says what goes to PostHog
+  (EU), that demo people are "demo profile 1–10", and that nothing typed is
+  sent, not even the item description.
+- **Teammates.** `npm run dev` works without a PostHog key (a warning instead
+  of an error).
+- **README.** A new "Optional: PostHog usage statistics" setup section.
+
+### Apple design pass (#43)
+
+Reviewed and changed using Apple's design guidance (WWDC *Designing Fluid
+Interfaces* and *The Details of UI Typography*):
+
+| Area | Change |
+| --- | --- |
+| Parcel pass | The notches are real holes, so they work on any background (on Home they used to show as cream bumps). A two-layer paper-ticket shadow, and equal-width code digits. |
+| Status badges | One height, a touch more letter spacing, equal-width digits. Still flat, so they never look like buttons. |
+| Success tick | The circle settles on a no-bounce spring, and the check finishes about 0.6s after the press. Android phones give two light taps on that frame. |
+| Send page | Mistakes show as you go, not only after "Post parcel". The message next to Post names the field. A progress bar shows the AI check's 8-second limit. Required fields come first. The price no longer jiggles. |
+| Type, all pages | Letter spacing and line height depend on text size. Fixed a hidden rule that overrode every heading's own line height. Prices, scores and totals use equal-width digits. |
+| Materials | The phone tab bar fades softly into the page. The "more contrast" phone setting gets darker lines and fields. |
+
+### Animation clean-up (#43)
+
+A deep animation audit (Emil Kowalski's animation skills) found ten issues.
+Five became step-by-step plans in `plans/`; `plans/README.md` shows which are
+done.
+
+- **Removed:**
+  - the page fade between pages (the most frequent action, so any fade read as
+    delay);
+  - the scroll reveals on Home's steps (they held the content back);
+  - the Dashboard cards' hover lift.
+- **Shortened:** the tracker road (350ms) and the Admin reorder (250ms, so
+  quick clicks are not lost).
+- **Animate only what is new:** opening or revisiting Matches or Delivery
+  shows everything in place. A card rises only when its step changes.
+- **Matches:** the results arrive as one 300ms wave, best match first, and
+  only the first time.
+- **Booked:** when both sides accept, the "Match confirmed" message carries
+  the success tick.
+- **Five small additions:** form errors, the "which item type?" question,
+  "Accepted", "How the score is calculated", and the checklist tick at 5 of 5.
+
+### Phone fixes (#43)
+
+- The phone status bar colour and the tab icon were still the old green. They
+  now match the header in both themes.
+- Press feedback on the theme switch, the logo and "See details".
+- The code keyboard's return key says "Go".
+- A long press on a checklist row no longer selects its text.
+
+### Design rules written down (#43)
+
+The design corrections and choices from this project are now rules, so future
+work follows them:
+
+- **`DESIGN.md`:** 11 rules, each with its reason. They cover:
+  - colour (60/30/10, tokens only);
+  - surfaces (no gradients, glows or emoji icons; left-aligned);
+  - typography (IBM Plex; no small ALL CAPS);
+  - copy (no marketing phrases; "our estimate"; an honest About page);
+  - motion (no page or scroll animations; 300ms or less);
+  - interaction (phone first; separate sender and carrier pages).
+- **`CLAUDE.md`:** read DESIGN.md before UI work, and show before/after
+  screenshots before anything goes live.
+- **`npm run check:design`:** checks six of the rules automatically. It finds
+  0 problems today.
+
+### Value proposition lines
+
+For the presentation (the courier price and step count are our estimates):
+
+- **Customer job:** "When I need to get a parcel to another city, I want to
+  hand it to someone already making that trip, so it arrives quickly and
+  cheaply and I know it got there." Carriers' job: earn from spare space on a
+  trip they are already making.
+- **Pain:** sending a parcel between cities means calls, bargaining and about
+  PKR 1,000 by courier (our estimate), while travellers' spare space goes unused.
+- **Gain:** a traveller already going that way carries it, for example
+  PKR 500 for 5 kg from Islamabad to Lahore, with payment held until the
+  delivery code confirms it arrived.
+
+### Checks
+
+- All 12 browser tests pass.
+- The axe accessibility check is clean on all 8 pages in light and dark mode.
+- `npm run check:design` finds no problems.
+- Playwright measured:
+  - the Matches wave at 0, 60 and 100ms, with nothing animating on a revisit;
+  - no page fade;
+  - the booked haptic firing on the same millisecond the check completes.
+- Live site after #43 (on a simulated iPhone 13):
+  - the status bar is `#1C1A17`, matching the header;
+  - the pass notches are real holes, and the scroll reveals are gone;
+  - the Send page starts with "From";
+  - 0 cookies and no errors.
+  (The first try got GitHub Pages' temporary "503 Unicorn!" page; reloading
+  fixed it.)
+
+### Still to do
+
+- Visitors from before #41 keep the old PostHog cookies until they expire or
+  are cleared.
+- **Check on a real phone** (device simulation cannot show these):
+  - the status bar is the same black as the header, in light and dark mode;
+  - on Android, booking a parcel gives two light taps as the tick finishes;
+  - presses feel immediate.
+- **Animation plans:** all four are now done (see `plans/README.md`). The
+  last two finished after #44: the message banner's 200ms fade, and the price
+  bars and code roll playing once per visit.
+- Before the presentation: press "Reset demo data" and do one practice run.
+  After it: clear the Google Sheet and rotate the Make.com webhooks.
 
 ## Photo credits
 

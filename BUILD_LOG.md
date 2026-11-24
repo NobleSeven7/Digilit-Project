@@ -1067,3 +1067,231 @@ label, Motorway + truck art), and the team chose **Cargo label**.
   statuses, sign-in and tests.
 - **Checked:** all 12 tests pass, axe is clean on all 8 pages in both themes,
   and there are no console errors.
+
+## Stage 40: motion polish (design-engineering review)
+
+A review of every animation and press effect, following Emil Kowalski's
+design-engineering advice: animate only what helps, keep frequent actions
+fast, and keep moving parts in step. Eight small fixes:
+
+- **Changing pages:** the fade is shorter (150ms instead of 260ms), and
+  Back/Forward now change at once. People change pages all the time, and
+  the page cannot be clicked while it fades (`src/lib/navigation.js`).
+- **Home intro:** it plays on the first visit only. Coming back to Home (in
+  the same tab) shows the finished map at once, instead of waiting about 4.7
+  seconds for the parcel again.
+- **Home headline:** each line rises in 500ms instead of 700ms, with gaps that
+  get shorter (0, 60, 110, 150ms), so it reads as one movement.
+- **Cards:** the border colour now changes together with the lift on hover.
+- **"See details":** the panel and its arrow both take 250ms on the same
+  curve (before: 320ms and 200ms).
+- **Final stop:** the "paid" stop settles in from 90% size instead of 80%.
+- **Buttons:** the press uses `scale`, the same as cards.
+- **Checklist and problem choices:** they now darken when tapped, so a phone
+  shows the tap (before, only a mouse hover did).
+- **Not changed:** logic, data, webhooks, the AI check and tests. Reduced
+  motion still turns movement off.
+- **Checked:** all 12 tests pass. Playwright confirmed Back no longer fades and
+  that nothing is still animating 0.3 seconds after returning to Home.
+
+## Stage 41: PostHog, honestly
+
+Pull request #38 (from another session) switched PostHog on for the live
+site. A check of the live site found it set two cookies, while the About page
+still said "no cookies, no tracking and no analytics".
+
+- **No cookies:** PostHog keeps its anonymous visitor ID in local storage
+  (`persistence: 'localStorage'`).
+- **Less collected:** "Do Not Track" and "Global Privacy Control" are respected; session replay (screen
+  recording) and surveys are off. Only events, page views and errors are sent.
+- **About page:** a new "Usage statistics" section says what goes to PostHog
+  (EU), that demo people are "demo profile 1–10", and that nothing typed is
+  sent. The old "no tracking and no analytics" line is gone.
+- **Teammates:** with no PostHog key, `npm run dev` now shows a warning and
+  leaves PostHog off, instead of stopping with an error.
+- **README:** a "PostHog usage statistics" setup section, and the 23 November
+  report is corrected.
+- **Checked:** all 12 tests pass. A build with a test key sets no cookies
+  (the old setup set two). In PostHog's own code, `respect_dnt` treats
+  "Do Not Track" and "Global Privacy Control" as opted out, so nothing is
+  captured for those visitors.
+
+## Stage 42: Apple design pass (parcel pass, badges, success tick)
+
+Reviewed with Apple's design guidance (WWDC *Designing Fluid Interfaces* and
+*The Details of UI Typography*, translated for the web).
+
+- **Parcel pass: real notches.** The two notches were cream circles drawn on
+  top of the pass, so on the Home page (kraft background) they looked like
+  bumps. They are now holes cut with a CSS mask, so any background shows
+  through.
+- **Parcel pass: depth.** A two-layer drop-shadow (a tight edge shadow and a
+  soft one underneath) follows the cut shape, so the pass reads as a thin
+  paper ticket on the page. Dark mode uses a faint light top edge instead,
+  and "more contrast" mode swaps the shadow for a solid outline.
+- **Parcel pass: type.** Small labels get +0.01em letter spacing and tight
+  line height; values use snug line height. The code uses equal-width
+  digits and 0.12em spacing (was 0.2em) so it reads digit by digit without
+  drifting apart.
+- **Status badges.** One line, tight line height, +0.01em letter spacing and
+  equal-width digits, so every badge is the same height. They stay flat like
+  a stamp, with no shadow.
+- **Press states.** None added. The pass and the badges cannot be pressed,
+  and only things that act when pressed should answer a press.
+- **Success tick.**
+  - The circle grows from 60% on a critically damped spring: Apple's default
+    of damping 1 and response 0.35s, written as a CSS `linear()` curve, with
+    no bounce.
+  - The check mark draws in 260ms once the circle is about 90% there, and it
+    is done at about 0.6s (was 0.75s).
+  - On that same frame, phones that support web vibration give two light taps
+    (iPhones ignore web vibration).
+  - With reduced motion, the tick fades in over 200ms and the taps come as the
+    fade ends.
+- **Not changed:** logic, data, webhooks, the AI check and tests.
+- **Checked:** all 12 tests pass, and axe is clean on all 8 pages in both
+  themes. Playwright measured the tick: the check finished at 596ms and the
+  vibration fired at 597ms; with reduced motion, both came at 251ms.
+
+## Stage 43: Apple design fixes (Send page, type scale, materials)
+
+The fixes from the Stage 42 reviews.
+
+**Send page**
+- **Mistakes show up as you go.** Each field is checked when you leave it, and
+  the city lists are checked as soon as they change. Before, problems only
+  appeared after "Post parcel", which stays disabled until the checklist is
+  done. The rules and messages are the same; a fixed field clears its message,
+  and screen readers read new messages out.
+- **The message by "Post parcel" names the field** ("Check the weight."),
+  instead of "Check the field marked in red". It appears only after pressing
+  Post.
+- **A progress bar for the AI check.** A thin bar fills over the check's
+  8-second limit, read from the same `TIMEOUT_MS` the check uses (now
+  exported from `aiCheck.js`). With reduced motion it is hidden, and the text
+  says the same.
+- **Required fields come first.** The optional "Describe your item" check now
+  comes after From, To, Weight, Item type and Deadline. Its suggestion still
+  shows under "Item type".
+- **The price and checklist count use equal-width digits**, so they do not
+  jiggle as they change.
+- **Button presses take 100ms** (was 160ms), across the app.
+
+**Type scale (all pages)**
+- **Letter spacing and line height now go with each text size**, set once in
+  `@theme`: 13px +0.01em; 30–36px -0.01em; 48px and up -0.02em. Line height
+  goes from 1.2 (20px) down to 1.0 (48px and up).
+- **Fixed a hidden override.** A general heading rule set every heading to line
+  height 1.05, which silently overrode any line height written on a heading.
+  It now sits in Tailwind's base layer, so the size scale and any
+  per-heading setting apply. Two Home headings asked for 0.95 and the hero
+  asked for 0.92; those never applied, and once they did, letters touched.
+  They now use the scale (1.0).
+- **Equal-width digits** for the prices, amounts, scores and Dashboard totals.
+
+**Materials**
+- **Phone tab bar:** the page fades into the paper over 16px just above it,
+  instead of stopping at a hard line.
+- **More contrast (a device setting):** lines use the darker text colour, and
+  form fields get a full ink outline.
+- **No frosted glass**, on purpose: the cargo-label look is flat print.
+
+- **Not changed:** the validation rules and messages, logic, data, webhooks,
+  the AI check and tests.
+- **Checked:** all 12 tests pass, and axe is clean on all 8 pages in both
+  themes. Before/after screenshots were taken of the Send page, Home and the
+  Dashboard, and in more-contrast mode.
+
+## Stage 44: animation audit, removals, choreography, booked tick, mobile
+
+Done in order, using Emil Kowalski's animation skills and Apple's guidance.
+
+1. **Audit (deep):** ten findings. Five became plans in `plans/` (001–004,
+   with plan 003 covering two findings); their status is in
+   `plans/README.md`.
+2. **Removed:**
+   - the page fade between in-app pages (the most frequent action, so any
+     fade read as delay);
+   - the scroll reveals on Home's "How it works" steps (they held the content
+     back);
+   - the Dashboard delivery cards' hover lift and shadow (now a border-colour
+     change only).
+   Shortened: the tracker road (450 → 350ms) and the Admin reorder
+   (380 → 250ms; the page cannot be clicked while it runs).
+3. **Animate only what is new:** Delivery step cards rise only when the step
+   changes while the page is open, and an "Accepted" badge settles in only
+   just after someone accepts. Opening or revisiting a page shows everything
+   in place.
+4. **Five small answers to an action:**
+   - inline form errors drop 2px into place;
+   - the "which item type?" question unfolds from where "Post parcel" was;
+   - "Accepted" settles in from the Accept button's side;
+   - "How the score is calculated" opens smoothly;
+   - the checklist tick appears at 5 of 5.
+   All 150–200ms on the ease-out curve.
+5. **Matches results as one wave:** the best match leads (12px, 280ms),
+   options 2 and 3 follow at 60 and 100ms with less travel, and options 4 and
+   5 fade in with option 3. It is over in 300ms and plays only the first time
+   a parcel's results appear in the tab. Cards revealed by "Show all" fade in
+   together.
+6. **Booked:** when both sides have accepted, the "Match confirmed" message
+   carries the success tick:
+   - the message appears in 150ms and the circle settles from 90%;
+   - the check finishes about 0.6s after the press, and phones that can
+     vibrate tap twice on that frame;
+   - the pickup card and the tracker road move at the same moment.
+   The tick now starts at 90% everywhere (it was 60%).
+7. **Review fixes:** the question panel unfolds from its top edge, where the
+   button was. Quick fades drop 2px instead of only fading. Card rises default
+   to 280ms (was 360ms).
+8. **Mobile:**
+   - the phone status bar colour (`theme-color`) and the tab icon were still
+     the old green; they now match the header in both themes;
+   - the theme switch, the logo and "See details" get a pressed state;
+   - the code box's return key says "Go";
+   - long-pressing a checklist row no longer selects its text.
+
+- **Checked:** all 12 tests pass, and axe is clean on all 8 pages in both
+  themes. Playwright confirmed:
+  - the Matches wave timings (0/60/100ms), with nothing animating on a
+    revisit;
+  - no page fade;
+  - the booked haptic firing on the same millisecond the check completes.
+
+## Stage 45: design rules written down (DESIGN.md, CLAUDE.md, a check)
+
+The design corrections and choices from the last few days are now rules, so
+future work follows them without being corrected again.
+
+- **`DESIGN.md`:** 11 rules, each with its reason and the date and words it
+  came from. They cover colour (60/30/10 with tokens), surfaces and layout
+  (no gradients, glows or emoji icons; left-aligned), typography (IBM Plex;
+  no small ALL CAPS), copy (no marketing phrases; "our estimate" on
+  unmeasured figures; the About page matches what the code sends), motion (no
+  page or scroll animations; only what changed; 300ms or less on the ease
+  tokens) and interaction (phone first; separate sender and carrier pages).
+- **`CLAUDE.md`:** read DESIGN.md before UI work, and show before/after
+  screenshots before anything goes live.
+- **`npm run check:design`** (`scripts/check-design.cjs`, plain Node, no new
+  libraries) checks six of the rules. It finds 0 problems in today's code. A
+  test file with one problem of each kind was flagged six times, and the
+  check was then run clean again.
+
+## Stage 46: the last two animation plans
+
+- **Plan 003, step 1:** the message banner on the Delivery page (a wrong
+  code, a confirmed pickup and so on) now fades in over 200ms on the ease-out
+  curve. It was 300ms with plain `ease`.
+- **Plan 004:** Home's price bars and its example code now play once per
+  visit, like the intro. Coming back to Home shows the bars full and the code
+  finished, using the same values as the reduced-motion version. The step
+  scroll reveals this plan also covered were already deleted in Stage 44.
+- **Checked:** all 12 tests pass, and `npm run check:design` finds no
+  problems. In Playwright:
+  - on the first visit the bars and code move;
+  - on a return, nothing moves (bars full, code at its final digits);
+  - the banner measured 200ms on `cubic-bezier(0.23, 1, 0.32, 1)`.
+  (The first Playwright run wrongly showed movement on the return. The test
+  had cleared storage while Home was already open; re-run from a fresh load,
+  it was correct.)
+- All four plans in `plans/` are now done.

@@ -4,7 +4,6 @@
 //   .../#/matches/s-123   -> Matches page for shipment s-123
 // This "hash" style also works on GitHub Pages with no extra setup.
 import { useEffect, useState } from 'react'
-import { withViewTransition } from './motion.js'
 
 // Go to another page, e.g. goTo('matches/s-123').
 export function goTo(path) {
@@ -13,16 +12,15 @@ export function goTo(path) {
 
 // React hook: returns the current page name and optional id,
 // and re-renders the app whenever the address changes.
+// Pages change at once, with no fade: people move between pages all the time,
+// and any animation there reads as a delay.
 export function useRoute() {
   const [hash, setHash] = useState(window.location.hash)
 
   useEffect(() => {
-    // The new page softly fades in over the old one (see "page" in index.css).
     function onChange() {
-      withViewTransition(() => {
-        setHash(window.location.hash)
-        window.scrollTo(0, 0) // start each page at the top
-      }, 'page')
+      setHash(window.location.hash)
+      window.scrollTo(0, 0) // start each page at the top
     }
     window.addEventListener('hashchange', onChange)
     return () => window.removeEventListener('hashchange', onChange)

@@ -38,6 +38,25 @@
   --text-sm: 0.9375rem;
   --text-xs: 0.8125rem;
 
+  /* Letter spacing and line height change with size (Apple's UI typography):
+     big type looks too loose, so it is tightened and set close; small type is
+     opened up a touch to stay readable. Every text-* class uses these, so
+     headings, prices and scores all follow one scale.
+     13px: +0.01em | 15-24px: 0 | 30-36px: -0.01em | 48px and up: -0.02em */
+  --text-xs--letter-spacing: 0.01em;
+  --text-xl--line-height: 1.2;
+  --text-2xl--line-height: 1.15;
+  --text-3xl--line-height: 1.1;
+  --text-3xl--letter-spacing: -0.01em;
+  --text-4xl--line-height: 1.05;
+  --text-4xl--letter-spacing: -0.01em;
+  --text-5xl--line-height: 1;
+  --text-5xl--letter-spacing: -0.02em;
+  --text-6xl--line-height: 1;
+  --text-6xl--letter-spacing: -0.02em;
+  --text-7xl--line-height: 1;
+  --text-7xl--letter-spacing: -0.02em;
+
   /* IBM Plex: plain, industrial lettering, like printing on a shipping label.
      The condensed cut is for headings, the normal cut for everything else. */
   --font-display: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
@@ -85,12 +104,15 @@ body {
 }
 h1, h2, h3 {
   font-family: var(--font-display);
-  line-height: 1.05;
-  letter-spacing: 0;
   text-wrap: balance; /* even line lengths in headings */
 }
-/* Big headings sit a touch tighter: letters look further apart as they grow. */
-h1 { letter-spacing: -0.01em; }
+/* A heading's default line height. It sits in the "base" layer so that a
+   heading's size class (text-xl, text-4xl ...) can set its own line height
+   and letter spacing from the scale above: a small heading that wraps needs
+   more room between lines than a big one. */
+@layer base {
+  h1, h2, h3 { line-height: 1.05; }
+}
 /* Body text avoids a lone word on its last line, where the browser supports it. */
 p, li { text-wrap: pretty; }
 /* The parts of the page the browser draws also use the brand colours:
@@ -115,8 +137,10 @@ a, button, summary, label, select, [role="button"] {
   touch-action: manipulation;
 }
 /* Holding a finger on a button or tab should not select its words.
-   Only controls: normal text stays selectable. */
-.btn, nav a, summary {
+   Only controls: normal text stays selectable. The checklist and problem
+   rows count as controls (the whole row is the tick box's label). */
+.btn, nav a, summary,
+label:has(> input[type="checkbox"]), label:has(> input[type="radio"]) {
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
@@ -152,15 +176,16 @@ a {
 /* ---- Reusable building blocks (used all over the pages) ------------- */
 @layer components {
   .card { @apply rounded-xl border border-line bg-surface p-4 sm:p-5; }
-  /* A whole card that is a link: rests on a soft shadow, lifts a little when
-     pointed at (mouse only) and presses in when tapped. */
+  /* A whole card that is a link: rests on a soft shadow, its border darkens
+     when pointed at (mouse only) and it presses in when tapped. No lift: these
+     sit on the Dashboard, among numbers people are reading. */
   .card-link {
     box-shadow: var(--shadow-rest);
-    transition: translate 200ms var(--ease-out), scale 160ms var(--ease-out), box-shadow 200ms var(--ease-out);
+    transition: scale 160ms var(--ease-out), border-color 150ms var(--ease-out);
   }
   .card-link:active { scale: 0.98; }
   @media (hover: hover) and (pointer: fine) {
-    .card-link:hover { translate: 0 -2px; border-color: var(--color-brand-ink); box-shadow: var(--shadow-lift); }
+    .card-link:hover { border-color: var(--color-brand-ink); }
   }
   @media (prefers-reduced-motion: reduce) { .card-link { transition: none; } }
 
@@ -169,11 +194,11 @@ a {
            px-5 py-2.5 text-center font-bold;
     /* Colour changes softly; a press shrinks the button a touch, so it feels
        like it answers the finger. */
-    transition: background-color 150ms ease, transform 160ms var(--ease-out);
+    transition: background-color 150ms ease, scale 100ms var(--ease-out);
   }
   /* ":not(:disabled)" (not "enabled") so that links styled as buttons get
      the same press and hover effects as real buttons. */
-  .btn:not(:disabled):active { transform: scale(0.97); }
+  .btn:not(:disabled):active { scale: 0.97; } /* 100ms: the press shows at once */
   .btn-primary { @apply bg-brand text-white; }
   .btn-secondary { @apply border-2 border-brand-ink bg-surface text-brand-ink; }
   .btn-danger { @apply border-2 border-fail bg-surface text-fail; }
@@ -199,14 +224,90 @@ a {
   .field[aria-invalid="true"] { @apply border-2 border-fail; }
 }
 
+/* ---- Send page: waiting for the AI check ---------------------------------
+   A thin bar fills from left to right over the check's time limit (--wait,
+   8 seconds), so people see that something is happening and how long is
+   left. Linear, because it measures time. With reduced motion it is hidden;
+   the text under it says the same thing. */
+.ai-wait-bar {
+  transform-origin: left;
+  animation: ai-wait var(--wait, 8s) linear both;
+}
+@keyframes ai-wait {
+  from { transform: scaleX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-wait-bar { display: none; }
+}
+
+/* ---- Phone tab bar: a soft edge instead of a hard stop --------------------
+   Where the page meets the tab bar fixed to the bottom of the screen, it
+   fades into the paper over 16px, so text slides under the bar instead of
+   being cut off at a line (Apple's "scroll edge effect"). */
+.tabbar::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 100%;
+  height: 1rem;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--color-paper), transparent);
+}
+
+/* ---- More contrast (a device accessibility setting) -----------------------
+   The kraft lines are faint on purpose. People who ask for more contrast get
+   lines in the darker text colour and form fields with a full ink outline. */
+@media (prefers-contrast: more) {
+  :root, :root[data-theme="dark"] { --color-line: var(--color-muted); }
+}
+@layer components {
+  @media (prefers-contrast: more) {
+    .field { border-color: var(--color-ink); }
+  }
+}
+
+/* ---- Parcel pass: a paper ticket --------------------------------------
+   The notches are real holes: each half of the pass is cut away in a 12px
+   half-circle at the tear line, so whatever is behind the pass shows through.
+   The shadow is a drop-shadow, which follows the cut shape (a box-shadow
+   would ignore the holes). Two layers: a tight one for the edge and a soft
+   one underneath, so the ticket reads as a thin object lying on the page. */
+.pass {
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.14)) drop-shadow(0 8px 12px rgb(0 0 0 / 0.16));
+}
+.pass-top {
+  -webkit-mask: radial-gradient(circle 12px at 0 100%, #0000 11.5px, #000 12px) left / 51% 100% no-repeat,
+                radial-gradient(circle 12px at 100% 100%, #0000 11.5px, #000 12px) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle 12px at 0 100%, #0000 11.5px, #000 12px) left / 51% 100% no-repeat,
+        radial-gradient(circle 12px at 100% 100%, #0000 11.5px, #000 12px) right / 51% 100% no-repeat;
+}
+.pass-bottom {
+  -webkit-mask: radial-gradient(circle 12px at 0 0, #0000 11.5px, #000 12px) left / 51% 100% no-repeat,
+                radial-gradient(circle 12px at 100% 0, #0000 11.5px, #000 12px) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle 12px at 0 0, #0000 11.5px, #000 12px) left / 51% 100% no-repeat,
+        radial-gradient(circle 12px at 100% 0, #0000 11.5px, #000 12px) right / 51% 100% no-repeat;
+}
+/* Dark: shadows barely show on a dark page, so a faint light edge along the
+   top of the ticket separates it instead (light catching the paper). */
+:root[data-theme="dark"] .pass {
+  filter: drop-shadow(0 -1px 0 rgb(255 255 255 / 0.06)) drop-shadow(0 8px 12px rgb(0 0 0 / 0.5));
+}
+/* More contrast asked for: a clear outline instead of a soft shadow. */
+@media (prefers-contrast: more) {
+  .pass { filter: none; }
+  .pass-top, .pass-bottom { border: 1px solid var(--color-ink); }
+  .pass-top { border-bottom: 0; }
+  .pass-bottom { border-top: 0; }
+}
+
 /* ---- Home page: the one moment of motion --------------------------------
    When the page opens, the headline, text and buttons rise into place one
    after another, the routes on the map draw themselves, and the parcel
    rides from Islamabad to Lahore once.
    Each piece sets --i (0, 1, 2 ...) to say when its turn comes. */
 .hero-enter {
-  animation: hero-enter 700ms var(--ease-out) backwards;
-  animation-delay: calc(var(--i, 0) * 100ms);
+  animation: hero-enter 500ms var(--ease-out) backwards;
+  animation-delay: var(--d, 0ms); /* 0, 60, 110, 150ms: each gap a little shorter */
 }
 @keyframes hero-enter {
   from { opacity: 0; transform: translateY(10px); }
@@ -247,6 +348,15 @@ a {
 }
 
 /* People who ask for less motion get the finished picture straight away. */
+/* The intro plays once per visit; coming back to Home shows the finished
+   picture at once (src/pages/Home.jsx sets .intro-done). The scroll
+   animations further down (the price bars and the example code) also show
+   finished after the first visit: the same values as the reduced-motion
+   block, so it is "finished, no motion". */
+.intro-done :is(.hero-enter, .route-draw, .stop-enter, .map-parcel) { animation: none; }
+.intro-done .bar-grow { clip-path: none; transition: none; }
+.intro-done .code-roll > span { translate: 0 var(--end); transition: none; }
+
 @media (prefers-reduced-motion: reduce) {
   .hero-enter, .route-draw, .stop-enter, .map-parcel { animation: none; }
   .btn { transition: none; }
@@ -258,9 +368,10 @@ a {
    across the screen); each lasts about a third to half a second. */
 
 /* A new card arrives (the next delivery step, ranked carriers): it rises a
-   little and fades in. --rise sets how far, --delay when (Matches page). */
+   little and fades in. --rise sets how far, --delay when and --duration how
+   long (the Matches page sets all three for its wave). */
 .enter-rise {
-  animation: enter-rise 360ms var(--ease-out) both;
+  animation: enter-rise var(--duration, 280ms) var(--ease-out) both;
   animation-delay: var(--delay, 0ms);
 }
 @keyframes enter-rise {
@@ -268,7 +379,7 @@ a {
 }
 
 /* A message banner appears: fade only, it is secondary to the card. */
-.enter-fade { animation: enter-fade 300ms ease both; }
+.enter-fade { animation: enter-fade 200ms var(--ease-out) both; }
 @keyframes enter-fade {
   from { opacity: 0; }
 }
@@ -284,13 +395,13 @@ a {
 
 /* Delivery tracker: the green and amber road grows to its new stop. clip-path
    is used instead of width so nothing has to be laid out again. */
-.road-fill { transition: clip-path 450ms var(--ease-in-out); }
+.road-fill { transition: clip-path 350ms var(--ease-in-out); }
 
 /* The one celebration: when the parcel is paid, the last stop settles in as
-   the road arrives (the delay matches the road's 450ms). */
-.stop-settle { animation: stop-settle 450ms var(--ease-out) 400ms both; }
+   the road arrives (the 300ms delay lands it just before the road's 350ms). */
+.stop-settle { animation: stop-settle 450ms var(--ease-out) 300ms both; }
 @keyframes stop-settle {
-  from { transform: scale(0.8); }
+  from { transform: scale(0.9); }
 }
 
 /* "See details" on a match card opens smoothly in browsers that support it;
@@ -299,21 +410,53 @@ details.rule-details { interpolate-size: allow-keywords; }
 details.rule-details::details-content {
   block-size: 0;
   overflow: clip;
-  transition: block-size 320ms var(--ease-out), content-visibility 320ms allow-discrete;
+  transition: block-size 250ms var(--ease-out), content-visibility 250ms allow-discrete;
 }
 details.rule-details[open]::details-content { block-size: auto; }
 
 /* Admin page (see withViewTransition in src/lib/motion.js): the rows slide to
-   their new places while a removed row fades. The page itself does not fade. */
+   their new places while a removed row fades. The page itself does not fade.
+   Kept short (250ms): the page cannot be clicked while it runs, and admins
+   click down a list. */
 ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
 ::view-transition-group(*) {
-  animation-duration: 380ms;
+  animation-duration: 250ms;
   animation-timing-function: var(--ease-in-out);
+}
+
+/* Small answers to a person's action, each under 200ms with the ease-out curve:
+   - .fade-in-quick: a message under a form field (or a new banner, or cards
+     shown by "Show all") drops 2px into place as it fades in, so it reads as
+     coming from what is above it, and the form moving down reads as an answer;
+   - .settle-in: "Accepted" takes the Accept button's place, settling in
+     from the button's side (origin set where it is used);
+   - .grow-from-button: the "which item type?" question unfolds downward from
+     the spot where "Post parcel" was (its top edge is where the button was);
+   - .tick-in: the checklist's tick appears at 5 of 5. */
+.fade-in-quick { animation: fade-drop 150ms var(--ease-out) both; }
+@keyframes fade-drop {
+  from { opacity: 0; transform: translateY(-2px); }
+}
+.settle-in { animation: settle-in 160ms var(--ease-out) both; }
+@keyframes settle-in {
+  from { opacity: 0; transform: scale(0.97); }
+}
+.grow-from-button {
+  transform-origin: top center;
+  animation: grow-from-button 200ms var(--ease-out) both;
+}
+@keyframes grow-from-button {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+}
+.tick-in { animation: tick-in 160ms var(--ease-out) both; }
+@keyframes tick-in {
+  from { opacity: 0; transform: scale(0.9); }
 }
 
 /* Less motion: nothing moves or slides, things simply fade in. */
 @media (prefers-reduced-motion: reduce) {
   .enter-rise, .enter-pop { animation-name: enter-fade; animation-delay: 0ms; }
+  .fade-in-quick, .settle-in, .grow-from-button, .tick-in { animation: enter-fade 150ms var(--ease-out) both; }
   .stop-settle { animation: none; }
   .road-fill { transition: none; }
   details.rule-details::details-content { transition: none; }
@@ -321,25 +464,12 @@ details.rule-details[open]::details-content { block-size: auto; }
 
 /* ---- Motion: added in Stage 22 ---------------------------------------- */
 
-/* Moving between pages: the new page softly fades in over the old one
-   (src/lib/navigation.js). Fade only, nothing slides. The old page leaves
-   faster than the new one arrives, and blurs slightly as it goes so the two
-   pages never read as two overlapping pictures. */
-html[data-transition="page"]::view-transition-old(root) {
-  animation: page-out 180ms ease both;
-}
-html[data-transition="page"]::view-transition-new(root) {
-  animation: page-in 260ms var(--ease-out) both;
-}
-html[data-transition="page"]::view-transition-group(*) { animation-duration: 260ms; }
-@keyframes page-out { to { opacity: 0; filter: blur(2px); } }
-
 /* Switching light/dark: the old colours fade out as the new ones fade in. */
 html[data-transition="theme"]::view-transition-old(root) { animation: theme-out 300ms ease both; }
-html[data-transition="theme"]::view-transition-new(root) { animation: page-in 300ms ease both; }
+html[data-transition="theme"]::view-transition-new(root) { animation: theme-in 300ms ease both; }
 html[data-transition="theme"]::view-transition-group(*) { animation-duration: 300ms; }
 @keyframes theme-out { to { opacity: 0; } }
-@keyframes page-in { from { opacity: 0; } }
+@keyframes theme-in { from { opacity: 0; } }
 
 /* Home, "What it costs": each bar fills from the left once the band is on
    screen, the courier first, then RaastaShare stopping at half. */
@@ -355,16 +485,6 @@ html[data-transition="theme"]::view-transition-group(*) { animation-duration: 30
 .shot-dark { display: none; }
 html[data-theme="dark"] .shot-light { display: none; }
 html[data-theme="dark"] .shot-dark { display: block; }
-
-/* Home, "How it works": as a step scrolls into view its text rises 24px and
-   fades in, then its phone follows 150ms later (as on Hyer's site). Once only. */
-.reveal-up > * {
-  opacity: 0;
-  translate: 0 24px;
-  transition: opacity 600ms var(--ease-out), translate 600ms var(--ease-out);
-}
-.reveal-up > :nth-child(2) { transition-delay: 150ms; }
-.reveal-up.is-seen > * { opacity: 1; translate: 0 0; }
 
 /* Home, step 03: each digit of the example code rolls up to its number like a
    departure board, left to right, starting once the phone has arrived.
@@ -394,25 +514,40 @@ html[data-theme="dark"] .shot-dark { display: block; }
   .site-header[data-hidden="true"]:not(:focus-within) { translate: 0 -100%; }
 }
 
-/* Success: the green circle pops in, then the check mark draws itself.
-   It starts at 90% size, never from nothing. */
-.tick-pop { animation: tick-pop 350ms var(--ease-out) both; }
+/* Success (src/components/SuccessTick.jsx): the circle grows from 90% on a
+   critically damped spring (Apple's default: damping 1, response 0.35s, no
+   bounce), written out as a linear() curve. Browsers without linear() use the
+   same ease-out curve as the rest of the app. Once the circle is about 90% of the way
+   there (about 280ms in), the check mark draws itself in 260ms; the phone
+   taps when it finishes, around half a second after the press. */
+:root { --spring-settle: cubic-bezier(0.23, 1, 0.32, 1); }
+@supports (animation-timing-function: linear(0, 1)) {
+  :root { --spring-settle: linear(0, 0.051 5%, 0.162 10%, 0.293 14%, 0.421 19%, 0.536 24%, 0.634 29%,
+    0.715 33%, 0.781 38%, 0.833 43%, 0.873 48%, 0.905 52%, 0.929 57%, 0.947 62%, 0.96 67%,
+    0.971 71%, 0.978 76%, 0.984 81%, 0.988 86%, 0.991 90%, 0.994 95%, 1 100%); }
+}
+.tick-pop {
+  animation: tick-pop 420ms var(--spring-settle) 60ms both;
+}
 @keyframes tick-pop {
+  /* The circle is fully visible by a quarter of the way, so it reads as one
+     object settling, not something fading in from nothing. It starts at 90%:
+     the drawing check carries the moment, the circle only settles. */
   from { opacity: 0; transform: scale(0.9); }
+  25% { opacity: 1; }
 }
 .tick-draw {
   stroke-dasharray: 1;
-  animation: route-draw 450ms var(--ease-out) 250ms backwards;
+  animation: route-draw 260ms var(--ease-out) 280ms backwards;
 }
 
 /* Less motion: the finished picture straight away; the tick just fades in.
    (The wrong-code shake is skipped in src/lib/motion.js.) */
 @media (prefers-reduced-motion: reduce) {
   .bar-grow { clip-path: none; transition: none; }
-  .reveal-up > * { opacity: 1; translate: none; transition: none; }
   .code-roll > span { translate: 0 var(--end); transition: none; }
   .photo-fade { transition: none; }
   .site-header { transition: none; }
-  .tick-pop { animation-name: enter-fade; }
+  .tick-pop { animation: enter-fade 200ms ease both; }
   .tick-draw { animation: none; }
 }
