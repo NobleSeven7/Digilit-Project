@@ -1,6 +1,6 @@
 // Home page: choose whether you are sending a parcel or carrying one.
 import { useCallback, useEffect, useState } from 'react'
-import { BASE_FEE, FEE_PER_KG, COURIER_FEE } from '../data/constants.js'
+import { BASE_FEE, FEE_PER_KG, COURIER_FEE, CITIES, CITY_CODES, tripHours } from '../data/constants.js'
 import { calculatePrice, savingPercent } from '../lib/pricing.js'
 import { formatPKR } from '../lib/format.js'
 import { ArrowRightIcon } from '../components/Icons.jsx'
@@ -9,34 +9,100 @@ import { createSampleData } from '../data/sampleData.js'
 import HeroMap from '../components/HeroMap.jsx'
 import { firstWithRole } from '../lib/profile.js'
 import { useSeenOnce } from '../lib/motion.js'
+// Dev-only (break-ui): worst-case data and its switch. Left out of the
+// production build, where import.meta.env.DEV is false.
+import { HOME_FIXTURES } from '../dev/homeFixtures.js'
+import DataToggle from '../dev/DataToggle.jsx'
 // Screenshots of the real pages, in a light and a dark copy
 // (taken from this app at phone width; retake them if those pages change).
 import sendLight from '../assets/home/step-send-light.webp'
 import sendDark from '../assets/home/step-send-dark.webp'
 import matchLight from '../assets/home/step-match-light.webp'
 import matchDark from '../assets/home/step-match-dark.webp'
-// Photos from Wikimedia Commons (credits under each photo and in the README).
+// Photo from Wikimedia Commons (credit under the photo and in the README).
 import terminalPhoto from '../assets/home/photo-daewoo-terminal.webp'
-import motorwayPhoto from '../assets/home/photo-m2-motorway.webp'
 
 // The demo case from the proposal.
 const DEMO_KG = 5
 
-// One of the two "who are you?" choices: a plain row between two thin lines
-// (no box), whose arrow moves when you point at it.
+// One half of the "who are you?" split: the role, one line on what you do
+// there, and an arrow. The two halves sit side by side between thin rules
+// (no boxes). Pressing one darkens it at once (feedback on press, colour only,
+// 100ms, so it works the same with a finger or a mouse; it stays with reduced
+// motion, since nothing moves).
 function ChoiceRow({ href, testId, title, text, onClick }) {
   return (
     <a href={href} data-testid={testId} onClick={onClick}
-      className="group flex min-h-16 items-center gap-4 border-b border-line py-4 text-ink no-underline active:opacity-80">
-      <span className="min-w-0 flex-1">
-        <span className="block whitespace-nowrap font-display text-2xl font-bold text-brand-ink">{title}</span>
-        <span className="mt-0.5 block text-sm text-muted">{text}</span>
+      className="flex min-h-32 min-w-0 flex-col justify-between gap-3 px-4 py-4 text-ink no-underline transition-colors
+                 duration-100 ease-[ease] first:pl-0 hover:bg-surface/60 active:bg-sunk">
+      <span className="min-w-0">
+        <span className="block font-display text-2xl font-bold text-brand-ink sm:text-3xl">{title}</span>
+        <span className="mt-1 block text-sm text-muted">{text}</span>
       </span>
-      <span className="text-brand-ink transition-[translate] duration-200 ease-[var(--ease-out)]
-                       group-hover:translate-x-1 motion-reduce:transition-none">
-        <ArrowRightIcon size={22} />
-      </span>
+      <span className="text-brand-ink"><ArrowRightIcon size={22} /></span>
     </a>
+  )
+}
+
+// The trust strip under the hero: three things the app really does, each
+// checked in the code (matching.js runs four rules; Delivery.jsx makes a
+// pickup and a delivery code and holds the fee until the second one).
+// Thin rules between them, no boxes.
+const TRUST = [
+  { fact: 'Four checks on every traveller', detail: 'Route, timing, space and vehicle, before anyone is ranked.' },
+  { fact: 'A code at each end', detail: 'The traveller enters a pickup code, then a delivery code.' },
+  { fact: 'Money held until delivery', detail: 'The fee is released only when the delivery code is entered.' },
+]
+
+function TrustStrip({ items }) {
+  return (
+    <ul data-testid="trust-strip"
+      className="trust-strip mt-10 grid divide-y divide-line border-y border-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      {items.map(({ fact, detail }) => (
+        <li key={fact} className="min-w-0 py-4 sm:px-5 sm:first:pl-0">
+          <p className="font-bold text-ink">{fact}</p>
+          <p className="mt-1 text-sm text-muted">{detail}</p>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+// "Routes we cover": Islamabad to each of the other seven cities, built from
+// the city list and city codes in src/data/constants.js. Any two of the eight
+// cities work the same way. Each row opens the Send page.
+const HUB = 'Islamabad'
+const ROUTES = CITIES.filter((city) => city !== HUB).map((to) => ({
+  from: HUB, to, fromCode: CITY_CODES[HUB], toCode: CITY_CODES[to], hours: tripHours(HUB, to),
+}))
+
+// Road time in plain words: "about 30 minutes", "about 4.5 hours". The times
+// are approximate (see tripHours in constants.js).
+function roadTime(hours) {
+  return hours < 1 ? `about ${Math.round(hours * 60)} minutes` : `about ${hours} hours`
+}
+
+function RouteList({ routes, onChoose }) {
+  return (
+    <ul data-testid="route-list" className="mt-8 border-t border-line">
+      {routes.map(({ from, to, fromCode, toCode, hours }) => (
+        <li key={to}>
+          <a href="#/sender" onClick={onChoose} data-testid="route-link"
+            className="flex min-h-16 items-center gap-4 border-b border-line py-3 text-ink no-underline transition-colors
+                       duration-100 ease-[ease] hover:bg-surface/60 active:bg-sunk">
+            <span className="min-w-0 flex-1">
+              <span aria-hidden="true" className="block font-display text-2xl font-bold text-brand-ink">
+                {fromCode} → {toCode}
+              </span>
+              <span className="mt-0.5 block text-sm text-muted">
+                {from} to {to}, {roadTime(hours)} by road
+              </span>
+            </span>
+            <span className="shrink-0 text-brand-ink"><ArrowRightIcon size={22} /></span>
+          </a>
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -172,6 +238,13 @@ function introSeen() {
 }
 
 export default function Home({ profile, setProfile }) {
+  // The trust facts and routes come from here, so the break-ui toggle (dev
+  // only) can swap in worst-case data at this one point.
+  const dataMode = import.meta.env.DEV ? new URLSearchParams(window.location.search).get('data') : null
+  const fixture = (import.meta.env.DEV && HOME_FIXTURES[dataMode]) || {}
+  const trust = fixture.trust ?? TRUST
+  const routes = fixture.routes ?? ROUTES
+
   const [skipIntro] = useState(introSeen)
   useEffect(() => {
     try { sessionStorage.setItem(INTRO_KEY, '1') } catch { /* storage blocked */ }
@@ -188,7 +261,9 @@ export default function Home({ profile, setProfile }) {
 
   return (
     <div className={`space-y-16 sm:space-y-24 ${skipIntro ? 'intro-done' : ''}`}>
-      {/* Hero: the headline on the left, the route map as the main picture */}
+      {/* Hero: the headline on the left, the route map as the main picture,
+          then the trust strip directly under it */}
+      <div>
       <section className="grid items-center gap-8 pt-2 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-6 lg:pt-6">
         <div>
           <h1 className="hero-enter text-balance text-[3.4rem] font-bold leading-none tracking-[-0.02em] sm:text-7xl lg:text-[5.6rem]">
@@ -203,17 +278,20 @@ export default function Home({ profile, setProfile }) {
             {formatPKR(calculatePrice(DEMO_KG))} instead of about {formatPKR(COURIER_FEE)} by courier (our estimate).
           </p>
 
-          {/* The two profile choices (simulated accounts: no login needed) */}
-          <div className="hero-enter mt-7 max-w-md border-t border-line [--d:150ms]">
+          {/* The two profile choices, split side by side (simulated accounts:
+              no login needed). Same links and profile switch as before. */}
+          <div className="hero-enter mt-7 grid max-w-md grid-cols-2 divide-x divide-line border-y border-line [--d:150ms]">
             <ChoiceRow href="#/sender" testId="choose-sender" onClick={become('sender')}
-              title="I am a sender" text="Post a parcel and see ranked carriers" />
+              title="Sender" text="Post a parcel and pick who takes it" />
             <ChoiceRow href="#/carrier" testId="choose-carrier" onClick={become('carrier')}
-              title="I am a carrier" text="Post a journey and earn from spare space" />
+              title="Traveller" text="Post a journey and earn from spare space" />
           </div>
         </div>
 
         <HeroMap />
       </section>
+      <TrustStrip items={trust} />
+      </div>
 
       {/* How it works: numbered steps, each beside the real screen */}
       <section>
@@ -226,16 +304,25 @@ export default function Home({ profile, setProfile }) {
         </ol>
       </section>
 
-      {/* A real photo: the trips already happen, with room to spare */}
-      <section className="grid overflow-hidden rounded-2xl bg-brand text-white lg:grid-cols-2" data-testid="photo-terminal">
+      {/* Routes we cover: one list, no cards. Each route opens the Send page. */}
+      <section>
+        <h2 className="text-4xl font-bold sm:text-6xl">Routes we cover</h2>
+        <p className="mt-2 max-w-2xl text-lg text-muted">
+          From Islamabad to the seven other cities. Any two of the eight work the same way.
+        </p>
+        <RouteList routes={routes} onChoose={become('sender')} />
+      </section>
+
+      {/* A real photo: the trips already happen, with room to spare.
+          Hidden on phones (below sm): it adds length, not information. */}
+      <section className="hidden overflow-hidden rounded-2xl bg-brand text-white sm:grid lg:grid-cols-2" data-testid="photo-terminal">
         <FadeInPhoto src={terminalPhoto} width="1280" height="960" loading="lazy"
           alt="Travellers carrying bags outside the Daewoo Express bus terminal in Bahawalpur"
           className="aspect-[4/3] size-full object-cover lg:aspect-auto" />
         <div className="self-center px-5 py-9 sm:px-12 sm:py-14">
           <h2 className="text-4xl font-bold sm:text-6xl">Already on the road</h2>
           <p className="mt-4 max-w-md text-lg text-on-brand-soft">
-            Every day people travel between Pakistan's cities by bus, car and van, often with
-            room to spare in a bag or a boot. RaastaShare puts that space to use.
+            People travel between Pakistan's cities every day with room to spare. RaastaShare puts it to use.
           </p>
           <PhotoCredit className="mt-6 [&_a]:text-white" tone="text-on-brand-soft" author="Ammarkh" licence="CC BY-SA 3.0"
             licenceUrl="https://creativecommons.org/licenses/by-sa/3.0/"
@@ -263,30 +350,19 @@ export default function Home({ profile, setProfile }) {
         </ul>
       </section>
 
-      {/* Closing: the same two choices as buttons, over a photo of the M-2 */}
-      <section className="pb-4">
-        <div className="relative overflow-hidden rounded-2xl bg-black text-white">
-          <FadeInPhoto src={motorwayPhoto} width="1280" height="960" loading="lazy" alt=""
-            className="absolute inset-0 size-full object-cover" />
-          {/* Darkens the photo so the white text stays readable */}
-          <div className="absolute inset-0 bg-black/65" aria-hidden="true" />
-          <div className="relative px-5 py-20 sm:px-12 sm:py-28">
-            <h2 className="max-w-3xl text-balance text-5xl font-bold sm:text-7xl">
-              The trip is happening anyway
-            </h2>
-            <p className="mt-4 max-w-xl text-lg text-white/85">
-              Put a parcel on it, or offer the space in your car.
-            </p>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <a href="#/sender" className="btn btn-primary" onClick={become('sender')}>Post a parcel</a>
-              <a href="#/carrier" className="btn btn-secondary" onClick={become('carrier')}>Post a journey</a>
-            </div>
-          </div>
+      {/* Closing: the same two choices again, as a two-colour split: label
+          black for senders, kraft for travellers. One line and one button each. */}
+      <section className="grid overflow-hidden rounded-2xl sm:grid-cols-2" data-testid="closing-split">
+        <div className="flex flex-col items-start justify-between gap-7 bg-brand px-5 py-10 text-white sm:px-10 sm:py-14">
+          <h2 className="text-3xl font-bold sm:text-4xl">Sending something? Put it on a trip that is already going.</h2>
+          <a href="#/sender" className="btn btn-secondary" onClick={become('sender')}>Post a parcel</a>
         </div>
-        <PhotoCredit className="mt-2" author="King Eliot" licence="CC BY-SA 4.0"
-          licenceUrl="https://creativecommons.org/licenses/by-sa/4.0/"
-          source="https://commons.wikimedia.org/wiki/File:M-2_Motorway_approaching_Islamabad.jpg" />
+        <div className="flex flex-col items-start justify-between gap-7 bg-sunk px-5 py-10 text-ink sm:px-10 sm:py-14">
+          <h2 className="text-3xl font-bold sm:text-4xl">Travelling anyway? Earn from the space you have.</h2>
+          <a href="#/carrier" className="btn btn-primary" onClick={become('carrier')}>Post a journey</a>
+        </div>
       </section>
+      {import.meta.env.DEV && <DataToggle current={dataMode} />}
     </div>
   )
 }

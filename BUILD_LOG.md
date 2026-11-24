@@ -1295,3 +1295,44 @@ future work follows them without being corrected again.
   had cleared storage while Home was already open; re-run from a fresh load,
   it was correct.)
 - All four plans in `plans/` are now done.
+
+## Stage 47: home page restructure (branch ccr-7df6bb23-nw9pnq)
+
+Done on branch `ccr-7df6bb23-nw9pnq`, after merging `main` (#40–#45) into it
+so the work builds on the latest app. Not merged to `main`.
+
+- **Hero:** the two choices are now a side-by-side split, "Sender" and
+  "Traveller", with thin rules and no boxes. Links, `data-testid`s and the
+  profile switch are unchanged. The arrow's hover nudge was removed (no
+  hover-only motion); pressing a half darkens it (colour, 100ms).
+- **Trust strip** (new, under the hero): three facts, each checked in the code:
+  - four checks on every traveller (`matching.js`);
+  - a pickup code and a delivery code (`Delivery.jsx`);
+  - money held until the delivery code is entered (`Delivery.jsx`).
+  It fades in as the intro's last beat (200ms, a transition from
+  `@starting-style`), once per visit.
+- **Routes we cover** (new, one list): Islamabad to each of the other seven
+  cities, from `CITIES`, `CITY_CODES` and `tripHours` in `constants.js`, with
+  the road time. Each row opens the Send page as a sender. The team chose the
+  heading over "Live routes", because the list is fixed, not live.
+- **Already on the road:** text cut to one sentence; moved below the routes;
+  hidden on phones (below `sm`). The photo and its credit are kept.
+- **Closing:** a two-colour split (label black for senders, kraft for
+  travellers), each half with one line and one button. The motorway photo
+  is gone, so its credit was removed from the page, the About page and the
+  README's photo credits. The file stays in the repository, unused.
+- **Footer:** "Check customs rules before you send anything." is always
+  visible. There is no terms page, so there is no link.
+- **break-ui:**
+  - a dev-only Demo / Worst case / Empty / One route toggle
+    (`src/dev/`, `?data=…`), not in the production build;
+  - findings reported and waiting for the team's decision.
+- **Design check:** `npm run check:design` now skips `src/dev/`. The toggle
+  is plain grey browser chrome on purpose, and it never ships.
+- **Checked:**
+  - build;
+  - all 12 tests;
+  - the design check;
+  - axe on all 8 pages in both themes;
+  - no sideways scrolling at 390px and 1440px;
+  - full-page screenshots at both widths.

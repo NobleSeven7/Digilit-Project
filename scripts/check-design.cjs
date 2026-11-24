@@ -8,11 +8,14 @@ const path = require('path')
 const ROOT = path.join(__dirname, '..')
 const SRC = path.join(ROOT, 'src')
 
-// Every .jsx/.js/.css file under src/.
+// Every .jsx/.js/.css file under src/, except src/dev/: dev-only test tools
+// (such as the break-ui data toggle) that never ship and are meant to look
+// like plain browser chrome, not like the design.
+const SKIP_DIRS = [path.join(SRC, 'dev')]
 function files(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const full = path.join(dir, entry.name)
-    if (entry.isDirectory()) return files(full)
+    if (entry.isDirectory()) return SKIP_DIRS.includes(full) ? [] : files(full)
     return /\.(jsx?|css)$/.test(entry.name) ? [full] : []
   })
 }
