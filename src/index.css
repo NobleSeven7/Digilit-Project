@@ -273,6 +273,10 @@ a {
    would ignore the holes). Two layers: a tight one for the edge and a soft
    one underneath, so the ticket reads as a thin object lying on the page. */
 .pass {
+  /* The pass is a size container, so its big type (route codes, the code)
+     can be capped by the pass's own width (cqi units): with very large text
+     it shrinks to fit instead of spilling out. */
+  container-type: inline-size;
   filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.14)) drop-shadow(0 8px 12px rgb(0 0 0 / 0.16));
 }
 .pass-top {

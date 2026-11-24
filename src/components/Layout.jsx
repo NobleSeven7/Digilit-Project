@@ -69,10 +69,12 @@ function ProfileBar({ profile, setProfile }) {
   return (
     <aside aria-label="Demo profile" className="border-b border-line bg-surface">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 safe-x py-2">
+        {/* The picker is never wider than the screen (max-w-full): with very
+            large text the longest name would otherwise push the page sideways. */}
         <label htmlFor="profilePicker" className="text-sm font-bold">Signed in as</label>
         <select id="profilePicker" data-testid="profile-picker" value={profileKey(profile)}
           onChange={(e) => setProfile(findProfile(e.target.value))}
-          className="min-h-11 rounded-lg border border-muted/60 bg-surface px-2 py-1 font-bold text-brand-ink">
+          className="min-h-11 min-w-0 max-w-full rounded-lg border border-muted/60 bg-surface px-2 py-1 font-bold text-brand-ink">
           <optgroup label="Senders">
             {PROFILES.filter((p) => p.role === 'sender').map((p) => (
               <option key={profileKey(p)} value={profileKey(p)}>{p.name} (sender)</option>

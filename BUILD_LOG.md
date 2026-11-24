@@ -1392,3 +1392,35 @@ choices (stack the hero halves; hide an empty routes list):
   link. The `data-testid="customs-note"` is unchanged.
 - **Checked:** build, all 12 tests and the design check. The private preview
   was rebuilt and republished.
+
+## Stage 51: very large text (200%) on Home, the profile picker and the parcel pass
+
+At 390px with text at 200%, every page scrolled sideways by 129px. Three
+parts of the page caused it; all three are fixed. At normal text sizes
+nothing changes: the same font sizes and heights, and pixel-identical page
+tops at 390px and 1440px.
+
+1. **Profile picker** (`Layout.jsx`): `min-w-0 max-w-full`, so the longest
+   name can no longer make it wider than the screen (it reached 519px; now
+   358px).
+2. **Hero headline** (`Home.jsx`): each size is also capped by the screen
+   width (`min(3.4rem, 15vw)`, `min(4.5rem, 11.5vw)` from `sm`,
+   `min(5.6rem, 9vw)` from `lg`), plus `overflow-wrap: break-word` as a last
+   resort. At normal text sizes the caps are above the sizes used. At 200%
+   it is 58.5px (was 108.8px), so "someone" fits. The wording is unchanged.
+3. **Parcel pass** (`ParcelPass.jsx`, `RouteCodes.jsx`, `index.css`):
+   - the pass is a size container, so its big type is capped by its own
+     width in `cqi` units: the route codes at `min(2.25rem, 17cqi)`, the arrow
+     at `min(1.5rem, 11cqi)`, the code at `min(3rem, 22cqi)`;
+   - the route wraps onto two lines if the cities cannot sit side by side;
+   - the details use two columns while each has at least 5rem, otherwise
+     one;
+   - names and labels wrap instead of being cut short with "…";
+   - the note moves under the code only when the code fills the row.
+   At 200% nothing spills out (it was 156px).
+
+- **After:** at 200%, Home, Carrier, Delivery and About no longer scroll
+  sideways. Send (219px), Dashboard (100px), Admin (56px) and Matches (22px)
+  still do because of their own content, which was not part of this fix.
+- **Checked:** all 12 tests pass; the design check and axe on all pages in
+  both themes are clean.
