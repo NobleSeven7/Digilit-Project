@@ -1115,3 +1115,40 @@ still said "no cookies, no tracking and no analytics".
   (the old setup set two). In PostHog's own code, `respect_dnt` treats
   "Do Not Track" and "Global Privacy Control" as opted out, so nothing is
   captured for those visitors.
+
+## Stage 42: Apple design pass (parcel pass, badges, success tick)
+
+Reviewed with Apple's design guidance (WWDC *Designing Fluid Interfaces* and
+*The Details of UI Typography*, translated for the web).
+
+- **Parcel pass: real notches.** The two notches were cream circles drawn on
+  top of the pass, so on the Home page (kraft background) they looked like
+  bumps. They are now holes cut with a CSS mask, so any background shows
+  through.
+- **Parcel pass: depth.** A two-layer drop-shadow (a tight edge shadow and a
+  soft one underneath) follows the cut shape, so the pass reads as a thin
+  paper ticket on the page. Dark mode uses a faint light top edge instead,
+  and "more contrast" mode swaps the shadow for a solid outline.
+- **Parcel pass: type.** Small labels get +0.01em letter spacing and tight
+  line height; values use snug line height. The code uses equal-width
+  digits and 0.12em spacing (was 0.2em) so it reads digit by digit without
+  drifting apart.
+- **Status badges.** One line, tight line height, +0.01em letter spacing and
+  equal-width digits, so every badge is the same height. They stay flat like
+  a stamp, with no shadow.
+- **Press states.** None added. The pass and the badges cannot be pressed,
+  and only things that act when pressed should answer a press.
+- **Success tick.**
+  - The circle grows from 60% on a critically damped spring: Apple's default
+    of damping 1 and response 0.35s, written as a CSS `linear()` curve, with
+    no bounce.
+  - The check mark draws in 260ms once the circle is about 90% there, and it
+    is done at about 0.6s (was 0.75s).
+  - On that same frame, phones that support web vibration give two light taps
+    (iPhones ignore web vibration).
+  - With reduced motion, the tick fades in over 200ms and the taps come as the
+    fade ends.
+- **Not changed:** logic, data, webhooks, the AI check and tests.
+- **Checked:** all 12 tests pass, and axe is clean on all 8 pages in both
+  themes. Playwright measured the tick: the check finished at 596ms and the
+  vibration fired at 597ms; with reduced motion, both came at 251ms.

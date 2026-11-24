@@ -200,6 +200,40 @@ a {
   .field[aria-invalid="true"] { @apply border-2 border-fail; }
 }
 
+/* ---- Parcel pass: a paper ticket --------------------------------------
+   The notches are real holes: each half of the pass is cut away in a 12px
+   half-circle at the tear line, so whatever is behind the pass shows through.
+   The shadow is a drop-shadow, which follows the cut shape (a box-shadow
+   would ignore the holes). Two layers: a tight one for the edge and a soft
+   one underneath, so the ticket reads as a thin object lying on the page. */
+.pass {
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.14)) drop-shadow(0 8px 12px rgb(0 0 0 / 0.16));
+}
+.pass-top {
+  -webkit-mask: radial-gradient(circle 12px at 0 100%, #0000 11.5px, #000 12px) left / 51% 100% no-repeat,
+                radial-gradient(circle 12px at 100% 100%, #0000 11.5px, #000 12px) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle 12px at 0 100%, #0000 11.5px, #000 12px) left / 51% 100% no-repeat,
+        radial-gradient(circle 12px at 100% 100%, #0000 11.5px, #000 12px) right / 51% 100% no-repeat;
+}
+.pass-bottom {
+  -webkit-mask: radial-gradient(circle 12px at 0 0, #0000 11.5px, #000 12px) left / 51% 100% no-repeat,
+                radial-gradient(circle 12px at 100% 0, #0000 11.5px, #000 12px) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle 12px at 0 0, #0000 11.5px, #000 12px) left / 51% 100% no-repeat,
+        radial-gradient(circle 12px at 100% 0, #0000 11.5px, #000 12px) right / 51% 100% no-repeat;
+}
+/* Dark: shadows barely show on a dark page, so a faint light edge along the
+   top of the ticket separates it instead (light catching the paper). */
+:root[data-theme="dark"] .pass {
+  filter: drop-shadow(0 -1px 0 rgb(255 255 255 / 0.06)) drop-shadow(0 8px 12px rgb(0 0 0 / 0.5));
+}
+/* More contrast asked for: a clear outline instead of a soft shadow. */
+@media (prefers-contrast: more) {
+  .pass { filter: none; }
+  .pass-top, .pass-bottom { border: 1px solid var(--color-ink); }
+  .pass-top { border-bottom: 0; }
+  .pass-bottom { border-top: 0; }
+}
+
 /* ---- Home page: the one moment of motion --------------------------------
    When the page opens, the headline, text and buttons rise into place one
    after another, the routes on the map draw themselves, and the parcel
@@ -400,15 +434,30 @@ html[data-theme="dark"] .shot-dark { display: block; }
   .site-header[data-hidden="true"]:not(:focus-within) { translate: 0 -100%; }
 }
 
-/* Success: the green circle pops in, then the check mark draws itself.
-   It starts at 90% size, never from nothing. */
-.tick-pop { animation: tick-pop 350ms var(--ease-out) both; }
+/* Success (src/components/SuccessTick.jsx): the circle grows from 60% on a
+   critically damped spring (Apple's default: damping 1, response 0.35s, no
+   bounce), written out as a linear() curve. Browsers without linear() use the
+   same ease-out curve as the rest of the app. Once the circle is about 90% of the way
+   there (about 280ms in), the check mark draws itself in 260ms; the phone
+   taps when it finishes, around half a second after the press. */
+:root { --spring-settle: cubic-bezier(0.23, 1, 0.32, 1); }
+@supports (animation-timing-function: linear(0, 1)) {
+  :root { --spring-settle: linear(0, 0.051 5%, 0.162 10%, 0.293 14%, 0.421 19%, 0.536 24%, 0.634 29%,
+    0.715 33%, 0.781 38%, 0.833 43%, 0.873 48%, 0.905 52%, 0.929 57%, 0.947 62%, 0.96 67%,
+    0.971 71%, 0.978 76%, 0.984 81%, 0.988 86%, 0.991 90%, 0.994 95%, 1 100%); }
+}
+.tick-pop {
+  animation: tick-pop 420ms var(--spring-settle) 60ms both;
+}
 @keyframes tick-pop {
-  from { opacity: 0; transform: scale(0.9); }
+  /* The circle is fully visible by a quarter of the way, so it reads as one
+     object growing, not something fading in from nothing. */
+  from { opacity: 0; transform: scale(0.6); }
+  25% { opacity: 1; }
 }
 .tick-draw {
   stroke-dasharray: 1;
-  animation: route-draw 450ms var(--ease-out) 250ms backwards;
+  animation: route-draw 260ms var(--ease-out) 280ms backwards;
 }
 
 /* Less motion: the finished picture straight away; the tick just fades in.
@@ -419,6 +468,6 @@ html[data-theme="dark"] .shot-dark { display: block; }
   .code-roll > span { translate: 0 var(--end); transition: none; }
   .photo-fade { transition: none; }
   .site-header { transition: none; }
-  .tick-pop { animation-name: enter-fade; }
+  .tick-pop { animation: enter-fade 200ms ease both; }
   .tick-draw { animation: none; }
 }
