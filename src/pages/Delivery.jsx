@@ -361,7 +361,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
           {/* Result of the last action */}
           {message && (
             <p role="alert" data-testid="delivery-message" key={message.text}
-              className={`rounded-lg px-4 py-3 font-bold ${message.booked ? 'fade-in-quick flex items-center gap-3' : 'enter-fade'} ${
+              className={`rounded-lg px-4 py-3 font-bold fade-in-quick ${message.booked ? 'flex items-center gap-3' : ''} ${
                 message.ok ? 'bg-brand-tint text-brand-ink' : 'bg-fail-tint text-fail'}`}>
               {/* Booked: the message appears quickly (150ms) so it does not hold
                   the tick back; the tick grows in, its check draws, and phones

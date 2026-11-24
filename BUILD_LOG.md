@@ -1472,3 +1472,42 @@ drawn over the logo.
   - all 8 pages at 390, 640, 768, 900, 1024, 1180 and 1440px with text at
     200%: 0px sideways everywhere;
   - all 12 tests pass, and the design check and axe in both themes are clean.
+
+## Stage 54: animation review against the standards file
+
+A full `review-animations` pass, this time checked against
+`.claude/skills/review-animations/STANDARDS.md`. Verdict: Approve (nothing
+blocking). Eight fixes:
+
+1. **Trust strip:** fades in and rises 6px (it only faded before; a plain fade
+   with no movement is flagged by the standards).
+2. **Delivery message banner:** a 150ms fade with a 2px drop (`fade-in-quick`,
+   as the booked message already used), instead of a plain 200ms fade.
+3. **Hover colours:** Tailwind's `hover:` now needs `(hover: hover) and
+   (pointer: fine)`, through `@custom-variant hover` in `index.css`, so a
+   hover colour cannot stick after a tap on phones that say they can hover.
+   The first version of this line used a syntax Tailwind ignored and silently
+   dropped every `hover:` class; the built CSS was checked, and the block
+   form fixed it.
+4. **Reduced motion keeps colour:** buttons, card borders and the checklist
+   count still fade their colour; only the press-shrink is turned off.
+5. **AI suggestion card:** 250ms (was 300ms).
+6. **Code roll:** uses the shared `--ease-out` curve instead of a hand-typed one.
+7. **Phone header:** hides in 200ms and comes back in 250ms (was 250ms both
+   ways).
+8. **Colour changes use `ease`:** the card border and the tracker's stop
+   colours.
+
+Kept on purpose:
+- the delivery road (350ms, explains progress);
+- the wrong-code shake (rare error feedback, even though Enter can trigger it);
+- the success tick (a celebration);
+- the Home marketing motion (once per visit);
+- colour press feedback on full-width rows instead of shrinking them.
+
+- **Checked:**
+  - measured in the old and new builds: transition properties, durations,
+    curves, and the banner's keyframes;
+  - all 12 tests pass, and the design check and axe are clean;
+  - needs a real phone: whether hover colours still stick on Android, and how
+    the new rise and drop feel.
