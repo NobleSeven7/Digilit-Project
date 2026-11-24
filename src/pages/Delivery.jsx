@@ -520,7 +520,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
         {/* Escrow panel */}
         <aside className="card h-fit" data-testid="escrow-panel">
           <h2 className="text-xl font-bold">Escrow</h2>
-          <p className="mt-2 font-display text-4xl font-bold text-brand-ink">{amount}</p>
+          <p className="mt-2 font-display text-4xl font-bold tabular-nums text-brand-ink">{amount}</p>
           <p className="mt-2" data-testid="escrow-status"><StatusBadge status={delivery.escrow} /></p>
           <p className="mt-3 text-sm text-muted">
             Escrow means RaastaShare holds the money safely: it is held when both sides

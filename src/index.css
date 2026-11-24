@@ -38,6 +38,25 @@
   --text-sm: 0.9375rem;
   --text-xs: 0.8125rem;
 
+  /* Letter spacing and line height change with size (Apple's UI typography):
+     big type looks too loose, so it is tightened and set close; small type is
+     opened up a touch to stay readable. Every text-* class uses these, so
+     headings, prices and scores all follow one scale.
+     13px: +0.01em | 15-24px: 0 | 30-36px: -0.01em | 48px and up: -0.02em */
+  --text-xs--letter-spacing: 0.01em;
+  --text-xl--line-height: 1.2;
+  --text-2xl--line-height: 1.15;
+  --text-3xl--line-height: 1.1;
+  --text-3xl--letter-spacing: -0.01em;
+  --text-4xl--line-height: 1.05;
+  --text-4xl--letter-spacing: -0.01em;
+  --text-5xl--line-height: 1;
+  --text-5xl--letter-spacing: -0.02em;
+  --text-6xl--line-height: 1;
+  --text-6xl--letter-spacing: -0.02em;
+  --text-7xl--line-height: 1;
+  --text-7xl--letter-spacing: -0.02em;
+
   /* IBM Plex: plain, industrial lettering, like printing on a shipping label.
      The condensed cut is for headings, the normal cut for everything else. */
   --font-display: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
@@ -85,12 +104,15 @@ body {
 }
 h1, h2, h3 {
   font-family: var(--font-display);
-  line-height: 1.05;
-  letter-spacing: 0;
   text-wrap: balance; /* even line lengths in headings */
 }
-/* Big headings sit a touch tighter: letters look further apart as they grow. */
-h1 { letter-spacing: -0.01em; }
+/* A heading's default line height. It sits in the "base" layer so that a
+   heading's size class (text-xl, text-4xl ...) can set its own line height
+   and letter spacing from the scale above: a small heading that wraps needs
+   more room between lines than a big one. */
+@layer base {
+  h1, h2, h3 { line-height: 1.05; }
+}
 /* Body text avoids a lone word on its last line, where the browser supports it. */
 p, li { text-wrap: pretty; }
 /* The parts of the page the browser draws also use the brand colours:
@@ -170,11 +192,11 @@ a {
            px-5 py-2.5 text-center font-bold;
     /* Colour changes softly; a press shrinks the button a touch, so it feels
        like it answers the finger. */
-    transition: background-color 150ms ease, scale 160ms var(--ease-out);
+    transition: background-color 150ms ease, scale 100ms var(--ease-out);
   }
   /* ":not(:disabled)" (not "enabled") so that links styled as buttons get
      the same press and hover effects as real buttons. */
-  .btn:not(:disabled):active { scale: 0.97; }
+  .btn:not(:disabled):active { scale: 0.97; } /* 100ms: the press shows at once */
   .btn-primary { @apply bg-brand text-white; }
   .btn-secondary { @apply border-2 border-brand-ink bg-surface text-brand-ink; }
   .btn-danger { @apply border-2 border-fail bg-surface text-fail; }
@@ -198,6 +220,48 @@ a {
   .hint { @apply mt-1 text-sm text-muted; }
   /* A field with a problem: red border, matching the message under it. */
   .field[aria-invalid="true"] { @apply border-2 border-fail; }
+}
+
+/* ---- Send page: waiting for the AI check ---------------------------------
+   A thin bar fills from left to right over the check's time limit (--wait,
+   8 seconds), so people see that something is happening and how long is
+   left. Linear, because it measures time. With reduced motion it is hidden;
+   the text under it says the same thing. */
+.ai-wait-bar {
+  transform-origin: left;
+  animation: ai-wait var(--wait, 8s) linear both;
+}
+@keyframes ai-wait {
+  from { transform: scaleX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-wait-bar { display: none; }
+}
+
+/* ---- Phone tab bar: a soft edge instead of a hard stop --------------------
+   Where the page meets the tab bar fixed to the bottom of the screen, it
+   fades into the paper over 16px, so text slides under the bar instead of
+   being cut off at a line (Apple's "scroll edge effect"). */
+.tabbar::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 100%;
+  height: 1rem;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--color-paper), transparent);
+}
+
+/* ---- More contrast (a device accessibility setting) -----------------------
+   The kraft lines are faint on purpose. People who ask for more contrast get
+   lines in the darker text colour and form fields with a full ink outline. */
+@media (prefers-contrast: more) {
+  :root, :root[data-theme="dark"] { --color-line: var(--color-muted); }
+}
+@layer components {
+  @media (prefers-contrast: more) {
+    .field { border-color: var(--color-ink); }
+  }
 }
 
 /* ---- Parcel pass: a paper ticket --------------------------------------

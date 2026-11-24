@@ -162,7 +162,7 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
 
       {/* Phone navigation: a tab bar fixed to the bottom of the screen. The
           padding keeps the tabs above an iPhone's home bar. */}
-      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-10 flex overflow-hidden border-t border-line bg-surface md:hidden"
+      <nav aria-label="Main" className="tabbar fixed inset-x-0 bottom-0 z-10 flex border-t border-line bg-surface [overflow-x:clip] md:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
         {[...menu.own, ...menu.team].map((item, index) => (
           <a

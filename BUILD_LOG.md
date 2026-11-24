@@ -1152,3 +1152,52 @@ Reviewed with Apple's design guidance (WWDC *Designing Fluid Interfaces* and
 - **Checked:** all 12 tests pass, and axe is clean on all 8 pages in both
   themes. Playwright measured the tick: the check finished at 596ms and the
   vibration fired at 597ms; with reduced motion, both came at 251ms.
+
+## Stage 43: Apple design fixes (Send page, type scale, materials)
+
+The fixes from the Stage 42 reviews.
+
+**Send page**
+- **Mistakes show up as you go.** Each field is checked when you leave it, and
+  the city lists are checked as soon as they change. Before, problems only
+  appeared after "Post parcel", which stays disabled until the checklist is
+  done. The rules and messages are the same; a fixed field clears its message,
+  and screen readers read new messages out.
+- **The message by "Post parcel" names the field** ("Check the weight."),
+  instead of "Check the field marked in red". It appears only after pressing
+  Post.
+- **A progress bar for the AI check.** A thin bar fills over the check's
+  8-second limit, read from the same `TIMEOUT_MS` the check uses (now
+  exported from `aiCheck.js`). With reduced motion it is hidden, and the text
+  says the same.
+- **Required fields come first.** The optional "Describe your item" check now
+  comes after From, To, Weight, Item type and Deadline. Its suggestion still
+  shows under "Item type".
+- **The price and checklist count use equal-width digits**, so they do not
+  jiggle as they change.
+- **Button presses take 100ms** (was 160ms), across the app.
+
+**Type scale (all pages)**
+- **Letter spacing and line height now go with each text size**, set once in
+  `@theme`: 13px +0.01em; 30–36px -0.01em; 48px and up -0.02em. Line height
+  goes from 1.2 (20px) down to 1.0 (48px and up).
+- **Fixed a hidden override.** A general heading rule set every heading to line
+  height 1.05, which silently overrode any line height written on a heading.
+  It now sits in Tailwind's base layer, so the size scale and any
+  per-heading setting apply. Two Home headings asked for 0.95 and the hero
+  asked for 0.92; those never applied, and once they did, letters touched.
+  They now use the scale (1.0).
+- **Equal-width digits** for the prices, amounts, scores and Dashboard totals.
+
+**Materials**
+- **Phone tab bar:** the page fades into the paper over 16px just above it,
+  instead of stopping at a hard line.
+- **More contrast (a device setting):** lines use the darker text colour, and
+  form fields get a full ink outline.
+- **No frosted glass**, on purpose: the cargo-label look is flat print.
+
+- **Not changed:** the validation rules and messages, logic, data, webhooks,
+  the AI check and tests.
+- **Checked:** all 12 tests pass, and axe is clean on all 8 pages in both
+  themes. Before/after screenshots were taken of the Send page, Home and the
+  Dashboard, and in more-contrast mode.

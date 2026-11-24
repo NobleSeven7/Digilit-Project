@@ -19,7 +19,7 @@ import { posthogLog } from './posthogLogs.js'
 const AI_WEBHOOK_URL = (import.meta.env.VITE_AI_WEBHOOK_URL || '').trim()
 
 export const MAX_DESCRIPTION = 200 // characters the sender may type
-const TIMEOUT_MS = 8000 // how long to wait for the AI before falling back
+export const TIMEOUT_MS = 8000 // how long to wait for the AI before falling back (the Send page's progress bar uses it too)
 const MAX_REASON = 160 // the reason is kept to about one line
 
 // Where an answer came from. Shown on the suggestion card and logged.

@@ -132,7 +132,7 @@ function StepRow({ step, index }) {
         <p className="font-display text-2xl font-bold text-brand-ink">
           <span className="tabular-nums text-muted">0{index + 1}</span> {step.label}
         </p>
-        <h3 className="mt-3 text-4xl font-bold leading-[0.95] sm:text-6xl">{step.title}</h3>
+        <h3 className="mt-3 text-4xl font-bold sm:text-6xl">{step.title}</h3>
         <p className="mt-4 text-lg text-muted">{step.text}</p>
       </div>
       <Phone label={step.phone}>{step.screen}</Phone>
@@ -190,10 +190,10 @@ export default function Home({ profile, setProfile }) {
       {/* Hero: the headline on the left, the route map as the main picture */}
       <section className="grid items-center gap-8 pt-2 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-6 lg:pt-6">
         <div>
-          <h1 className="hero-enter text-balance text-[3.4rem] font-bold leading-[0.92] sm:text-7xl lg:text-[5.6rem]">
+          <h1 className="hero-enter text-balance text-[3.4rem] font-bold leading-none tracking-[-0.02em] sm:text-7xl lg:text-[5.6rem]">
             Send it with someone already going that way
           </h1>
-          <p className="hero-enter mt-5 max-w-md text-lg text-muted [--d:60ms] sm:text-xl">
+          <p className="hero-enter mt-5 max-w-md text-lg text-muted [--d:60ms] sm:text-xl sm:leading-normal">
             RaastaShare matches your parcel with a traveller who has spare space on the
             same intercity route. Payment stays in escrow until delivery is confirmed.
           </p>
@@ -270,7 +270,7 @@ export default function Home({ profile, setProfile }) {
           {/* Darkens the photo so the white text stays readable */}
           <div className="absolute inset-0 bg-black/65" aria-hidden="true" />
           <div className="relative px-5 py-20 sm:px-12 sm:py-28">
-            <h2 className="max-w-3xl text-balance text-5xl font-bold leading-[0.95] sm:text-7xl">
+            <h2 className="max-w-3xl text-balance text-5xl font-bold sm:text-7xl">
               The trip is happening anyway
             </h2>
             <p className="mt-4 max-w-xl text-lg text-white/85">

@@ -57,7 +57,7 @@ function Metric({ label, value, note, testId }) {
   return (
     <div className="border-b border-line py-5 sm:pr-5 sm:even:border-l sm:even:pl-5 lg:border-b-0 lg:[&:not(:first-child)]:border-l lg:[&:not(:first-child)]:pl-5">
       <p className="font-bold text-muted">{label}</p>
-      <p className="mt-1 font-display text-5xl font-bold tracking-tight" data-testid={testId}>{value}</p>
+      <p className="mt-1 font-display text-5xl font-bold tracking-tight tabular-nums" data-testid={testId}>{value}</p>
       <p className="mt-2 text-sm text-muted">{note}</p>
     </div>
   )
@@ -152,7 +152,7 @@ export default function Dashboard({ state }) {
 
         <section>
           <h2 className="text-xl font-bold">Spare capacity used</h2>
-          <p className="mt-2 font-display text-5xl font-bold tracking-tight">
+          <p className="mt-2 font-display text-5xl font-bold tracking-tight tabular-nums">
             {utilisation.length ? `${averageUtilisation}%` : '—'}
           </p>
           {utilisation.length > 0 && <CapacityMeter value={averageUtilisation} />}
@@ -191,7 +191,7 @@ export default function Dashboard({ state }) {
                     {d.deliveredAt ? `Delivered ${formatDateTime(d.deliveredAt)}.` : ''}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-display text-2xl font-bold">{formatPKR(d.price)}</span>
+                    <span className="font-display text-2xl font-bold tabular-nums">{formatPKR(d.price)}</span>
                     <StatusBadge status={d.status} />
                   </div>
                 </a>

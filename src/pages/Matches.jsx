@@ -19,7 +19,7 @@ function ScoreBadge({ total }) {
   const rounded = Math.round(total)
   return (
     <div className="text-right">
-      <p className="font-display text-4xl font-bold leading-none text-brand-ink" data-testid="score">
+      <p className="font-display text-4xl font-bold leading-none tabular-nums text-brand-ink" data-testid="score">
         {rounded}
         <span className="text-lg text-muted"> / 100</span>
       </p>
