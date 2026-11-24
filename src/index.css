@@ -427,8 +427,8 @@ a {
 .road-fill { transition: clip-path 250ms var(--ease-in-out); }
 
 /* The one celebration: when the parcel is paid, the last stop settles in as
-   the road arrives (the 300ms delay lands it just before the road's 350ms). */
-.stop-settle { animation: stop-settle 450ms var(--ease-out) 300ms both; }
+   the road arrives (the 200ms delay lands it just before the road's 250ms). */
+.stop-settle { animation: stop-settle 450ms var(--ease-out) 200ms both; }
 @keyframes stop-settle {
   from { transform: scale(0.9); }
 }
