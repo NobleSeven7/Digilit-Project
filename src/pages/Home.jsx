@@ -1,5 +1,5 @@
 // Home page: choose whether you are sending a parcel or carrying one.
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { BASE_FEE, FEE_PER_KG, COURIER_FEE } from '../data/constants.js'
 import { calculatePrice, savingPercent } from '../lib/pricing.js'
 import { formatPKR } from '../lib/format.js'
@@ -162,7 +162,20 @@ function PhotoCredit({ author, licence, licenceUrl, source, className = '', tone
   )
 }
 
+// The intro (headline rising, routes drawing, parcel ride) plays on the first
+// visit to Home only; coming back shows the finished picture straight away.
+// Remembered for this browser tab. If storage is blocked, it simply plays.
+const INTRO_KEY = 'raastashare:intro-seen'
+function introSeen() {
+  try { return sessionStorage.getItem(INTRO_KEY) === '1' } catch { return false }
+}
+
 export default function Home({ profile, setProfile }) {
+  const [skipIntro] = useState(introSeen)
+  useEffect(() => {
+    try { sessionStorage.setItem(INTRO_KEY, '1') } catch { /* storage blocked */ }
+  }, [])
+
   // The price bars fill once they are on screen.
   const [pricesRef, pricesSeen] = useSeenOnce()
 
@@ -173,24 +186,24 @@ export default function Home({ profile, setProfile }) {
   }
 
   return (
-    <div className="space-y-16 sm:space-y-24">
+    <div className={`space-y-16 sm:space-y-24 ${skipIntro ? 'intro-done' : ''}`}>
       {/* Hero: the headline on the left, the route map as the main picture */}
       <section className="grid items-center gap-8 pt-2 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-6 lg:pt-6">
         <div>
-          <h1 className="hero-enter text-balance text-[3.4rem] font-bold leading-[0.92] [--i:0] sm:text-7xl lg:text-[5.6rem]">
+          <h1 className="hero-enter text-balance text-[3.4rem] font-bold leading-[0.92] sm:text-7xl lg:text-[5.6rem]">
             Send it with someone already going that way
           </h1>
-          <p className="hero-enter mt-5 max-w-md text-lg text-muted [--i:1] sm:text-xl">
+          <p className="hero-enter mt-5 max-w-md text-lg text-muted [--d:60ms] sm:text-xl">
             RaastaShare matches your parcel with a traveller who has spare space on the
             same intercity route. Payment stays in escrow until delivery is confirmed.
           </p>
-          <p className="hero-enter mt-4 max-w-md font-bold [--i:1]" data-testid="hero-fact">
+          <p className="hero-enter mt-4 max-w-md font-bold [--d:110ms]" data-testid="hero-fact">
             <span aria-hidden="true">ISB → LHE</span><span className="sr-only">Islamabad to Lahore</span>, 5 kg:{' '}
             {formatPKR(calculatePrice(DEMO_KG))} instead of about {formatPKR(COURIER_FEE)} by courier (our estimate).
           </p>
 
           {/* The two profile choices (simulated accounts: no login needed) */}
-          <div className="hero-enter mt-7 max-w-md border-t border-line [--i:2]">
+          <div className="hero-enter mt-7 max-w-md border-t border-line [--d:150ms]">
             <ChoiceRow href="#/sender" testId="choose-sender" onClick={become('sender')}
               title="I am a sender" text="Post a parcel and see ranked carriers" />
             <ChoiceRow href="#/carrier" testId="choose-carrier" onClick={become('carrier')}
