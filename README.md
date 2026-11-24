@@ -232,7 +232,16 @@ the real AI model.
 The script opens the app in a real browser, clicks through it and saves a
 screenshot of each result in `test-screenshots/`.
 
-To run them yourself, install the browser tool once:
+**Design rules.** `DESIGN.md` lists the team's design rules and the reason for
+each. Six of them are checked automatically: no small ALL-CAPS labels, no
+marketing phrases, no `ease-in` or `transition: all`, no decorative gradients
+or emoji icons, and no raw hex colours in components. Run:
+
+```bash
+npm run check:design
+```
+
+To run the browser tests yourself, install the browser tool once:
 
 ```bash
 npm install --save-dev playwright

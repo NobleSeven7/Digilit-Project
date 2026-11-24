@@ -1257,3 +1257,22 @@ Done in order, using Emil Kowalski's animation skills and Apple's guidance.
     revisit;
   - no page fade;
   - the booked haptic firing on the same millisecond the check completes.
+
+## Stage 45: design rules written down (DESIGN.md, CLAUDE.md, a check)
+
+The design corrections and choices from the last few days are now rules, so
+future work follows them without being corrected again.
+
+- **`DESIGN.md`:** 11 rules, each with its reason and the date and words it
+  came from. They cover colour (60/30/10 with tokens), surfaces and layout
+  (no gradients, glows or emoji icons; left-aligned), typography (IBM Plex;
+  no small ALL CAPS), copy (no marketing phrases; "our estimate" on
+  unmeasured figures; the About page matches what the code sends), motion (no
+  page or scroll animations; only what changed; 300ms or less on the ease
+  tokens) and interaction (phone first; separate sender and carrier pages).
+- **`CLAUDE.md`:** read DESIGN.md before UI work, and show before/after
+  screenshots before anything goes live.
+- **`npm run check:design`** (`scripts/check-design.cjs`, plain Node, no new
+  libraries) checks six of the rules. It finds 0 problems in today's code. A
+  test file with one problem of each kind was flagged six times, and the
+  check was then run clean again.
