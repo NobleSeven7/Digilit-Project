@@ -13,7 +13,7 @@ export function prefersReducedMotion() {
 // (style viewTransitionName) from its old place to its new one. Used on the
 // Admin page so a row that leaves fades out while the rows below slide up.
 // "kind" is put on <html> while it runs, so the CSS can style each kind
-// differently ("page" = a soft fade between two pages).
+// differently ("theme" = a cross-fade between light and dark).
 // Browsers without view transitions, and reduced motion, just change at once.
 let latestTransition = 0
 export function withViewTransition(change, kind) {

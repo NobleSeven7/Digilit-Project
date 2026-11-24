@@ -8,8 +8,8 @@ import RouteCodes from './RouteCodes.jsx'
 function Field({ label, value }) {
   return (
     <div className="min-w-0">
-      <p className="text-sm text-on-brand-soft">{label}</p>
-      <p className="truncate font-bold">{value}</p>
+      <p className="text-sm leading-tight tracking-[0.01em] text-on-brand-soft">{label}</p>
+      <p className="mt-0.5 truncate font-bold leading-snug">{value}</p>
     </div>
   )
 }
@@ -41,17 +41,22 @@ function RollingCode({ code }) {
   )
 }
 
+// Like a real paper ticket, the pass is one object: the two notches are holes
+// cut through it (see .pass-top and .pass-bottom in src/index.css), so the page
+// shows through them on any background, and its shadow follows that shape.
+// It cannot be pressed, so it has no press effect: only things that do
+// something when pressed should answer a press.
+//
 // kind: "Pickup" or "Delivery". codeTestId keeps the tests' hook on the code.
 // rollCode: show the code as rolling digits (the Home page example only).
 export default function ParcelPass({ kind, code, shipment, journey, codeTestId, note = 'Would arrive by SMS', rollCode = false }) {
   return (
-    <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-line bg-surface text-ink shadow-[var(--shadow-rest)]"
-      data-testid="parcel-pass">
+    <div className="pass w-full max-w-sm text-ink" data-testid="parcel-pass">
       {/* Top: the trip */}
-      <div className="bg-brand p-5 text-white">
+      <div className="pass-top rounded-t-2xl bg-brand p-5 text-white">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-sm">
-          <span className="font-display text-lg font-bold">RaastaShare</span>
-          <span className="whitespace-nowrap rounded-full border border-white px-3 py-0.5 text-sm font-bold">{kind} pass</span>
+          <span className="font-display text-lg font-bold leading-tight">RaastaShare</span>
+          <span className="whitespace-nowrap rounded-full border border-white px-3 py-1 text-sm font-bold leading-tight tracking-[0.01em]">{kind} pass</span>
         </div>
         <RouteCodes origin={shipment.origin} destination={shipment.destination} className="mt-4" tone="text-on-brand-soft" />
         <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -61,21 +66,18 @@ export default function ParcelPass({ kind, code, shipment, journey, codeTestId, 
           <Field label="Departs" value={formatDateTime(journey.departure)} />
         </div>
       </div>
-      {/* Tear line with a notch on each side */}
-      <div className="relative h-0" aria-hidden="true">
-        <span className="absolute -left-3 -top-3 size-6 rounded-full border border-line bg-surface" />
-        <span className="absolute -right-3 -top-3 size-6 rounded-full border border-line bg-surface" />
-        <span className="absolute inset-x-5 top-0 border-t-2 border-dashed border-line" />
-      </div>
-      {/* Bottom: the code */}
-      <div className="flex items-end justify-between gap-4 p-5">
+      {/* Bottom: the code, below a tear line between the two notches */}
+      <div className="pass-bottom relative flex items-end justify-between gap-4 rounded-b-2xl border border-t-0 border-line bg-surface p-5">
+        <span aria-hidden="true" className="absolute inset-x-5 top-0 border-t-2 border-dashed border-line" />
         <div>
-          <p className="text-sm text-muted">{kind} code</p>
-          <p className="font-display text-5xl font-bold leading-none tracking-[0.2em]" data-testid={codeTestId}>
+          <p className="text-sm leading-tight tracking-[0.01em] text-muted">{kind} code</p>
+          {/* Digits are spaced so the code can be read out one by one, and
+              all the same width, so codes line up and do not shift. */}
+          <p className="mt-1 font-display text-5xl font-bold leading-none tracking-[0.12em] tabular-nums" data-testid={codeTestId}>
             {rollCode ? <RollingCode code={code} /> : code}
           </p>
         </div>
-        <p className="max-w-[8rem] text-right text-xs text-muted">{note}</p>
+        <p className="max-w-[8rem] text-right text-xs leading-snug tracking-[0.01em] text-muted">{note}</p>
       </div>
     </div>
   )

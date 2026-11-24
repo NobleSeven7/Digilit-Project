@@ -1,6 +1,6 @@
 // Matches page: ranked carriers for one shipment, and for every carrier
 // the result of each of the four rules, so the decision is transparent.
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { STATUS, DELIVERY, FLAG_AFTER_HOURS } from '../data/constants.js'
 import { findMatches } from '../lib/matching.js'
 import { calculatePrice, calculateSaving } from '../lib/pricing.js'
@@ -19,7 +19,7 @@ function ScoreBadge({ total }) {
   const rounded = Math.round(total)
   return (
     <div className="text-right">
-      <p className="font-display text-4xl font-bold leading-none text-brand-ink" data-testid="score">
+      <p className="font-display text-4xl font-bold leading-none tabular-nums text-brand-ink" data-testid="score">
         {rounded}
         <span className="text-lg text-muted"> / 100</span>
       </p>
@@ -43,20 +43,51 @@ function PassChip({ rule }) {
   )
 }
 
-// One carrier card. "rank" is set only for eligible carriers.
-// Ranked carriers arrive one after another, best first, with shrinking gaps
-// (0, 80, 140, 190 ms, then the rest together) so the group reads as one wave.
-// The best match rises the furthest. Not-eligible carriers do not move.
-const ARRIVE_DELAY = [0, 80, 140, 190]
-function arrival(rank) {
+// How the ranked carriers arrive: one wave, played once.
+// - The best match leads: it starts first, rises furthest and takes longest.
+// - Options 2 and 3 follow with shrinking gaps and less travel, so the three
+//   read as one movement settling, not separate entrances. Options 4 and 5
+//   (when there are that many) arrive with option 3 and only fade. The wave
+//   is over in 300ms, and every card can be pressed as soon as it shows.
+// - Everything else on the page stays still: the heading, the parcel summary,
+//   "Show all" and the not-available list.
+// It plays the first time a parcel's results are shown in this tab (just
+// after posting); opening them again shows them in place.
+const WAVE = [
+  { delay: 0, rise: 12, duration: 280 },   // best match
+  { delay: 60, rise: 6, duration: 220 },   // option 2
+  { delay: 100, rise: 4, duration: 200 },  // option 3
+]
+const WAVE_REST = { delay: 100, rise: 0, duration: 200 } // options 4 and 5
+// Cards revealed by pressing "Show all" answer that press: they fade in
+// together, with no wave.
+const REVEALED = { className: 'fade-in-quick' }
+
+function arrival(rank, wave) {
   if (!rank) return {}
+  if (rank > FIRST_SHOWN) return REVEALED
+  if (!wave) return {}
+  const { delay, rise, duration } = WAVE[rank - 1] || WAVE_REST
   return {
     className: 'enter-rise',
-    style: { '--delay': `${ARRIVE_DELAY[Math.min(rank, ARRIVE_DELAY.length) - 1]}ms`, '--rise': rank === 1 ? '10px' : '6px' },
+    style: { '--delay': `${delay}ms`, '--rise': `${rise}px`, '--duration': `${duration}ms` },
   }
 }
 
-function CarrierCard({ result, rank, shipment, declined, canRequest, onRequest }) {
+// Which parcels' results have already arrived in this tab (so the wave
+// plays once per parcel). If storage is blocked, the wave simply plays.
+const SEEN_KEY = 'raastashare:results-seen'
+function resultsSeen(id) {
+  try { return JSON.parse(sessionStorage.getItem(SEEN_KEY) || '[]').includes(id) } catch { return false }
+}
+function markResultsSeen(id) {
+  try {
+    const seen = JSON.parse(sessionStorage.getItem(SEEN_KEY) || '[]')
+    if (!seen.includes(id)) sessionStorage.setItem(SEEN_KEY, JSON.stringify([...seen, id]))
+  } catch { /* storage blocked */ }
+}
+
+function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onRequest }) {
   const { journey, rules, eligible, score } = result
   const usedPercent = Math.round((shipment.weightKg / journey.spareKg) * 100)
   const showChips = eligible && !declined // passed everything: keep it compact
@@ -66,8 +97,8 @@ function CarrierCard({ result, rank, shipment, declined, canRequest, onRequest }
       data-testid="carrier-card"
       data-carrier={journey.carrierName}
       data-eligible={eligible && !declined}
-      className={`card ${arrival(rank).className ?? ''} ${rank === 1 ? 'border-2 border-brand-ink' : ''}`}
-      style={arrival(rank).style}
+      className={`card ${arrival(rank, wave).className ?? ''} ${rank === 1 ? 'border-2 border-brand-ink' : ''}`}
+      style={arrival(rank, wave).style}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
@@ -102,7 +133,7 @@ function CarrierCard({ result, rank, shipment, declined, canRequest, onRequest }
             {rules.map((rule) => <PassChip key={rule.key} rule={rule} />)}
           </ul>
           <details className="rule-details group mt-3">
-            <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-lg font-bold text-brand-ink
+            <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-lg font-bold text-brand-ink active:opacity-70
                                 [&::-webkit-details-marker]:hidden">
               <span className="group-open:hidden">See details</span>
               <span className="hidden group-open:inline">Hide details</span>
@@ -154,6 +185,13 @@ export default function Matches({ state, save, id }) {
   const shipments = [...state.shipments].reverse()
   // Show the shipment named in the address bar, or the newest one.
   const shipment = shipments.find((s) => s.id === id) || shipments[0]
+
+  // Does this parcel's wave play? Decided when its results are first shown
+  // (and again when another parcel is picked), then remembered for the tab.
+  const [wave, setWave] = useState(() => ({ id: shipment?.id, on: Boolean(shipment) && !resultsSeen(shipment.id) }))
+  if (shipment && wave.id !== shipment.id) setWave({ id: shipment.id, on: !resultsSeen(shipment.id) })
+  const shipmentId = shipment?.id
+  useEffect(() => { if (shipmentId) markResultsSeen(shipmentId) }, [shipmentId])
 
   if (!shipment) {
     return (
@@ -243,8 +281,9 @@ export default function Matches({ state, save, id }) {
       </section>
 
       {/* The published score formula (transparency) */}
-      <details className="card mb-6">
-        <summary className="flex min-h-11 cursor-pointer items-center font-bold">How the score is calculated</summary>
+      {/* Opens smoothly, like "See details" on each card (.rule-details) */}
+      <details className="rule-details card mb-6">
+        <summary className="flex min-h-11 cursor-pointer items-center font-bold active:opacity-70">How the score is calculated</summary>
         <ul className="mt-3 list-disc space-y-1 pl-5">
           <li>Time buffer: 50 points if the carrier departs at least 6 hours before your deadline, otherwise 25.</li>
           <li>Capacity fit: 50 × (parcel kg ÷ carrier spare kg). A fuller fit scores higher.</li>
@@ -270,7 +309,7 @@ export default function Matches({ state, save, id }) {
           <>
             <ol className="space-y-4" key={shipment.id}>
               {shownOffered.map((result, index) => (
-                <CarrierCard key={result.journey.id} result={result} rank={index + 1}
+                <CarrierCard key={result.journey.id} result={result} rank={index + 1} wave={wave.on}
                   shipment={shipment} canRequest={canRequest} onRequest={handleRequest} />
               ))}
             </ol>

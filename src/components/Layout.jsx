@@ -30,7 +30,7 @@ function menuFor(role) {
 // The RaastaShare logo: two stops joined by a road.
 function Logo() {
   return (
-    <a href="#/home" className="flex min-h-11 min-w-0 items-center gap-2 font-display text-xl font-bold text-white sm:text-2xl">
+    <a href="#/home" className="flex min-h-11 min-w-0 items-center gap-2 font-display text-xl font-bold text-white active:opacity-80 sm:text-2xl">
       <svg width="36" height="20" viewBox="0 0 36 20" aria-hidden="true" className="shrink-0">
         <path d="M6 10h24" stroke="white" strokeWidth="3" strokeDasharray="4 3" />
         <circle cx="6" cy="10" r="5" fill="white" />
@@ -58,7 +58,7 @@ function ThemeSwitch() {
   return (
     <button type="button" onClick={handleClick} data-testid="theme-switch"
       aria-label={`Switch to ${next} theme`} title={`Switch to ${next} theme`}
-      className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-lg text-white hover:bg-brand-dark">
+      className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-lg text-white hover:bg-brand-dark active:bg-brand-dark">
       {next === 'dark' ? <MoonIcon size={22} /> : <SunIcon size={22} />}
     </button>
   )
@@ -162,7 +162,7 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
 
       {/* Phone navigation: a tab bar fixed to the bottom of the screen. The
           padding keeps the tabs above an iPhone's home bar. */}
-      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-10 flex overflow-hidden border-t border-line bg-surface md:hidden"
+      <nav aria-label="Main" className="tabbar fixed inset-x-0 bottom-0 z-10 flex border-t border-line bg-surface [overflow-x:clip] md:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
         {[...menu.own, ...menu.team].map((item, index) => (
           <a

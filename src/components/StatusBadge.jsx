@@ -19,11 +19,15 @@ const COLOURS = {
   waiting: 'bg-hold-tint text-hold-ink border-hold',
 }
 
+// Printed flat, like a stamp on the label: no shadow and no press effect, so it
+// is never mistaken for a button. Small bold type gets a touch of extra letter
+// spacing and a tight line height, so every badge is the same height and stays
+// on one line; numbers (e.g. "PKR 500 frozen") use equal-width digits.
 export default function StatusBadge({ status }) {
   const colours = COLOURS[statusTone(status)]
 
   return (
-    <span data-testid="status" className={`inline-block rounded-full border px-3 py-0.5 text-sm font-bold transition-colors duration-200 ${colours}`}>
+    <span data-testid="status" className={`inline-flex items-center whitespace-nowrap rounded-full border px-3 py-1 text-sm font-bold leading-tight tracking-[0.01em] tabular-nums transition-colors duration-200 ${colours}`}>
       {status}
     </span>
   )

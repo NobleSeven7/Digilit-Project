@@ -39,6 +39,17 @@ const STILL_MOVING = [
   DELIVERY.AWAITING_ACCEPT, DELIVERY.AWAITING_PICKUP, DELIVERY.IN_TRANSIT, DELIVERY.DISPUTED,
 ]
 
+// "Accepted" where the Accept button was. When it has just been pressed, the
+// badge settles in from the right (the button's side) instead of replacing
+// the button in one frame (.settle-in in src/index.css).
+function AcceptedBadge({ animate }) {
+  return (
+    <span className={`inline-block ${animate ? 'settle-in origin-right' : ''}`}>
+      <StatusBadge status="Accepted" />
+    </span>
+  )
+}
+
 // A 4-digit code input with its confirm button. onSubmit returns false for a
 // wrong code, and the box then shakes.
 function CodeForm({ id, label, buttonText, onSubmit }) {
@@ -54,7 +65,7 @@ function CodeForm({ id, label, buttonText, onSubmit }) {
       <label className="label" htmlFor={id}>{label}</label>
       <div className="flex flex-wrap gap-3">
         <input id={id} ref={input} className="field w-36 text-center text-2xl tracking-[0.3em]"
-          inputMode="numeric" maxLength={4} autoComplete="one-time-code" value={code}
+          inputMode="numeric" enterKeyHint="go" maxLength={4} autoComplete="one-time-code" value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
         <button type="submit" className="btn btn-primary" data-testid={`${id}-submit`}>
           {buttonText}
@@ -90,6 +101,17 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
   const deliveries = [...state.deliveries].reverse() // newest first
   const delivery = deliveries.find((d) => d.id === id) || deliveries[0]
+
+  // Motion is only for what changes while this page is open: a step card
+  // rises in when the step changes, and an "Accepted" badge settles in when
+  // someone accepts. Opening the page (or another delivery) shows everything
+  // in place. So remember how the delivery looked when it was opened.
+  const snapshot = (d) => ({ id: d?.id, status: d?.status, senderAccepted: d?.senderAccepted, carrierAccepted: d?.carrierAccepted })
+  const [opened, setOpened] = useState(() => snapshot(delivery))
+  if (delivery && opened.id !== delivery.id) setOpened(snapshot(delivery))
+  const sameDelivery = delivery && opened.id === delivery.id
+  const rise = sameDelivery && delivery.status !== opened.status ? 'enter-rise' : ''
+  const justAccepted = (who) => sameDelivery && delivery[`${who}Accepted`] && !opened[`${who}Accepted`]
 
   if (!delivery) {
     return (
@@ -155,7 +177,9 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
         senderAccepted, carrierAccepted, pickupOtp, deliveryOtp,
         status: DELIVERY.AWAITING_PICKUP, escrow: ESCROW.HELD,
       })
-      setMessage({ ok: true, text: `Match confirmed. ${amount} is now held in escrow.` })
+      // Booked: the one moment both sides have said yes. The message carries
+      // the success tick (see below).
+      setMessage({ ok: true, booked: true, text: `Match confirmed. ${amount} is now held in escrow.` })
       sendToWebhook('match', { ...record, escrow: ESCROW.HELD },
         `Match accepted: ${shipment.senderName} and ${journey.carrierName}`)
     } else {
@@ -337,14 +361,21 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
           {/* Result of the last action */}
           {message && (
             <p role="alert" data-testid="delivery-message" key={message.text}
-              className={`enter-fade rounded-lg px-4 py-3 font-bold ${message.ok ? 'bg-brand-tint text-brand-ink' : 'bg-fail-tint text-fail'}`}>
-              {message.text}
+              className={`rounded-lg px-4 py-3 font-bold ${message.booked ? 'fade-in-quick flex items-center gap-3' : 'enter-fade'} ${
+                message.ok ? 'bg-brand-tint text-brand-ink' : 'bg-fail-tint text-fail'}`}>
+              {/* Booked: the message appears quickly (150ms) so it does not hold
+                  the tick back; the tick grows in, its check draws, and phones
+                  that can vibrate tap twice as the check completes. The pickup
+                  card and the tracker's road move at the same moment, so the
+                  whole page answers the second "Accept" as one change. */}
+              {message.booked && <SuccessTick animate />}
+              {message.booked ? <span>{message.text}</span> : message.text}
             </p>
           )}
 
           {/* Step 1: both sides accept */}
           {delivery.status === DELIVERY.AWAITING_ACCEPT && (
-            <section className="card enter-rise" data-testid="step-accept">
+            <section className={`card ${rise}`} data-testid="step-accept">
               <h2 className="text-xl font-bold">Accept the match</h2>
               <p className="mt-1 text-muted">
                 Both people must accept before any money moves. You can only answer for the
@@ -354,7 +385,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
                 {/* The sender's row: only the sender can accept here */}
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-sunk px-3 py-3">
                   <p><strong>{shipment.senderName}</strong> (sender)</p>
-                  {delivery.senderAccepted ? <StatusBadge status="Accepted" />
+                  {delivery.senderAccepted ? <AcceptedBadge animate={justAccepted('sender')} />
                     : isSender ? (
                       <button type="button" className="btn btn-primary" data-testid="accept-sender"
                         onClick={() => handleAccept('sender')}>Accept</button>
@@ -368,7 +399,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
                 {/* The carrier's row: only the carrier can accept or decline here */}
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-sunk px-3 py-3">
                   <p><strong>{journey.carrierName}</strong> (carrier)</p>
-                  {delivery.carrierAccepted ? <StatusBadge status="Accepted" />
+                  {delivery.carrierAccepted ? <AcceptedBadge animate={justAccepted('carrier')} />
                     : isCarrier ? (
                       <div className="flex flex-wrap gap-3">
                         <button type="button" className="btn btn-primary" data-testid="accept-carrier"
@@ -396,7 +427,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
           {/* Step 2: pickup code */}
           {delivery.status === DELIVERY.AWAITING_PICKUP && (
-            <section className="card enter-rise" data-testid="step-pickup">
+            <section className={`card ${rise}`} data-testid="step-pickup">
               <h2 className="text-xl font-bold">Pickup</h2>
               <p className="mt-1 text-muted">
                 {isolate(shipment.senderName)} reads this code to {isolate(journey.carrierName)} when handing over the parcel.
@@ -416,7 +447,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
           {/* Step 3: delivery code */}
           {delivery.status === DELIVERY.IN_TRANSIT && (
-            <section className="card enter-rise" data-testid="step-delivery">
+            <section className={`card ${rise}`} data-testid="step-delivery">
               <h2 className="text-xl font-bold">Delivery</h2>
               <p className="mt-1 text-muted">
                 The receiver reads this code to {isolate(journey.carrierName)} once the parcel arrives safely.
@@ -436,7 +467,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
           {/* Finished states */}
           {delivery.status === DELIVERY.DELIVERED && (
-            <section className="card enter-rise border-brand-ink bg-brand-tint" data-testid="step-done">
+            <section className={`card ${rise} border-brand-ink bg-brand-tint`} data-testid="step-done">
               {/* The tick draws itself only right after the delivery code is
                   confirmed, not every time a finished delivery is opened. */}
               <h2 className="flex items-center gap-3 text-xl font-bold text-brand-ink">
@@ -456,14 +487,14 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
             </section>
           )}
           {delivery.status === DELIVERY.DISPUTED && (
-            <section className="card enter-rise border-fail bg-fail-tint">
+            <section className={`card ${rise} border-fail bg-fail-tint`}>
               <h2 className="text-xl font-bold text-fail">Under admin review</h2>
               <p className="mt-1">{delivery.disputeReason}. The payment is frozen until a person decides.</p>
               <a href="#/admin" className="btn btn-secondary mt-4">Open admin</a>
             </section>
           )}
           {delivery.status === DELIVERY.DECLINED && (
-            <section className="card enter-rise">
+            <section className={`card ${rise}`}>
               <h2 className="text-xl font-bold">{delivery.expired ? 'Request expired' : 'Carrier declined'}</h2>
               <p className="mt-1">
                 {delivery.expired
@@ -475,7 +506,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
             </section>
           )}
           {delivery.status === DELIVERY.REFUNDED && (
-            <section className="card enter-rise">
+            <section className={`card ${rise}`}>
               <h2 className="text-xl font-bold">Refunded</h2>
               <p className="mt-1">An admin reviewed the dispute and returned {amount} to {isolate(shipment.senderName)}.</p>
             </section>
@@ -490,6 +521,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
           )}
           {active && reporting && (
             <section className="card enter-rise border-fail" data-testid="report-form">
+              {/* Opened by pressing "Report a problem", so it always rises in. */}
               <h2 className="text-xl font-bold">Report a problem</h2>
               <p className="mt-1">
                 {amount} will be frozen until a person on the Admin page decides who gets it.
@@ -520,7 +552,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
         {/* Escrow panel */}
         <aside className="card h-fit" data-testid="escrow-panel">
           <h2 className="text-xl font-bold">Escrow</h2>
-          <p className="mt-2 font-display text-4xl font-bold text-brand-ink">{amount}</p>
+          <p className="mt-2 font-display text-4xl font-bold tabular-nums text-brand-ink">{amount}</p>
           <p className="mt-2" data-testid="escrow-status"><StatusBadge status={delivery.escrow} /></p>
           <p className="mt-3 text-sm text-muted">
             Escrow means RaastaShare holds the money safely: it is held when both sides
