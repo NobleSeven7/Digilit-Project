@@ -1336,3 +1336,32 @@ so the work builds on the latest app. Not merged to `main`.
   - axe on all 8 pages in both themes;
   - no sideways scrolling at 390px and 1440px;
   - full-page screenshots at both widths.
+
+## Stage 48: break-ui fixes on the new home sections (branch ccr-7df6bb23-nw9pnq)
+
+The six problems the worst-case data found, all fixed, with the team's
+choices (stack the hero halves; hide an empty routes list):
+
+1. **A city without a code** shows its name ("ISB → Mandi Bahauddin"), not "ISB →".
+2. **An unknown road time** (a pair missing from the trip-time table gives
+   0) is left out, instead of "about undefined hours" or "about 0 minutes".
+3. **The hero split** puts the halves side by side while each has at least
+   10rem, and stacks them when there is not room (for example at 200% text
+   size, where "Traveller" was cut off). The rule between them is a 1px gap,
+   so it works across or down.
+4. **No routes:** the "Routes we cover" section is left out.
+5. **Counts from the data:** the line under the heading counts the routes
+   and cities ("the seven other cities", "one other city") instead of
+   having them typed in.
+6. **A trust fact with no detail** has no empty line under it.
+
+- **Still open, not part of this work:** at 200% text size the page scrolls
+  sideways because of older parts of the page: the profile picker, the hero
+  headline (the long word "someone") and the example parcel pass. With the
+  headline allowed to wrap, every new section fits.
+- **Checked:**
+  - build, all 12 tests, the design check, and axe on all pages in both themes;
+  - all four toggle states at 320px, 390px and 1440px, at 200% text size and
+    in dark mode;
+  - the demo data looks as before, apart from "Sender" now being indented to
+    match "Traveller".

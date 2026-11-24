@@ -27,14 +27,14 @@ const DEMO_KG = 5
 
 // One half of the "who are you?" split: the role, one line on what you do
 // there, and an arrow. The two halves sit side by side between thin rules
-// (no boxes). Pressing one darkens it at once (feedback on press, colour only,
+// (no boxes; they stack when there is not room for both). Pressing one darkens it at once (feedback on press, colour only,
 // 100ms, so it works the same with a finger or a mouse; it stays with reduced
 // motion, since nothing moves).
 function ChoiceRow({ href, testId, title, text, onClick }) {
   return (
     <a href={href} data-testid={testId} onClick={onClick}
-      className="flex min-h-32 min-w-0 flex-col justify-between gap-3 px-4 py-4 text-ink no-underline transition-colors
-                 duration-100 ease-[ease] first:pl-0 hover:bg-surface/60 active:bg-sunk">
+      className="flex min-h-32 min-w-0 flex-col justify-between gap-3 bg-paper px-4 py-4 text-ink no-underline transition-colors
+                 duration-100 ease-[ease] hover:bg-surface active:bg-sunk">
       <span className="min-w-0">
         <span className="block font-display text-2xl font-bold text-brand-ink sm:text-3xl">{title}</span>
         <span className="mt-1 block text-sm text-muted">{text}</span>
@@ -61,7 +61,7 @@ function TrustStrip({ items }) {
       {items.map(({ fact, detail }) => (
         <li key={fact} className="min-w-0 py-4 sm:px-5 sm:first:pl-0">
           <p className="font-bold text-ink">{fact}</p>
-          <p className="mt-1 text-sm text-muted">{detail}</p>
+          {detail && <p className="mt-1 text-sm text-muted">{detail}</p>}
         </li>
       ))}
     </ul>
@@ -77,31 +77,41 @@ const ROUTES = CITIES.filter((city) => city !== HUB).map((to) => ({
 }))
 
 // Road time in plain words: "about 30 minutes", "about 4.5 hours". The times
-// are approximate (see tripHours in constants.js).
+// are approximate (see tripHours in constants.js). Unknown (a pair missing
+// from the table gives 0) means no time is shown at all.
 function roadTime(hours) {
+  if (!(hours > 0)) return null
   return hours < 1 ? `about ${Math.round(hours * 60)} minutes` : `about ${hours} hours`
 }
+
+// Small counts as words ("seven"), larger ones as digits.
+const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']
+const inWords = (n) => WORDS[n] ?? String(n)
 
 function RouteList({ routes, onChoose }) {
   return (
     <ul data-testid="route-list" className="mt-8 border-t border-line">
-      {routes.map(({ from, to, fromCode, toCode, hours }) => (
+      {routes.map(({ from, to, fromCode, toCode, hours }) => {
+        const time = roadTime(hours)
+        return (
         <li key={to}>
           <a href="#/sender" onClick={onChoose} data-testid="route-link"
             className="flex min-h-16 items-center gap-4 border-b border-line py-3 text-ink no-underline transition-colors
                        duration-100 ease-[ease] hover:bg-surface/60 active:bg-sunk">
             <span className="min-w-0 flex-1">
               <span aria-hidden="true" className="block font-display text-2xl font-bold text-brand-ink">
-                {fromCode} → {toCode}
+                {/* A city without a code yet shows its name instead */}
+                {fromCode || from} → {toCode || to}
               </span>
               <span className="mt-0.5 block text-sm text-muted">
-                {from} to {to}, {roadTime(hours)} by road
+                {from} to {to}{time && `, ${time} by road`}
               </span>
             </span>
             <span className="shrink-0 text-brand-ink"><ArrowRightIcon size={22} /></span>
           </a>
         </li>
-      ))}
+        )
+      })}
     </ul>
   )
 }
@@ -280,7 +290,10 @@ export default function Home({ profile, setProfile }) {
 
           {/* The two profile choices, split side by side (simulated accounts:
               no login needed). Same links and profile switch as before. */}
-          <div className="hero-enter mt-7 grid max-w-md grid-cols-2 divide-x divide-line border-y border-line [--d:150ms]">
+          {/* Side by side while each half has at least 10rem; with large text
+              (10rem grows with it) the halves stack. The 1px gap over a line-coloured
+              background draws the rule between them, across or down. */}
+          <div className="hero-enter mt-7 grid max-w-md grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-px border-y border-line bg-line [--d:150ms]">
             <ChoiceRow href="#/sender" testId="choose-sender" onClick={become('sender')}
               title="Sender" text="Post a parcel and pick who takes it" />
             <ChoiceRow href="#/carrier" testId="choose-carrier" onClick={become('carrier')}
@@ -304,14 +317,19 @@ export default function Home({ profile, setProfile }) {
         </ol>
       </section>
 
-      {/* Routes we cover: one list, no cards. Each route opens the Send page. */}
-      <section>
-        <h2 className="text-4xl font-bold sm:text-6xl">Routes we cover</h2>
-        <p className="mt-2 max-w-2xl text-lg text-muted">
-          From Islamabad to the seven other cities. Any two of the eight work the same way.
-        </p>
-        <RouteList routes={routes} onChoose={become('sender')} />
-      </section>
+      {/* Routes we cover: one list, no cards. Each route opens the Send page.
+          With no routes the section is left out (an empty list says nothing);
+          the counts in the line under the heading come from the data. */}
+      {routes.length > 0 && (
+        <section>
+          <h2 className="text-4xl font-bold sm:text-6xl">Routes we cover</h2>
+          <p className="mt-2 max-w-2xl text-lg text-muted">
+            From {routes[0].from} to {routes.length === 1 ? 'one other city' : `the ${inWords(routes.length)} other cities`}.
+            {' '}Any two of the {inWords(CITIES.length)} work the same way.
+          </p>
+          <RouteList routes={routes} onChoose={become('sender')} />
+        </section>
+      )}
 
       {/* A real photo: the trips already happen, with room to spare.
           Hidden on phones (below sm): it adds length, not information. */}
