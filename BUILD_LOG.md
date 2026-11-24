@@ -1453,3 +1453,22 @@ timestamps a minute apart).
   - all 12 tests pass, and the design check and axe on all pages in both
     themes are clean;
   - all 8 pages: 0px sideways at 200%.
+
+## Stage 53: very large text on tablets (the header)
+
+From 768px (where the full menu bar replaces the phone tab bar) up to about
+1180px, doubled text made the header too wide: 338px sideways at 768px,
+206px at 900px and 82px at 1024px, on every page. At 768px the menu was also
+drawn over the logo.
+
+- **Header** (`Layout.jsx`): the header row and the menu may wrap. When the
+  menu does not fit beside the logo it moves onto its own line, and its links
+  wrap if needed. At normal text sizes everything fits on one line as before
+  (the header is pixel-identical at 390px, 768px, 1024px and 1440px).
+- **Known compromise:** at tablet width with doubled text, the light/dark
+  switch ends up alone on the header's last line. Moving it up would mean
+  rearranging the header, with a risk to how it looks at normal sizes.
+- **Checked:**
+  - all 8 pages at 390, 640, 768, 900, 1024, 1180 and 1440px with text at
+    200%: 0px sideways everywhere;
+  - all 12 tests pass, and the design check and axe in both themes are clean.

@@ -107,7 +107,10 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
     <div className="flex min-h-dvh flex-col">
       {/* Header (on phones it stays at the top and hides while scrolling down) */}
       <header className="site-header bg-brand" data-hidden={headerHidden}>
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 safe-x py-3 sm:gap-4">
+        {/* flex-wrap: if the menu does not fit beside the logo (very large text
+            on a tablet), it moves onto its own line instead of pushing the
+            page sideways. At normal sizes everything fits on one line. */}
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-2 gap-y-2 safe-x py-3 sm:gap-x-4">
           <Logo />
           {/* Phones: show which page you are on */}
           <div className="flex shrink-0 items-center gap-1 md:order-last">
@@ -120,7 +123,7 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
           </div>
           {/* Desktop navigation (hidden on phones). The current page is a white tab
               with a short amber bar under its name; the others are plain text. */}
-          <nav aria-label="Main" className="hidden items-center gap-1 md:ml-auto md:flex">
+          <nav aria-label="Main" className="hidden flex-wrap items-center gap-1 md:ml-auto md:flex">
             {[...menu.own, ...menu.team].map((item, index) => (
               <a
                 key={item.page}
