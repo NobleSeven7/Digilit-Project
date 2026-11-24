@@ -1201,3 +1201,59 @@ The fixes from the Stage 42 reviews.
 - **Checked:** all 12 tests pass, and axe is clean on all 8 pages in both
   themes. Before/after screenshots were taken of the Send page, Home and the
   Dashboard, and in more-contrast mode.
+
+## Stage 44: animation audit, removals, choreography, booked tick, mobile
+
+Done in order, using Emil Kowalski's animation skills and Apple's guidance.
+
+1. **Audit (deep):** ten findings. Five became plans in `plans/` (001–004,
+   with plan 003 covering two findings); their status is in
+   `plans/README.md`.
+2. **Removed:**
+   - the page fade between in-app pages (the most frequent action, so any
+     fade read as delay);
+   - the scroll reveals on Home's "How it works" steps (they held the content
+     back);
+   - the Dashboard delivery cards' hover lift and shadow (now a border-colour
+     change only).
+   Shortened: the tracker road (450 → 350ms) and the Admin reorder
+   (380 → 250ms; the page cannot be clicked while it runs).
+3. **Animate only what is new:** Delivery step cards rise only when the step
+   changes while the page is open, and an "Accepted" badge settles in only
+   just after someone accepts. Opening or revisiting a page shows everything
+   in place.
+4. **Five small answers to an action:**
+   - inline form errors drop 2px into place;
+   - the "which item type?" question unfolds from where "Post parcel" was;
+   - "Accepted" settles in from the Accept button's side;
+   - "How the score is calculated" opens smoothly;
+   - the checklist tick appears at 5 of 5.
+   All 150–200ms on the ease-out curve.
+5. **Matches results as one wave:** the best match leads (12px, 280ms),
+   options 2 and 3 follow at 60 and 100ms with less travel, and options 4 and
+   5 fade in with option 3. It is over in 300ms and plays only the first time
+   a parcel's results appear in the tab. Cards revealed by "Show all" fade in
+   together.
+6. **Booked:** when both sides have accepted, the "Match confirmed" message
+   carries the success tick:
+   - the message appears in 150ms and the circle settles from 90%;
+   - the check finishes about 0.6s after the press, and phones that can
+     vibrate tap twice on that frame;
+   - the pickup card and the tracker road move at the same moment.
+   The tick now starts at 90% everywhere (it was 60%).
+7. **Review fixes:** the question panel unfolds from its top edge, where the
+   button was. Quick fades drop 2px instead of only fading. Card rises default
+   to 280ms (was 360ms).
+8. **Mobile:**
+   - the phone status bar colour (`theme-color`) and the tab icon were still
+     the old green; they now match the header in both themes;
+   - the theme switch, the logo and "See details" get a pressed state;
+   - the code box's return key says "Go";
+   - long-pressing a checklist row no longer selects its text.
+
+- **Checked:** all 12 tests pass, and axe is clean on all 8 pages in both
+  themes. Playwright confirmed:
+  - the Matches wave timings (0/60/100ms), with nothing animating on a
+    revisit;
+  - no page fade;
+  - the booked haptic firing on the same millisecond the check completes.

@@ -65,7 +65,7 @@ function CodeForm({ id, label, buttonText, onSubmit }) {
       <label className="label" htmlFor={id}>{label}</label>
       <div className="flex flex-wrap gap-3">
         <input id={id} ref={input} className="field w-36 text-center text-2xl tracking-[0.3em]"
-          inputMode="numeric" maxLength={4} autoComplete="one-time-code" value={code}
+          inputMode="numeric" enterKeyHint="go" maxLength={4} autoComplete="one-time-code" value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
         <button type="submit" className="btn btn-primary" data-testid={`${id}-submit`}>
           {buttonText}

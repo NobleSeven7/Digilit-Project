@@ -137,8 +137,10 @@ a, button, summary, label, select, [role="button"] {
   touch-action: manipulation;
 }
 /* Holding a finger on a button or tab should not select its words.
-   Only controls: normal text stays selectable. */
-.btn, nav a, summary {
+   Only controls: normal text stays selectable. The checklist and problem
+   rows count as controls (the whole row is the tick box's label). */
+.btn, nav a, summary,
+label:has(> input[type="checkbox"]), label:has(> input[type="radio"]) {
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
