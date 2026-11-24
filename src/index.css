@@ -424,7 +424,7 @@ a {
 
 /* Delivery tracker: the green and amber road grows to its new stop. clip-path
    is used instead of width so nothing has to be laid out again. */
-.road-fill { transition: clip-path 350ms var(--ease-in-out); }
+.road-fill { transition: clip-path 250ms var(--ease-in-out); }
 
 /* The one celebration: when the parcel is paid, the last stop settles in as
    the road arrives (the 300ms delay lands it just before the road's 350ms). */
