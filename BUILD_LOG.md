@@ -1093,3 +1093,25 @@ fast, and keep moving parts in step. Eight small fixes:
   motion still turns movement off.
 - **Checked:** all 12 tests pass. Playwright confirmed Back no longer fades and
   that nothing is still animating 0.3 seconds after returning to Home.
+
+## Stage 41: PostHog, honestly
+
+Pull request #38 (from another session) switched PostHog on for the live
+site. A check of the live site found it set two cookies, while the About page
+still said "no cookies, no tracking and no analytics".
+
+- **No cookies:** PostHog keeps its anonymous visitor ID in local storage
+  (`persistence: 'localStorage'`).
+- **Less collected:** "Do Not Track" and "Global Privacy Control" are respected; session replay (screen
+  recording) and surveys are off. Only events, page views and errors are sent.
+- **About page:** a new "Usage statistics" section says what goes to PostHog
+  (EU), that demo people are "demo profile 1–10", and that nothing typed is
+  sent. The old "no tracking and no analytics" line is gone.
+- **Teammates:** with no PostHog key, `npm run dev` now shows a warning and
+  leaves PostHog off, instead of stopping with an error.
+- **README:** a "PostHog usage statistics" setup section, and the 23 November
+  report is corrected.
+- **Checked:** all 12 tests pass. A build with a test key sets no cookies
+  (the old setup set two). In PostHog's own code, `respect_dnt` treats
+  "Do Not Track" and "Global Privacy Control" as opted out, so nothing is
+  captured for those visitors.

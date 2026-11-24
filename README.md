@@ -102,6 +102,22 @@ webhook response. No API key is stored in this app; the key lives in Make.com.
    the three new fields in the Google Sheets module. Checks are logged with
    `event` = `ai_check`.
 
+### Optional: PostHog usage statistics
+
+The app can send anonymous usage events to PostHog (see "Usage statistics" on
+the About page). It is off unless both values are set, and the app works the
+same without them. Locally, add them to `.env.local`:
+
+```
+VITE_POSTHOG_KEY=phc_your_project_token
+VITE_POSTHOG_HOST=https://eu.i.posthog.com
+```
+
+For the live site, add GitHub secrets with the same two names (Settings >
+Secrets and variables > Actions); the deploy workflow passes them to the build.
+The project token is meant to be public (it can only send events), but keep it
+in secrets anyway so the code holds no keys.
+
 ### Optional: connect the live site to Make.com
 
 The live GitHub Pages site gets the webhook URL from a repository secret:
@@ -307,12 +323,21 @@ straight after #37.
   step, so the GitHub Pages deploy failed at `npm ci`. The live site stayed on
   the #37 version. The lock file is now synced, and the Barlow font packages
   the merge brought back (no longer used) were removed again.
-- **Not switched on.** The deploy does not pass a PostHog key, so the live site
-  sends nothing to PostHog. If a key is added, the About page's "no tracking
-  and no analytics" must be changed.
-- **Local development needs a key.** `src/lib/posthog.js` throws an error in
-  development mode (`npm run dev`) when `VITE_POSTHOG_KEY` is missing. Add a
-  key to `.env.local`, or decide as a team to remove PostHog.
+- **Switched on by #38 (24 November update).** A separate pull request, #38,
+  passed the PostHog key and host to the deploy from GitHub secrets, so the
+  live site now sends anonymous usage events to PostHog (EU), and #39 added
+  the parcel reference to delivery events. A check of the live site showed it
+  also set two PostHog cookies, which the About page said it did not.
+- **Fixed in the PostHog privacy pull request.** PostHog now keeps its visitor
+  ID in local storage instead of cookies, respects "Do Not Track" and "Global
+  Privacy Control", and has
+  session replay (screen recording) and surveys turned off. The About page
+  has a "Usage statistics" section saying what is sent: page views, button
+  presses, step events with cities, weights, item types and outcomes, errors
+  and AI-check timings. Demo people are "demo profile 1–10", and nothing typed
+  (not even the item description) is sent.
+- **Local development works without a key.** A missing PostHog key now gives a
+  console warning in `npm run dev` and leaves PostHog off, instead of an error.
 
 ### Before and after the presentation
 
