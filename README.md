@@ -646,9 +646,10 @@ For the presentation (the courier price and step count are our estimates):
 
 ## Work report: 25 November 2026
 
-One small change to the Home page: status notes on the map. Full details are
-in `BUILD_LOG.md`, Stage 55. Pull request #52 was merged and deployed. This
-report was written in a README-only pull request.
+Two small changes: status notes on the Home map, and a shorter delivery
+road on the Delivery tracker. Full details are in `BUILD_LOG.md`, Stages 55
+and 56. Pull requests #52 and #54 were merged and deployed. This report was
+first written in the README-only pull request #53.
 
 ### Status notes on the Home map (#52)
 
@@ -674,6 +675,15 @@ Also looked at, with no change made: 21st.dev, a library of ready-made React
 pieces. Most are TypeScript, need extra libraries, or are the gradients and
 glows our design rules ban, so it is useful for ideas only.
 
+### Delivery road timing (#54)
+
+While checking the old `ccr-7df6bb23-nw9pnq` branch before deleting it, two
+commits turned up that had never reached `main`. They shorten the Delivery
+tracker's road from 350ms to 250ms, and start the last stop's settle at 200ms
+instead of 300ms. Side-by-side recordings showed almost no visible difference
+at real speed, and 250ms brings the road back within DESIGN.md's "300ms or
+less" rule, so the change was taken.
+
 ### Checks
 
 - Before and after screenshots at 390px and 1440px, and in dark mode: no note
@@ -686,6 +696,7 @@ glows our design rules ban, so it is useful for ideas only.
 
 - **Check on a phone:** open Home in a private tab and watch the notes appear
   with the parcel's ride.
+- **Tidy-up:** once #54 is merged, delete the `ccr-7df6bb23-nw9pnq` branch.
 - The items under "Still to do" in the 24 November report still apply.
 
 ## Photo credits
