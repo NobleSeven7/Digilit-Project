@@ -80,6 +80,19 @@ style and the old instruction not to change the design style.
   Why: motion that is short and consistent makes the app feel fast; one
   celebration keeps it special.
   <!-- 2026-11-24: approved the timing findings from the animation audit -->
+- **Named exceptions to the 300ms limit.** Only these may run longer. The
+  check lists them in `LONG_MOTION_ALLOWED` (`scripts/check-design.cjs`), and
+  a new one is added in both places, with its reason:
+  - the success tick and the delivery tracker's "Paid" stop settling (the
+    one celebration);
+  - the Home intro, once per visit: the hero, the route drawing, the city
+    stops and the parcel's ride;
+  - Home's price bars and departure-board code, once per visit;
+  - Home photos fading in once they have loaded;
+  - the bar that shows the AI check's 8-second wait (a timer, not an effect).
+  Why: the 300ms rule was written without them, so the check could not
+  enforce it, and a 350ms delivery road went unnoticed until 25 November.
+  <!-- 2026-11-25: "do 1, 2 and 3" (name the exceptions, check durations) -->
 
 ## Interaction
 

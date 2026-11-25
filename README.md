@@ -702,7 +702,8 @@ less" rule, so the change was taken.
 ## Photo credits
 
 The photo on the Home page comes from Wikimedia Commons. We resized and
-cropped it, and it keeps its original licence:
+cropped it, and printed it as a two-colour halftone (a light and a dark
+version). It and our halftone versions keep its original licence:
 
 - Daewoo Express terminal, Bahawalpur: photo by Ammarkh,
   [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/),

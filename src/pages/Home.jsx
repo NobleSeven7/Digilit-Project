@@ -19,8 +19,10 @@ import sendLight from '../assets/home/step-send-light.webp'
 import sendDark from '../assets/home/step-send-dark.webp'
 import matchLight from '../assets/home/step-match-light.webp'
 import matchDark from '../assets/home/step-match-dark.webp'
-// Photo from Wikimedia Commons (credit under the photo and in the README).
-import terminalPhoto from '../assets/home/photo-daewoo-terminal.webp'
+// Photo from Wikimedia Commons (credit under the photo and in the README),
+// printed as a halftone in label black on kraft (light) and the reverse (dark).
+import terminalPrintLight from '../assets/home/photo-daewoo-terminal-halftone-light.png'
+import terminalPrintDark from '../assets/home/photo-daewoo-terminal-halftone-dark.png'
 
 // The demo case from the proposal.
 const DEMO_KG = 5
@@ -236,7 +238,7 @@ function PhotoCredit({ author, licence, licenceUrl, source, className = '', tone
   return (
     <p className={`text-xs ${tone} ${className}`}>
       Photo: {author}, <a href={licenceUrl} rel="noopener noreferrer" className="underline">{licence}</a>, via{' '}
-      <a href={source} rel="noopener noreferrer" className="underline">Wikimedia Commons</a> (cropped).
+      <a href={source} rel="noopener noreferrer" className="underline">Wikimedia Commons</a> (cropped, printed as a halftone).
     </p>
   )
 }
@@ -342,9 +344,11 @@ export default function Home({ profile, setProfile }) {
       {/* A real photo: the trips already happen, with room to spare.
           Hidden on phones (below sm): it adds length, not information. */}
       <section className="hidden overflow-hidden rounded-2xl bg-brand text-white sm:grid lg:grid-cols-2" data-testid="photo-terminal">
-        <FadeInPhoto src={terminalPhoto} width="1280" height="960" loading="lazy"
-          alt="Travellers carrying bags outside the Daewoo Express bus terminal in Bahawalpur"
-          className="aspect-[4/3] size-full object-cover lg:aspect-auto" />
+        {[[terminalPrintLight, 'shot-light'], [terminalPrintDark, 'shot-dark']].map(([src, theme]) => (
+          <FadeInPhoto key={theme} src={src} width="1280" height="960" loading="lazy"
+            alt="Travellers carrying bags outside the Daewoo Express bus terminal in Bahawalpur"
+            className={`${theme} aspect-[4/3] size-full object-cover lg:aspect-auto`} />
+        ))}
         <div className="self-center px-5 py-9 sm:px-12 sm:py-14">
           <h2 className="text-4xl font-bold sm:text-6xl">Already on the road</h2>
           <p className="mt-4 max-w-md text-lg text-on-brand-soft">
