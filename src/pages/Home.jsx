@@ -122,8 +122,8 @@ function RouteList({ routes, onChoose }) {
 
 // One line of the price comparison: a name, a price, and a bar drawn to scale.
 // It sits on the green band, so everything is white.
-// The bar fills from the left when the band scrolls into view (.bar-grow).
-function PriceRow({ name, note, price, highlight, order }) {
+// The bars are drawn at once (no scroll-in fill: DESIGN.md > Motion).
+function PriceRow({ name, note, price, highlight }) {
   return (
     <li>
       <div className="flex items-end justify-between gap-4">
@@ -136,8 +136,8 @@ function PriceRow({ name, note, price, highlight, order }) {
         </p>
       </div>
       <div className="mt-3 h-4 rounded-full bg-white/15" aria-hidden="true">
-        <div className={`bar-grow h-4 rounded-full ${highlight ? 'bg-hold' : 'bg-white/45'}`}
-          style={{ width: `${(price / COURIER_FEE) * 100}%`, '--i': order }} />
+        <div className={`h-4 rounded-full ${highlight ? 'bg-hold' : 'bg-white/45'}`}
+          style={{ width: `${(price / COURIER_FEE) * 100}%` }} />
       </div>
     </li>
   )
@@ -264,9 +264,6 @@ export default function Home({ profile, setProfile }) {
     try { sessionStorage.setItem(INTRO_KEY, '1') } catch { /* storage blocked */ }
   }, [])
 
-  // The price bars fill once they are on screen.
-  const [pricesRef, pricesSeen] = useSeenOnce()
-
   // Choosing a side also signs you in as a demo person with that role
   // (unless you already have it).
   const become = (role) => () => {
@@ -361,8 +358,7 @@ export default function Home({ profile, setProfile }) {
       </section>
 
       {/* Price comparison from the proposal, on a band of motorway green */}
-      <section ref={pricesRef}
-        className={`rounded-2xl bg-brand px-5 py-9 text-white sm:px-12 sm:py-14 ${pricesSeen ? 'is-seen' : ''}`}>
+      <section className="rounded-2xl bg-brand px-5 py-9 text-white sm:px-12 sm:py-14">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-4xl font-bold sm:text-6xl">What it costs</h2>
@@ -374,8 +370,8 @@ export default function Home({ profile, setProfile }) {
           </span>
         </div>
         <ul className="mt-9 space-y-9">
-          <PriceRow name="Courier" note="Our estimate of a typical quote" price={COURIER_FEE} order={0} />
-          <PriceRow name="RaastaShare" highlight order={1} price={calculatePrice(DEMO_KG)}
+          <PriceRow name="Courier" note="Our estimate of a typical quote" price={COURIER_FEE} />
+          <PriceRow name="RaastaShare" highlight price={calculatePrice(DEMO_KG)}
             note={`${formatPKR(BASE_FEE)} base + ${formatPKR(FEE_PER_KG)} × ${DEMO_KG} kg`} />
         </ul>
       </section>

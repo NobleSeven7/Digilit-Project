@@ -90,7 +90,6 @@ const LONG_MOTION_ALLOWED = {
   '.route-draw': 'Home map intro, once per visit',
   '.stop-enter': 'Home map intro, once per visit',
   '.map-parcel': 'Home map intro, once per visit',
-  '.bar-grow': 'Home price bars, once per visit',
   '.code-roll': 'Home departure-board code, once per visit',
   '.photo-fade': 'Home photos fading in once loaded',
   '.stop-settle': 'the delivery celebration (paid)',

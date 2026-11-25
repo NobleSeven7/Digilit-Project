@@ -395,11 +395,10 @@ a {
 
 /* The intro plays once per visit; coming back to Home shows the finished
    picture at once (src/pages/Home.jsx sets .intro-done). The scroll
-   animations further down (the price bars and the example code) also show
+   animation further down (the example code) also shows
    finished after the first visit: the same values as the reduced-motion
    block, so it is "finished, no motion". */
 .intro-done :is(.hero-enter, .route-draw, .stop-enter, .map-parcel) { animation: none; }
-.intro-done .bar-grow { clip-path: none; transition: none; }
 .intro-done .code-roll > span { translate: 0 var(--end); transition: none; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -517,15 +516,6 @@ html[data-transition="theme"]::view-transition-group(*) { animation-duration: 30
 @keyframes theme-out { to { opacity: 0; } }
 @keyframes theme-in { from { opacity: 0; } }
 
-/* Home, "What it costs": each bar fills from the left once the band is on
-   screen, the courier first, then RaastaShare stopping at half. */
-.bar-grow {
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path 900ms var(--ease-out);
-  transition-delay: calc(150ms + var(--i, 0) * 300ms);
-}
-.is-seen .bar-grow { clip-path: inset(0); }
-
 /* Home, "How it works": each screenshot comes in a light and a dark copy;
    only the one for the current theme is shown (and, being lazy, loaded). */
 .shot-dark { display: none; }
@@ -593,7 +583,6 @@ html[data-theme="dark"] .shot-dark { display: block; }
 /* Less motion: the finished picture straight away; the tick just fades in.
    (The wrong-code shake is skipped in src/lib/motion.js.) */
 @media (prefers-reduced-motion: reduce) {
-  .bar-grow { clip-path: none; transition: none; }
   .code-roll > span { translate: 0 var(--end); transition: none; }
   .photo-fade { transition: none; }
   .site-header { transition: none; }
