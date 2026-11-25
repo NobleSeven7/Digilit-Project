@@ -325,7 +325,25 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
       if (posthogEnabled) posthog.capture('pickup_confirmed', { shipment_ref: shipment.id })
       setMessage({ ok: true, text: 'Pickup confirmed. The parcel is on its way.' })
     } else {
-      setMessage({ ok: false, text: `Wrong pickup code. The parcel has not been handed over. Ask ${isolate(shipment.senderName)} to read the code again.` })
+      // Wrong code: the parcel is not handed over. Like the delivery code,
+      // after MAX_CODE_TRIES wrong codes the delivery goes to an admin
+      // (escrow frozen), so the 4-digit code cannot simply be guessed.
+      const tries = (delivery.wrongPickupAttempts ?? 0) + 1
+      if (tries >= MAX_CODE_TRIES) {
+        const reason = `${MAX_CODE_TRIES} wrong pickup codes were entered`
+        update(
+          { wrongPickupAttempts: tries, status: DELIVERY.DISPUTED, escrow: ESCROW.FROZEN, disputeReason: reason },
+          { status: STATUS.DISPUTED },
+        )
+        setMessage({ ok: false, text: `Wrong pickup code again. After ${MAX_CODE_TRIES} wrong codes, ${amount} is frozen and an admin will check this delivery.` })
+        if (posthogEnabled) posthog.capture('delivery_disputed', { shipment_ref: shipment.id, dispute_source: 'maximum_pickup_code_attempts' })
+        sendToWebhook('dispute', { ...record, escrow: ESCROW.FROZEN },
+          `Dispute raised: ${reason}, ${shipment.origin} to ${shipment.destination}`)
+      } else {
+        const left = MAX_CODE_TRIES - tries
+        update({ wrongPickupAttempts: tries })
+        setMessage({ ok: false, text: `Wrong pickup code. The parcel has not been handed over. ${left} ${left === 1 ? 'try' : 'tries'} left. Ask ${isolate(shipment.senderName)} to read the code again.` })
+      }
       return false
     }
   }
@@ -616,6 +634,11 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
             accept and paid to the carrier only when the correct delivery code is entered.
             The payment is simulated in this demo.
           </p>
+          {(delivery.wrongPickupAttempts ?? 0) > 0 && delivery.escrow === ESCROW.HELD && (
+            <p className="mt-2 text-sm text-fail">
+              Wrong pickup codes entered: {delivery.wrongPickupAttempts} of {MAX_CODE_TRIES}
+            </p>
+          )}
           {delivery.wrongAttempts > 0 && delivery.escrow === ESCROW.HELD && (
             <p className="mt-2 text-sm text-fail">
               Wrong delivery codes entered: {delivery.wrongAttempts} of {MAX_CODE_TRIES}

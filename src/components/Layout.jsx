@@ -116,7 +116,7 @@ function focusHeading() {
   heading.focus({ preventScroll: true })
 }
 
-export default function Layout({ currentPage, onReset, profile, setProfile, children }) {
+export default function Layout({ currentPage, onReset, profile, setProfile, saveFailed, children }) {
   // After a page change (not on the first load): new title, focus on its heading.
   const firstPage = useRef(true)
   useEffect(() => {
@@ -181,6 +181,16 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
       </header>
 
       <ProfileBar profile={profile} setProfile={setProfile} />
+
+      {/* The browser would not save: say so, instead of losing changes silently */}
+      {saveFailed && (
+        <p role="status" data-testid="save-failed" className="border-b border-hold bg-hold-tint">
+          <span className="mx-auto block max-w-5xl safe-x py-2 font-bold">
+            This browser is not letting RaastaShare save. You can keep using the demo, but your
+            changes will be lost when you reload or close this page.
+          </span>
+        </p>
+      )}
 
       {/* Page content. Extra bottom padding on phones leaves room for the tab bar. */}
       <main className="mx-auto w-full max-w-5xl flex-1 safe-x py-6 sm:py-8">{children}</main>

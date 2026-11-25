@@ -15,7 +15,7 @@ globalThis.localStorage = {
   setItem(key, value) { this.data[key] = String(value) },
   removeItem(key) { delete this.data[key] },
 }
-const { settleExpired } = await import('../../src/lib/storage.js')
+const { settleExpired, saveState } = await import('../../src/lib/storage.js')
 
 const HOUR = 60 * 60 * 1000
 const inHours = (h) => new Date(Date.now() + h * HOUR).toISOString().slice(0, 16)
@@ -100,4 +100,15 @@ test('an unanswered request expires when the carrier leaves, and the parcel goes
   assert.equal(after.deliveries[0].status, DELIVERY.DECLINED)
   assert.deepEqual(after.shipments[0].rejectedJourneyIds, ['gone'])
   assert.equal(after.shipments[0].status, STATUS.FOUND) // "other" still fits
+})
+
+test('saving reports false, instead of crashing, when the browser will not save', () => {
+  const real = localStorage.setItem
+  localStorage.setItem = () => { throw new Error('QuotaExceededError') }
+  try {
+    assert.equal(saveState({ journeys: [], shipments: [], deliveries: [] }), false)
+  } finally {
+    localStorage.setItem = real
+  }
+  assert.equal(saveState({ journeys: [], shipments: [], deliveries: [] }), true)
 })

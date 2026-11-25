@@ -1,6 +1,7 @@
 // Browser tests: the 8 test cases in the project proposal (tests 1 to 8),
-// plus 4 tests for the AI parcel check (tests 9 to 12) and 2 for who may do
-// what (tests 13 and 14).
+// plus 4 tests for the AI parcel check (tests 9 to 12), 2 for who may do
+// what (tests 13 and 14), 1 for wrong pickup codes (15) and 1 for a browser
+// that will not save (16).
 // The script opens the app in a real (headless) Chromium browser, clicks
 // through it like a user, checks the result and saves a screenshot of each
 // case in the test-screenshots folder.
@@ -342,6 +343,43 @@ async function main() {
     check(await page.locator('#delivery-code').isVisible(), 'The carrier has no box to type the code')
     await shot('test-14-carrier-cannot-see-code.png', page.locator('[data-testid="step-delivery"]'))
     return 'Carrier sees the code box but not the code; the sender sees the delivery pass'
+  })
+
+  await runTest(page, 15, 'Three wrong pickup codes entered', 'Payment frozen; the delivery goes to an admin', async () => {
+    await startDelivery(page)
+    const real = await readCode(page, 'pickup-otp')
+    const wrong = real === '0000' ? '1111' : '0000'
+    for (let i = 0; i < 2; i++) {
+      await page.fill('#pickup-code', wrong)
+      await page.click('[data-testid="pickup-code-submit"]')
+    }
+    const second = await page.textContent('[data-testid="delivery-message"]')
+    check(second.includes('1 try left'), `After 2 wrong codes the message was "${second}"`)
+    await page.fill('#pickup-code', wrong)
+    await page.click('[data-testid="pickup-code-submit"]')
+    const escrow = (await page.textContent('[data-testid="escrow-status"]')).trim()
+    check(escrow === 'Frozen', `Escrow status is "${escrow}"`)
+    await shot('test-15-wrong-pickup-codes-frozen.png')
+    return `"${second}" then, after the third, escrow: ${escrow}`
+  })
+
+  await runTest(page, 16, 'The browser will not save (storage full or blocked)', 'The app keeps working and says changes will not be kept', async () => {
+    const blocked = await browser.newContext({ viewport: { width: 1100, height: 800 }, deviceScaleFactor: 2 })
+    await blocked.addInitScript(() => {
+      Storage.prototype.setItem = () => { throw new DOMException('Quota exceeded', 'QuotaExceededError') }
+    })
+    const other = await blocked.newPage()
+    try {
+      await other.goto(APP_URL)
+      check(await other.locator('[data-testid="save-failed"]').isVisible(), 'No notice that changes will not be kept')
+      await postShipment(other)
+      const cards = await other.locator('[data-testid="carrier-card"]').count()
+      check(cards > 0, 'Posting a parcel did not show any carriers')
+      await other.screenshot({ path: path.join(SHOTS, 'test-16-storage-blocked.png') })
+      return `Notice shown; a parcel was posted and ${cards} carriers were checked`
+    } finally {
+      await blocked.close()
+    }
   })
 
   await browser.close()
