@@ -644,6 +644,50 @@ For the presentation (the courier price and step count are our estimates):
 - Before the presentation: press "Reset demo data" and do one practice run.
   After it: clear the Google Sheet and rotate the Make.com webhooks.
 
+## Work report: 25 November 2026
+
+One small change to the Home page: status notes on the map. Full details are
+in `BUILD_LOG.md`, Stage 55. Pull request #52 was merged and deployed. This
+report was written in a README-only pull request.
+
+### Status notes on the Home map (#52)
+
+Three small notes on the hero map now follow the demo trip from Islamabad to
+Lahore:
+
+| Note | Detail | Appears |
+| --- | --- | --- |
+| Carrier matched | Bilal Ahmed, best of 3 | as the route draws |
+| Picked up | Code checked | as the parcel sets off |
+| Delivered in Lahore | PKR 500 paid to carrier | as the parcel reaches Lahore |
+
+Before, the map showed a parcel moving but not what was happening to it. The
+idea came from flight-tracking apps (seen on supahero.io), which pin short
+status notes to the map. The notes join the existing once-per-visit intro;
+on a return visit or with reduced motion they are simply there.
+
+The first wording ("Matched with Bilal Ahmed", "PKR 500 released to carrier")
+ran out of its boxes, so it was shortened after measuring the text in the
+browser.
+
+Also looked at, with no change made: 21st.dev, a library of ready-made React
+pieces. Most are TypeScript, need extra libraries, or are the gradients and
+glows our design rules ban, so it is useful for ideas only.
+
+### Checks
+
+- Before and after screenshots at 390px and 1440px, and in dark mode: no note
+  covers a city, a route or the fare tag.
+- All 12 browser tests pass; axe and `npm run check:design` are clean.
+- Live site after #52, at 390px: all three notes show, no sideways
+  scrolling, 0 cookies.
+
+### Still to do
+
+- **Check on a phone:** open Home in a private tab and watch the notes appear
+  with the parcel's ride.
+- The items under "Still to do" in the 24 November report still apply.
+
 ## Photo credits
 
 The photo on the Home page comes from Wikimedia Commons. We resized and
