@@ -2,7 +2,7 @@
 // fit a journey (the carrier's side of matching).
 import { useEffect, useRef, useState } from 'react'
 import { CITIES, VEHICLES, VEHICLE_TYPES, STATUS, DELIVERY } from '../data/constants.js'
-import { findMatches, evaluateCarrier, isAvailable } from '../lib/matching.js'
+import { findMatches, evaluateCarrier, isAvailable, withSpaceLeft } from '../lib/matching.js'
 import { calculatePrice } from '../lib/pricing.js'
 import { startDelivery } from '../lib/delivery.js'
 import { goTo } from '../lib/navigation.js'
@@ -27,7 +27,8 @@ const MAX_SPARE_KG = 500
 // It uses the same four rules as the sender's Matches page.
 function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
   // Only the signed-in carrier's journeys that are open and have not left yet, newest first.
-  const journeys = state.journeys
+  // spareKg here is the space still free after parcels already booked.
+  const journeys = withSpaceLeft(state)
     .filter((j) => isAvailable(j) && j.carrierName === carrierName)
     .reverse()
   // Show the picked journey if it is one of them, else the newest.
@@ -89,7 +90,7 @@ function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
         <select id="journeyPicker" className="field" value={journey.id} onChange={(e) => onPick(e.target.value)}>
           {journeys.map((j) => (
             <option key={j.id} value={j.id}>
-              {j.origin} to {j.destination}, {formatDateTime(j.departure)}, {j.vehicleType}, {j.spareKg} kg spare
+              {j.origin} to {j.destination}, {formatDateTime(j.departure)}, {j.vehicleType}, {j.spareKg} kg spare{j.postedSpareKg !== undefined ? ' left' : ''}
             </option>
           ))}
         </select>
@@ -237,7 +238,7 @@ export default function Carrier({ state, save, profile, setProfile }) {
     const shipments = state.shipments.map((shipment) => {
       const waiting = shipment.status === STATUS.RETRYING || shipment.status === STATUS.FLAGGED
       if (!waiting) return shipment
-      const { eligible } = findMatches(shipment, journeys)
+      const { eligible } = findMatches(shipment, withSpaceLeft({ ...state, journeys }))
       const stillOpen = eligible.filter((r) => !shipment.rejectedJourneyIds.includes(r.journey.id))
       if (stillOpen.length === 0) return shipment
       helped += 1

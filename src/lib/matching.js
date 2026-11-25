@@ -2,7 +2,7 @@
 // Step 1: check each carrier against four eligibility rules.
 // Step 2: give every carrier that passed all four a score out of 100, and rank them.
 import {
-  VEHICLES, PERISHABLE_MAX_TRIP_HOURS, TIME_BUFFER_HOURS, tripHours,
+  VEHICLES, PERISHABLE_MAX_TRIP_HOURS, TIME_BUFFER_HOURS, DELIVERY, tripHours,
 } from '../data/constants.js'
 
 const HOUR_MS = 60 * 60 * 1000 // milliseconds in one hour
@@ -34,13 +34,15 @@ function checkTiming(shipment, journey) {
 }
 
 // Rule 3 - Capacity: carrier spare capacity (kg) >= package weight (kg).
+// Once a carrier has booked parcels, spareKg is the space LEFT (see withSpaceLeft).
 function checkCapacity(shipment, journey) {
   const pass = journey.spareKg >= shipment.weightKg
+  const left = journey.postedSpareKg !== undefined ? ' left' : ''
   return {
     pass,
     detail: pass
-      ? `${journey.spareKg} kg spare is enough for ${shipment.weightKg} kg`
-      : `Only ${journey.spareKg} kg spare, but the parcel is ${shipment.weightKg} kg`,
+      ? `${journey.spareKg} kg spare${left} is enough for ${shipment.weightKg} kg`
+      : `Only ${journey.spareKg} kg spare${left}, but the parcel is ${shipment.weightKg} kg`,
   }
 }
 
@@ -109,6 +111,37 @@ export function evaluateCarrier(shipment, journey) {
 // the four rules themselves are unchanged.)
 export function isAvailable(journey, now = Date.now()) {
   return journey.status === 'Open' && new Date(journey.departure).getTime() > now
+}
+
+// ---- Space already booked ----------------------------------------------
+// A parcel takes up room in the carrier's vehicle once BOTH people have
+// accepted, and keeps it until it is delivered. A request still waiting for
+// an answer holds no room (nothing is agreed yet), and a refunded parcel
+// gives its room back.
+const HOLDS_SPACE = [DELIVERY.AWAITING_PICKUP, DELIVERY.IN_TRANSIT, DELIVERY.DELIVERED, DELIVERY.DISPUTED]
+
+// Kilograms already booked on one journey. "exceptShipmentId" leaves out one
+// parcel's own booking, so a booked parcel does not count against itself.
+export function bookedKg(journey, state, exceptShipmentId = null) {
+  return state.deliveries
+    .filter((d) => d.journeyId === journey.id && HOLDS_SPACE.includes(d.status)
+      && d.shipmentId !== exceptShipmentId)
+    .reduce((total, d) => {
+      const shipment = state.shipments.find((s) => s.id === d.shipmentId)
+      return total + (shipment ? shipment.weightKg : 0)
+    }, 0)
+}
+
+// Every journey with spareKg changed to the space still free. A journey with
+// bookings also keeps the number the carrier posted, as postedSpareKg.
+// Example: 10 kg posted, an 8 kg parcel booked -> spareKg 2, postedSpareKg 10.
+export function withSpaceLeft(state, exceptShipmentId = null) {
+  return state.journeys.map((journey) => {
+    const booked = bookedKg(journey, state, exceptShipmentId)
+    if (booked === 0) return journey
+    const left = Math.max(0, Math.round((journey.spareKg - booked) * 10) / 10)
+    return { ...journey, spareKg: left, postedSpareKg: journey.spareKg }
+  })
 }
 
 // Check ALL available journeys. Returns two lists:
