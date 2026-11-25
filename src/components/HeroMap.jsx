@@ -9,6 +9,27 @@ import { formatPKR } from '../lib/format.js'
 
 const DEMO_KG = 5
 
+// Status notes around the map, telling the demo trip the way the app would:
+// matched, picked up, delivered. Each appears when that moment happens in the
+// intro (the parcel sets off at 2.1s and arrives at about 4.7s), so the map
+// reads as one short story. On a return visit, or with reduced motion, they
+// are simply there (they use .stop-enter, like the city names).
+// done: a filled tick; otherwise an outlined ring.
+function Note({ x, y, width, title, detail, delay, done }) {
+  return (
+    <g className="stop-enter" style={{ animationDelay: delay }}>
+      <rect x={x} y={y} width={width} height="54" rx="10" fill="var(--color-surface)"
+        stroke="var(--color-line)" strokeWidth="2" />
+      <circle cx={x + 22} cy={y + 27} r="10" fill={done ? 'var(--color-brand-ink)' : 'var(--color-surface)'}
+        stroke="var(--color-brand-ink)" strokeWidth="2.5" />
+      {done && <path d={`M${x + 17} ${y + 27.5} l3.5 3.5 l6.5 -7`} fill="none" stroke="var(--color-surface)"
+        strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />}
+      <text x={x + 42} y={y + 23} fontFamily="var(--font-body)" fontWeight="700" fontSize="16" fill="var(--color-ink)">{title}</text>
+      <text x={x + 42} y={y + 43} fontFamily="var(--font-body)" fontSize="14" fill="var(--color-muted)">{detail}</text>
+    </g>
+  )
+}
+
 // The routes, back to front. Each is a path of straight and 45-degree stretches.
 const ROUTES = [
   { d: 'M70 340 V380 L130 440', colour: 'var(--color-route-3)' },            // Quetta - Karachi
@@ -37,7 +58,7 @@ export default function HeroMap() {
   const price = formatPKR(calculatePrice(DEMO_KG))
   return (
     <svg viewBox="28 26 520 462" className="block w-full" role="img" data-testid="hero-map"
-      aria-label={`Route map of eight cities. A ${DEMO_KG} kg parcel travels from Islamabad to Lahore for ${price}.`}>
+      aria-label={`Route map of eight cities. A ${DEMO_KG} kg parcel travels from Islamabad to Lahore for ${price}: matched with Bilal Ahmed, picked up in Islamabad, delivered in Lahore.`}>
       {/* The routes draw themselves one after another */}
       {ROUTES.map((route, index) => (
         <path key={route.d} d={route.d} pathLength="1" className="route-draw" style={{ '--i': index }}
@@ -71,6 +92,14 @@ export default function HeroMap() {
         <text x="420" y="127" textAnchor="end" fontFamily="var(--font-display)" fontWeight="700" fontSize="23"
           fill="var(--color-brand-ink)">{price}</text>
       </g>
+
+      {/* Status notes: the demo trip as it happens */}
+      <Note x={344} y={34} width={196} delay="1500ms" done
+        title="Carrier matched" detail="Bilal Ahmed, best of 3" />
+      <Note x={36} y={178} width={150} delay="2100ms" done
+        title="Picked up" detail="Code checked" />
+      <Note x={336} y={410} width={206} delay="4600ms" done
+        title="Delivered in Lahore" detail={`${price} paid to carrier`} />
 
       {/* The parcel riding the road */}
       <circle className="map-parcel" r="9" fill="var(--color-hold)" stroke="var(--color-surface)" strokeWidth="3.5" />
