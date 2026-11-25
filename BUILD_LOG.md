@@ -1511,3 +1511,20 @@ Kept on purpose:
   - all 12 tests pass, and the design check and axe are clean;
   - needs a real phone: whether hover colours still stick on Android, and how
     the new rise and drop feel.
+
+## Stage 55: status notes on the Home map
+
+- **What:** three small notes on the Home hero map follow the demo trip from
+  Islamabad to Lahore: "Carrier matched" (Bilal Ahmed, best of 3), "Picked up"
+  (code checked) and "Delivered in Lahore" (PKR 500 paid to carrier).
+- **Why:** the map showed a parcel moving but not what was happening to it.
+  The idea came from flight-tracking apps, which pin short status notes to
+  the map.
+- **Motion:** each note joins the existing once-per-visit map intro, in step
+  with the parcel: matched as the route draws, picked up as it sets off,
+  delivered as it reaches Lahore. On a return visit or with reduced motion,
+  they are simply there.
+- **Fit:** the first wording ran out of the boxes, so it was shortened. Text
+  widths were measured in the browser. No note covers a city, a route or the
+  fare tag at 390px or 1440px, in light or dark mode.
+- **Checked:** all 12 tests pass, and axe and the design check are clean.
