@@ -2,7 +2,7 @@
 // the result of each of the four rules, so the decision is transparent.
 import { useEffect, useState } from 'react'
 import { STATUS, DELIVERY, FLAG_AFTER_HOURS } from '../data/constants.js'
-import { findMatches } from '../lib/matching.js'
+import { findMatches, withSpaceLeft } from '../lib/matching.js'
 import { calculatePrice, calculateSaving } from '../lib/pricing.js'
 import { goTo } from '../lib/navigation.js'
 import { startDelivery } from '../lib/delivery.js'
@@ -115,7 +115,7 @@ function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onReq
             )}
             <h3 className="text-xl font-bold">{journey.carrierName}</h3>
             <p className="text-sm text-muted">
-              {journey.vehicleType}, {journey.spareKg} kg spare, departs {formatDateTime(journey.departure)}
+              {journey.vehicleType}, {journey.spareKg} kg spare{journey.postedSpareKg !== undefined ? ' left' : ''}, departs {formatDateTime(journey.departure)}
             </p>
           </div>
         </div>
@@ -206,7 +206,8 @@ export default function Matches({ state, save, id }) {
   }
 
   // Run the matching engine (it is fast, so we simply run it on every render).
-  const { eligible, ineligible } = findMatches(shipment, state.journeys)
+  // Carriers' space is what is still free, not counting this parcel's own booking.
+  const { eligible, ineligible } = findMatches(shipment, withSpaceLeft(state, shipment.id))
   // Carriers who declined this request drop out of the ranking.
   const offered = eligible.filter((r) => !shipment.rejectedJourneyIds.includes(r.journey.id))
   const declined = eligible.filter((r) => shipment.rejectedJourneyIds.includes(r.journey.id))

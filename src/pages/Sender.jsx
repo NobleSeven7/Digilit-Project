@@ -2,7 +2,7 @@
 // prohibited-items checklist before the parcel can be posted.
 import { useRef, useState } from 'react'
 import { CITIES, CITY_CODES, ITEM_TYPES, STATUS } from '../data/constants.js'
-import { findMatches } from '../lib/matching.js'
+import { findMatches, withSpaceLeft } from '../lib/matching.js'
 import { calculatePrice } from '../lib/pricing.js'
 import { sendToWebhook } from '../lib/webhook.js'
 import { checkParcel, MAX_DESCRIPTION, SOURCE, TIMEOUT_MS } from '../lib/aiCheck.js'
@@ -199,7 +199,7 @@ export default function Sender({ state, save, id, profile, setProfile }) {
     }
 
     // Run the matching engine immediately.
-    const { eligible } = findMatches(shipment, state.journeys)
+    const { eligible } = findMatches(shipment, withSpaceLeft(state))
     const matchingMs = Math.max(0.1, Math.round((performance.now() - startedAt) * 10) / 10)
 
     // No eligible carrier -> "Unmatched – Retrying" (proposal: failure scenario).

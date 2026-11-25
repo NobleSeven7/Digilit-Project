@@ -6,7 +6,7 @@ import { generateOtp, generateDifferentOtp } from '../lib/otp.js'
 import { sendToWebhook, noteInSyncLog } from '../lib/webhook.js'
 import { goTo } from '../lib/navigation.js'
 import { formatPKR, formatDateTime, formatShort, isolate } from '../lib/format.js'
-import { findMatches, isAvailable } from '../lib/matching.js'
+import { findMatches, isAvailable, withSpaceLeft } from '../lib/matching.js'
 import { calculateSaving } from '../lib/pricing.js'
 import { shake } from '../lib/motion.js'
 import PageHeader from '../components/PageHeader.jsx'
@@ -161,6 +161,16 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
     const senderAccepted = who === 'sender' ? true : delivery.senderAccepted
     const carrierAccepted = who === 'carrier' ? true : delivery.carrierAccepted
 
+    // The second "Accept" books the space. Check it is still free: since this
+    // request was sent, the carrier may have agreed to carry other parcels.
+    if (senderAccepted && carrierAccepted) {
+      const spaceLeft = withSpaceLeft(state).find((j) => j.id === journey.id).spareKg
+      if (spaceLeft < shipment.weightKg) {
+        setMessage({ ok: false, text: `${isolate(journey.carrierName)} has only ${spaceLeft} kg spare left after other parcels were booked, so this ${shipment.weightKg} kg parcel no longer fits. ${isolate(journey.carrierName)} can decline, or ${isolate(shipment.senderName)} can withdraw and choose another carrier.` })
+        return
+      }
+    }
+
     if (posthogEnabled) {
       posthog.capture('delivery_acceptance_recorded', {
         shipment_ref: shipment.id,
@@ -194,7 +204,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
   // Retrying" only if none does (the same check as "Withdraw request").
   function handleDecline() {
     const rejectedJourneyIds = [...shipment.rejectedJourneyIds, journey.id]
-    const { eligible } = findMatches(shipment, state.journeys)
+    const { eligible } = findMatches(shipment, withSpaceLeft(state))
     const stillOpen = eligible.some((r) => !rejectedJourneyIds.includes(r.journey.id))
     update(
       { status: DELIVERY.DECLINED },
@@ -211,7 +221,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
   function handleWithdraw() {
     const rejectedJourneyIds = delivery.carrierAccepted
       ? [...shipment.rejectedJourneyIds, journey.id] : shipment.rejectedJourneyIds
-    const { eligible } = findMatches(shipment, state.journeys)
+    const { eligible } = findMatches(shipment, withSpaceLeft(state))
     const stillOpen = eligible.some((r) => !rejectedJourneyIds.includes(r.journey.id))
     save({
       ...state,
