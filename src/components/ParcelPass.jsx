@@ -17,33 +17,6 @@ function Field({ label, value }) {
   )
 }
 
-// The code as departure-board digits: each digit is a short strip of numbers
-// that rolls up to the right one when a parent gets "is-seen" (see .code-roll
-// in src/index.css). Later digits roll a little longer, so they stop in turn.
-function RollingCode({ code }) {
-  return (
-    <>
-      <span className="sr-only">{code}</span>
-      {/* One row that never wraps: each digit is its own little window */}
-      <span aria-hidden="true" className="inline-flex">
-        {[...code].map((digit, place) => {
-          const steps = 6 + place * 2
-          // The strip counts up to the real digit: e.g. 3, 4, ... 9, 0, 1, 2, then 2.
-          const strip = Array.from({ length: steps }, (_, k) => (Number(digit) + 10 - steps + k) % 10)
-          return (
-            <span key={place} className="code-roll" style={{ '--n': place, '--end': `-${steps}em` }}>
-              <span>
-                {strip.map((n, k) => <span key={k}>{n}</span>)}
-                <span>{digit}</span>
-              </span>
-            </span>
-          )
-        })}
-      </span>
-    </>
-  )
-}
-
 // Like a real paper ticket, the pass is one object: the two notches are holes
 // cut through it (see .pass-top and .pass-bottom in src/index.css), so the page
 // shows through them on any background, and its shadow follows that shape.
@@ -51,8 +24,7 @@ function RollingCode({ code }) {
 // something when pressed should answer a press.
 //
 // kind: "Pickup" or "Delivery". codeTestId keeps the tests' hook on the code.
-// rollCode: show the code as rolling digits (the Home page example only).
-export default function ParcelPass({ kind, code, shipment, journey, codeTestId, note = 'Would arrive by SMS', rollCode = false }) {
+export default function ParcelPass({ kind, code, shipment, journey, codeTestId, note = 'Would arrive by SMS' }) {
   return (
     <div className="pass w-full max-w-sm text-ink" data-testid="parcel-pass">
       {/* Top: the trip */}
@@ -80,7 +52,7 @@ export default function ParcelPass({ kind, code, shipment, journey, codeTestId, 
           {/* Digits are spaced so the code can be read out one by one, and
               all the same width, so codes line up and do not shift. */}
           <p className="mt-1 font-display text-[min(3rem,22cqi)] font-bold leading-none tracking-[0.12em] tabular-nums" data-testid={codeTestId}>
-            {rollCode ? <RollingCode code={code} /> : code}
+            {code}
           </p>
         </div>
         {/* Starts at zero width (flex-basis 0, min-w-0) and grows into the room

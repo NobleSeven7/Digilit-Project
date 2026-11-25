@@ -1,6 +1,6 @@
 // Helpers for the few animations in the app (see "Motion" in src/index.css).
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { flushSync } from 'react-dom'
 
 // Does the person's device ask for less motion?
@@ -28,28 +28,6 @@ export function withViewTransition(change, kind) {
   // Only the newest transition clears the marker; an older one finishing
   // late must not cut the newer one's fade short.
   transition.finished.finally(() => { if (id === latestTransition) delete root.dataset.transition })
-}
-
-// React hook: becomes true the first time the element scrolls into view
-// (and stays true). Used to start an animation only when people can see it.
-// Browsers without IntersectionObserver show the finished state at once.
-export function useSeenOnce() {
-  const ref = useRef(null)
-  const [seen, setSeen] = useState(() => typeof IntersectionObserver === 'undefined')
-
-  useEffect(() => {
-    if (seen || !ref.current) return
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        setSeen(true)
-        observer.disconnect()
-      }
-    }, { threshold: 0.4 })
-    observer.observe(ref.current)
-    return () => observer.disconnect()
-  }, [seen])
-
-  return [ref, seen]
 }
 
 // React hook: true while the person is scrolling down the page (past the

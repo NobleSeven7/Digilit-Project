@@ -8,7 +8,6 @@ import ParcelPass from '../components/ParcelPass.jsx'
 import { createSampleData } from '../data/sampleData.js'
 import HeroMap from '../components/HeroMap.jsx'
 import { firstWithRole } from '../lib/profile.js'
-import { useSeenOnce } from '../lib/motion.js'
 // Dev-only (break-ui): worst-case data and its switch. Left out of the
 // production build, where import.meta.env.DEV is false.
 import { HOME_FIXTURES } from '../dev/homeFixtures.js'
@@ -195,19 +194,17 @@ const STEPS = [
     phone: 'A phone showing a RaastaShare pickup pass from Islamabad to Lahore',
     screen: (
       <div className="px-2 pb-3">
-        <ParcelPass kind="Pickup" code="4827" shipment={PASS_PARCEL} journey={PASS_JOURNEY} note="Example pass" rollCode />
+        <ParcelPass kind="Pickup" code="4827" shipment={PASS_PARCEL} journey={PASS_JOURNEY} note="Example pass" />
       </div>
     ),
   },
 ]
 
 // One step: the text, then its phone. They are simply there (no scroll
-// reveal: it held the content back); the first time step 03 scrolls into view,
-// its code rolls to its digits.
+// reveal or scroll-in animation: DESIGN.md > Motion).
 function StepRow({ step, index }) {
-  const [ref, seen] = useSeenOnce()
   return (
-    <li ref={ref} className={`grid items-center gap-8 lg:grid-cols-2 lg:gap-16 ${seen ? 'is-seen' : ''}`}>
+    <li className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
       <div className={`max-w-md ${index % 2 ? 'lg:order-2' : 'lg:justify-self-end'}`}>
         {/* Step number and name in normal case (tiny ALL CAPS labels read as templated) */}
         <p className="font-display text-2xl font-bold text-brand-ink">
