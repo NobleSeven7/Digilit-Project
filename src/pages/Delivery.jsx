@@ -188,12 +188,17 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
     }
   }
 
-  // Carrier declines: the shipment goes back to "Unmatched – Retrying"
-  // and the next-ranked carrier is offered on the Matches page.
+  // Carrier declines: this carrier is not offered the parcel again, and the
+  // next-ranked carrier is offered on the Matches page. The parcel goes back
+  // to "Carriers found" if another carrier still fits, and to "Unmatched –
+  // Retrying" only if none does (the same check as "Withdraw request").
   function handleDecline() {
+    const rejectedJourneyIds = [...shipment.rejectedJourneyIds, journey.id]
+    const { eligible } = findMatches(shipment, state.journeys)
+    const stillOpen = eligible.some((r) => !rejectedJourneyIds.includes(r.journey.id))
     update(
       { status: DELIVERY.DECLINED },
-      { status: STATUS.RETRYING, rejectedJourneyIds: [...shipment.rejectedJourneyIds, journey.id] },
+      { status: stillOpen ? STATUS.FOUND : STATUS.RETRYING, rejectedJourneyIds },
     )
     if (posthogEnabled) posthog.capture('delivery_request_declined', { shipment_ref: shipment.id })
     goTo(`matches/${shipment.id}`)
