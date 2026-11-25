@@ -56,7 +56,7 @@ export function readSyncLog() {
 }
 
 export function clearSyncLog() {
-  localStorage.removeItem(LOG_KEY)
+  try { localStorage.removeItem(LOG_KEY) } catch { /* storage blocked */ }
 }
 
 // A note in the sync log for something that happened only on this device
@@ -68,7 +68,11 @@ export function noteInSyncLog(event, summary) {
 function addToSyncLog(event, summary, result) {
   const entry = { time: new Date().toISOString(), event, summary, result }
   const log = [entry, ...readSyncLog()].slice(0, 50) // keep the latest 50
-  localStorage.setItem(LOG_KEY, JSON.stringify(log))
+  try {
+    localStorage.setItem(LOG_KEY, JSON.stringify(log))
+  } catch {
+    // Storage full or blocked: the log is only a record, so carry on.
+  }
 }
 
 // event   = 'shipment' | 'journey' | 'match' | 'delivery' | 'dispute' | 'ai_check'

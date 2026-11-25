@@ -97,8 +97,27 @@ export function refreshSampleDates(state, now = new Date()) {
   }
 }
 
+// Save the app data. Returns false if the browser would not save it (storage
+// full, or blocked in some private or locked-down browsers). The app then
+// keeps working with the data in memory, and says that changes will not last.
 export function saveState(state) {
-  localStorage.setItem(KEY, JSON.stringify(state))
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state))
+    return true
+  } catch {
+    return false
+  }
+}
+
+// Can this browser save at all? Checked once when the app starts.
+export function canSave() {
+  try {
+    localStorage.setItem(`${KEY}-check`, '1')
+    localStorage.removeItem(`${KEY}-check`)
+    return true
+  } catch {
+    return false
+  }
 }
 
 // Load saved data. On the very first visit (or if the saved data is damaged),

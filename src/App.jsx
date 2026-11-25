@@ -1,7 +1,7 @@
 // The top-level component. It owns all the app data and decides which page to show.
 import { useEffect, useRef, useState } from 'react'
 import { useRoute } from './lib/navigation.js'
-import { loadState, saveState, resetState } from './lib/storage.js'
+import { loadState, saveState, resetState, canSave } from './lib/storage.js'
 import { getProfile, PROFILES, profileKey, saveProfile } from './lib/profile.js'
 import posthog, { posthogEnabled } from './lib/posthog.js'
 import Layout from './components/Layout.jsx'
@@ -18,6 +18,9 @@ export default function App() {
   // "state" holds { shipments, journeys, deliveries }. It is loaded from
   // localStorage once, when the app starts.
   const [state, setState] = useState(loadState)
+  // True when the browser will not save (storage full or blocked). The app
+  // still works for this visit; a notice says changes will not be kept.
+  const [saveFailed, setSaveFailed] = useState(() => !canSave())
   const { page, id } = useRoute()
 
   // Who is "signed in": one of the fictional demo people (see src/lib/profile.js).
@@ -57,7 +60,7 @@ export default function App() {
   // Pages call save(newState) whenever something changes.
   // It writes to localStorage AND updates the screen.
   function save(newState) {
-    saveState(newState)
+    setSaveFailed(!saveState(newState))
     setState(newState)
   }
 
@@ -84,7 +87,7 @@ export default function App() {
   }
 
   return (
-    <Layout currentPage={page} onReset={handleReset} profile={profile} setProfile={setProfile}>
+    <Layout currentPage={page} onReset={handleReset} profile={profile} setProfile={setProfile} saveFailed={saveFailed}>
       {pages[page] || <Home {...pageProps} />}
     </Layout>
   )

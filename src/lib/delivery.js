@@ -17,7 +17,8 @@ export function startDelivery(state, shipment, journey, acceptedBy = null) {
     carrierAccepted: acceptedBy === 'carrier',
     pickupOtp: null,
     deliveryOtp: null,
-    wrongAttempts: 0,
+    wrongAttempts: 0, // wrong delivery codes
+    wrongPickupAttempts: 0,
     status: DELIVERY.AWAITING_ACCEPT,
     escrow: ESCROW.NONE,
     createdAt: new Date().toISOString(),
