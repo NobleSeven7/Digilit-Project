@@ -1528,3 +1528,20 @@ Kept on purpose:
   widths were measured in the browser. No note covers a city, a route or the
   fare tag at 390px or 1440px, in light or dark mode.
 - **Checked:** all 12 tests pass, and axe and the design check are clean.
+
+## Stage 56: delivery road back within the 300ms rule
+
+- **What:** the Delivery tracker's road now grows in 250ms (was 350ms), and
+  the last stop's settle starts at 200ms (was 300ms), so it still lands as
+  the road arrives.
+- **Where it came from:** two commits from 24 November on the
+  `ccr-7df6bb23-nw9pnq` branch that never reached `main`. They were found
+  while checking that branch before deleting it.
+- **Why:** DESIGN.md says UI motion lasts 300ms or less, with the success
+  tick as the only exception. The 350ms road (kept in Stage 54 because it
+  shows progress) broke that rule. At 250ms the road still visibly travels,
+  so it still shows progress.
+- **Checked:**
+  - side-by-side recordings at real and quarter speed (390px): the two look
+    almost the same at real speed, and the road finishes about 100ms sooner;
+  - all 12 tests pass; the design check and axe are clean.
