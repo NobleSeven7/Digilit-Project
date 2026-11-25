@@ -109,3 +109,48 @@ export function VehicleIcon({ type, ...props }) {
   if (type === 'Van / Pickup') return <VanIcon {...props} />
   return <CarIcon {...props} />
 }
+
+// ---- Phone tab bar icons (one per page) ---------------------------------
+
+// Matches: a ranked list (three rows, the first marked).
+export function RankIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M9 6h11M9 12h11M9 18h11" />
+      <circle cx="4.5" cy="6" r="1.5" fill="currentColor" />
+      <circle cx="4.5" cy="12" r="1.5" />
+      <circle cx="4.5" cy="18" r="1.5" />
+    </Svg>
+  )
+}
+
+// Delivery: two stops joined by a road, like the logo.
+export function RouteIcon(props) {
+  return (
+    <Svg {...props}>
+      <circle cx="5" cy="18" r="2.5" />
+      <circle cx="19" cy="6" r="2.5" />
+      <path d="M7.5 18H14a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6.5" />
+    </Svg>
+  )
+}
+
+// Admin: a person checking (a shield with a tick).
+export function ShieldIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M12 3l7 3v5.5c0 4.4-3 8-7 9.5-4-1.5-7-5.1-7-9.5V6z" />
+      <path d="M8.8 12.2l2.2 2.2 4.2-4.4" />
+    </Svg>
+  )
+}
+
+// Dashboard: bars of different heights.
+export function BarsIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M4 20h16M7 16v-5M12 16V6M17 16v-8" />
+    </Svg>
+  )
+}
+

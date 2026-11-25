@@ -142,7 +142,7 @@ shows what was sent.
 
 | Page | What it does |
 |---|---|
-| Home | Choose Sender or Traveller (the carrier role; this also signs you in as a demo person with that role). Also: three checked facts, the routes from Islamabad, the price comparison, and a closing split for senders and travellers |
+| Home | Choose Sender or Carrier (this also signs you in as a demo person with that role). Also: three checked facts, the routes from Islamabad, the price comparison, and a closing split for senders and travellers |
 | Send | Post a parcel, including the prohibited-items checklist. An optional AI parcel check suggests an item type and spots possibly prohibited items |
 | Carry | Post a journey with vehicle type and spare capacity; see the parcels that fit a journey and offer to carry one |
 | Matches | The sender's view: ranked carriers, with a pass or fail for each of the four rules |
@@ -266,6 +266,14 @@ and never sends rows to the real Google Sheet.) In a second terminal:
 
 ```bash
 npm run test:e2e
+```
+
+The matching rules, prices and expiry tidy-up also have quick tests that need
+no browser (about a second, Node's built-in test runner). The deploy runs
+these and the design check before it publishes:
+
+```bash
+npm run test:unit
 ```
 
 ## Project structure

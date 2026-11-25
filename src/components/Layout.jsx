@@ -1,22 +1,23 @@
 // The frame around every page: header with navigation, a bottom tab bar
 // on phones, and a footer with the "Reset demo data" button.
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getTheme, saveTheme } from '../lib/theme.js'
 import { PROFILES, profileKey, findProfile } from '../lib/profile.js'
-import { SunIcon, MoonIcon } from './Icons.jsx'
+import { PROHIBITED } from '../data/constants.js'
+import { SunIcon, MoonIcon, ParcelIcon, CarIcon, RankIcon, RouteIcon, ShieldIcon, BarsIcon } from './Icons.jsx'
 import { withViewTransition, useHideOnScroll } from '../lib/motion.js'
 
 // "for" says who sees the page in the menu: a sender, a carrier, both, or the
 // team (Admin and Dashboard, set apart after a divider). Every page still opens
 // from a link whoever you are; the menu just shows what your role needs.
 const NAV_ITEMS = [
-  { page: 'sender', label: 'Send', for: 'sender' },
-  { page: 'carrier', label: 'Carry', for: 'carrier' },
-  { page: 'matches', label: 'Matches', for: 'sender' },
-  { page: 'delivery', label: 'Delivery', for: 'both' },
-  { page: 'admin', label: 'Admin', for: 'team' },
-  { page: 'dashboard', label: 'Dashboard', for: 'team' },
+  { page: 'sender', label: 'Send', for: 'sender', Icon: ParcelIcon },
+  { page: 'carrier', label: 'Carry', for: 'carrier', Icon: CarIcon },
+  { page: 'matches', label: 'Matches', for: 'sender', Icon: RankIcon },
+  { page: 'delivery', label: 'Delivery', for: 'both', Icon: RouteIcon },
+  { page: 'admin', label: 'Admin', for: 'team', Icon: ShieldIcon },
+  { page: 'dashboard', label: 'Dashboard', for: 'team', Icon: BarsIcon },
 ]
 
 // The menu for one role: its own pages first, then the team pages.
@@ -88,7 +89,9 @@ function ProfileBar({ profile, setProfile }) {
         </select>
         <span className="hidden text-sm text-muted sm:inline">Demo profile. No password, no real account.</span>
         {/* Which side of the service you are looking at, so an audience can follow along */}
-        <span className="ml-auto font-display text-xl font-bold text-brand-ink" data-testid="role-view">
+        {/* Phones: hidden, as the picker already says "(sender)" or "(carrier)";
+            the bar then fits on one line */}
+        <span className="ml-auto hidden font-display text-xl font-bold text-brand-ink sm:inline" data-testid="role-view">
           {profile.role === 'carrier' ? 'Carrier view' : 'Sender view'}
         </span>
       </div>
@@ -96,7 +99,32 @@ function ProfileBar({ profile, setProfile }) {
   )
 }
 
+// The browser tab's title for each page, so the tab (and a screen reader)
+// says where you are.
+const TITLES = { home: 'RaastaShare', about: 'About this demo · RaastaShare' }
+function titleFor(page) {
+  const item = NAV_ITEMS.find((i) => i.page === page)
+  return TITLES[page] ?? (item ? `${item.label} · RaastaShare` : 'RaastaShare')
+}
+
+// Move keyboard and screen-reader focus to the page's heading. Screen
+// readers then read the new page's name, as they would after a full page load.
+function focusHeading() {
+  const heading = document.querySelector('main h1')
+  if (!heading) return
+  heading.setAttribute('tabindex', '-1')
+  heading.focus({ preventScroll: true })
+}
+
 export default function Layout({ currentPage, onReset, profile, setProfile, children }) {
+  // After a page change (not on the first load): new title, focus on its heading.
+  const firstPage = useRef(true)
+  useEffect(() => {
+    document.title = titleFor(currentPage)
+    if (firstPage.current) { firstPage.current = false; return }
+    focusHeading()
+  }, [currentPage])
+
   // Name of the page we are on (shown in the phone header, where there is no top menu).
   const current = NAV_ITEMS.find((item) => item.page === currentPage)
   const menu = menuFor(profile.role)
@@ -105,6 +133,12 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
 
   return (
     <div className="flex min-h-dvh flex-col">
+      {/* Keyboard users: skip the header and menu. Hidden until it has focus.
+          A button, not a "#main" link, because the address hash is the page. */}
+      <button type="button" onClick={focusHeading}
+        className="skip-link btn btn-primary">
+        Skip to content
+      </button>
       {/* Header (on phones it stays at the top and hides while scrolling down) */}
       <header className="site-header bg-brand" data-hidden={headerHidden}>
         {/* flex-wrap: if the menu does not fit beside the logo (very large text
@@ -157,8 +191,15 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
           <div className="space-y-1">
             {/* What-you-can-send note, always visible. Every route is within
                 Pakistan, so it speaks to what is allowed rather than customs.
-                There is no terms page in this demo, so it has no link to one. */}
-            <p className="font-bold text-ink" data-testid="customs-note">Check what you&rsquo;re allowed to send.</p>
+                It opens to the same list senders tick on the Send page. */}
+            <details className="rule-details" data-testid="customs-note">
+              <summary className="inline-flex min-h-11 cursor-pointer items-center font-bold text-ink underline underline-offset-2">
+                Check what you&rsquo;re allowed to send
+              </summary>
+              <ul className="mb-2 list-disc space-y-1 pl-5">
+                {PROHIBITED.map((line) => <li key={line}>{line}</li>)}
+              </ul>
+            </details>
             <p>
               Student prototype. All people and trips are fictional; codes and payments are simulated.{' '}
               <a href="#/about" data-testid="about-link" className="font-bold text-brand-ink underline underline-offset-2">About this demo</a>
@@ -180,11 +221,13 @@ export default function Layout({ currentPage, onReset, profile, setProfile, chil
             key={item.page}
             href={`#/${item.page}`}
             aria-current={currentPage === item.page ? 'page' : undefined}
-            className={`flex min-h-14 min-w-0 flex-auto items-center justify-center border-t-4 px-1 text-xs font-bold active:bg-brand-tint ${
+            className={`flex min-h-14 min-w-0 flex-auto flex-col items-center justify-center gap-0.5 border-t-4 px-1 pb-1 text-xs font-bold active:bg-brand-tint ${
               index === menu.own.length ? 'shadow-[inset_1px_0_0_var(--color-line)]' : ''} ${
               currentPage === item.page ? 'border-brand-ink text-brand-ink' : 'border-transparent text-muted'
             }`}
           >
+            {/* Icon and label together: quicker to find than a word alone */}
+            <item.Icon size={22} />
             {item.label}
           </a>
         ))}

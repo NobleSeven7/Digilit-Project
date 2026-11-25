@@ -1,7 +1,7 @@
 // Carrier page: post a journey with spare capacity, and see which parcels
 // fit a journey (the carrier's side of matching).
 import { useEffect, useRef, useState } from 'react'
-import { CITIES, VEHICLES, VEHICLE_TYPES, STATUS, DELIVERY } from '../data/constants.js'
+import { CITIES, VEHICLES, VEHICLE_TYPES, STATUS, DELIVERY, PERISHABLE_MAX_TRIP_HOURS } from '../data/constants.js'
 import { findMatches, evaluateCarrier, isAvailable, withSpaceLeft } from '../lib/matching.js'
 import { calculatePrice } from '../lib/pricing.js'
 import { startDelivery } from '../lib/delivery.js'
@@ -50,8 +50,10 @@ function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
     (d) => d.journeyId === journey.id && d.status === DELIVERY.AWAITING_ACCEPT)
 
   // Check every parcel that is still looking for a carrier against this journey.
+  // A parcel the item check marked "possibly prohibited" stays hidden until an
+  // admin has allowed it.
   const waiting = state.shipments.filter((s) =>
-    [STATUS.FOUND, STATUS.RETRYING, STATUS.FLAGGED].includes(s.status))
+    [STATUS.FOUND, STATUS.RETRYING, STATUS.FLAGGED].includes(s.status) && s.aiFlag !== 'pending')
   const results = waiting.map((shipment) => ({ shipment, ...evaluateCarrier(shipment, journey) }))
   const declined = (r) => r.shipment.rejectedJourneyIds.includes(journey.id)
   const fits = results.filter((r) => r.eligible && !declined(r))
@@ -349,7 +351,7 @@ export default function Carrier({ state, save, profile, setProfile }) {
         {/* What this vehicle may carry, straight from the compatibility table */}
         <p className="rounded-lg bg-brand-tint px-3 py-2 text-sm">
           A <strong>{vehicleType}</strong> can carry: {vehicle.allowed.join(', ').toLowerCase()}
-          {vehicleType === 'Car' ? ' (perishables only on trips under 6 hours)' : ''}.{' '}
+          {vehicleType === 'Car' ? ` (perishables only on trips under ${PERISHABLE_MAX_TRIP_HOURS} hours)` : ''}.{' '}
           {vehicle.maxKg !== null ? `Weight limit ${vehicle.maxKg} kg.` : 'Weight limit as you declare.'}
         </p>
 

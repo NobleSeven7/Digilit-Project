@@ -1,5 +1,6 @@
 // Admin page: human oversight. Flagged, unmatched and disputed requests
 // are listed here for a person to decide, rather than decided automatically.
+import { useState } from 'react'
 import { STATUS, DELIVERY, ESCROW, FLAG_AFTER_HOURS } from '../data/constants.js'
 import { readSyncLog, isWebhookConfigured } from '../lib/webhook.js'
 import { formatPKR, formatDateTime, isolate } from '../lib/format.js'
@@ -24,6 +25,30 @@ function RouteLabel({ origin, destination }) {
 function waitingTime(createdAt) {
   const minutes = Math.round((Date.now() - new Date(createdAt)) / 60000)
   return minutes < 60 ? `${minutes} min` : `${Math.round(minutes / 6) / 10} hours`
+}
+
+// A button whose action cannot be undone (money moves, or a request ends).
+// The first press asks; the second, on "Yes", does it. "Keep" steps back.
+function ConfirmButton({ label, question, yesLabel, onConfirm, className, testId }) {
+  const [asking, setAsking] = useState(false)
+  if (!asking) {
+    return (
+      <button type="button" className={className} data-testid={testId} onClick={() => setAsking(true)}>
+        {label}
+      </button>
+    )
+  }
+  return (
+    <div role="group" aria-label={question} className="fade-in-quick w-full rounded-lg border border-hold bg-hold-tint p-3">
+      <p className="font-bold">{question}</p>
+      <div className="mt-3 flex flex-wrap gap-3">
+        <button type="button" className={className} data-testid={testId && `${testId}-yes`} onClick={onConfirm} autoFocus>
+          {yesLabel}
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={() => setAsking(false)}>Keep it</button>
+      </div>
+    </div>
+  )
 }
 
 // One section with a heading, a count and a list (or an empty message).
@@ -107,9 +132,9 @@ export default function Admin({ state, save }) {
       </div>
       <div className="mt-3 flex flex-wrap gap-3">
         <a href={`#/matches/${s.id}`} className="btn btn-secondary">Check carriers again</a>
-        <button type="button" className="btn btn-danger" onClick={() => cancelShipment(s.id)}>
-          Cancel request
-        </button>
+        <ConfirmButton className="btn btn-danger" label="Cancel request"
+          question={`Cancel ${s.senderName}'s ${s.origin} to ${s.destination} request? This cannot be undone.`}
+          yesLabel="Yes, cancel it" onConfirm={() => cancelShipment(s.id)} />
       </div>
     </li>
   )
@@ -141,10 +166,9 @@ export default function Admin({ state, save }) {
                 onClick={() => allowFlagged(s.id)}>
                 Allow
               </button>
-              <button type="button" className="btn btn-danger" data-testid="ai-cancel"
-                onClick={() => cancelShipment(s.id, 'ai_flag')}>
-                Cancel request
-              </button>
+              <ConfirmButton className="btn btn-danger" testId="ai-cancel" label="Cancel request"
+                question={`Cancel ${s.senderName}'s ${s.origin} to ${s.destination} request? This cannot be undone.`}
+                yesLabel="Yes, cancel it" onConfirm={() => cancelShipment(s.id, 'ai_flag')} />
             </div>
           </li>
         ))}
@@ -178,12 +202,12 @@ export default function Admin({ state, save }) {
                 <StatusBadge status={`${formatPKR(d.price)} frozen`} />
               </div>
               <div className="mt-3 flex flex-wrap gap-3">
-                <button type="button" className="btn btn-primary" onClick={() => resolveDispute(d, true)}>
-                  Release to carrier
-                </button>
-                <button type="button" className="btn btn-secondary" onClick={() => resolveDispute(d, false)}>
-                  Refund sender
-                </button>
+                <ConfirmButton className="btn btn-primary" testId="release-to-carrier" label="Release to carrier"
+                  question={`Release ${formatPKR(d.price)} to ${j.carrierName}? This cannot be undone.`}
+                  yesLabel={`Yes, pay ${j.carrierName}`} onConfirm={() => resolveDispute(d, true)} />
+                <ConfirmButton className="btn btn-secondary" testId="refund-sender" label="Refund sender"
+                  question={`Refund ${formatPKR(d.price)} to ${s.senderName}? This cannot be undone.`}
+                  yesLabel={`Yes, refund ${s.senderName}`} onConfirm={() => resolveDispute(d, false)} />
               </div>
             </li>
           )

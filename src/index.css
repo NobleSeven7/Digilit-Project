@@ -191,6 +191,20 @@ a {
 }
 
 /* Clear keyboard-focus ring on everything clickable (accessibility). */
+/* "Skip to content": off screen until a keyboard user tabs to it. */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: 0.5rem;
+  z-index: 50;
+  transform: translateY(-200%);
+}
+.skip-link:focus-visible { transform: none; }
+
+/* A page heading gets focus after a page change, so screen readers announce
+   it. It is not a control, so it shows no focus ring. */
+h1[tabindex="-1"]:focus { outline: none; }
+
 :focus-visible {
   outline: 3px solid var(--color-hold);
   outline-offset: 2px;

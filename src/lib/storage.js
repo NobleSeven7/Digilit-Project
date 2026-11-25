@@ -3,7 +3,7 @@
 import { createSampleData } from '../data/sampleData.js'
 import { STATUS, DELIVERY, FLAG_AFTER_HOURS } from '../data/constants.js'
 import { clearSyncLog, noteInSyncLog } from './webhook.js'
-import { findMatches, isAvailable, withSpaceLeft } from './matching.js'
+import { anotherCarrierFits, isAvailable } from './matching.js'
 import { toInputValue } from './format.js'
 
 const KEY = 'raastashare-data-v1'
@@ -38,9 +38,7 @@ export function settleExpired(state, now = Date.now()) {
     const lost = expired.filter((d) => d.shipmentId === s.id)
     if (lost.length === 0 && s.status !== STATUS.FOUND) return s
     const rejectedJourneyIds = [...s.rejectedJourneyIds, ...lost.map((d) => d.journeyId)]
-    const stillOpen = findMatches(s, withSpaceLeft(state)).eligible
-      .some((r) => !rejectedJourneyIds.includes(r.journey.id))
-    const status = stillOpen ? STATUS.FOUND : STATUS.RETRYING
+    const status = anotherCarrierFits(s, state, rejectedJourneyIds) ? STATUS.FOUND : STATUS.RETRYING
     if (lost.length === 0 && status === s.status) return s
     return { ...s, rejectedJourneyIds, status }
   })

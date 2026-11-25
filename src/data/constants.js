@@ -61,6 +61,16 @@ export const FLAG_AFTER_HOURS = 2
 // (stops someone guessing the 4-digit code until the money is released).
 export const MAX_CODE_TRIES = 3
 
+// What may not be sent. The sender ticks each line on the Send page, and the
+// footer lists them for everyone.
+export const PROHIBITED = [
+  'No weapons, ammunition or explosives',
+  'No illegal drugs, alcohol or tobacco in bulk',
+  'No cash, jewellery, passports or other high-value documents',
+  'No flammable, toxic or otherwise hazardous materials',
+  'No live animals',
+]
+
 // Shipment statuses (one place, so the spelling is always identical).
 export const STATUS = {
   FOUND: 'Carriers found',

@@ -7,7 +7,7 @@ import { toPakistanTime } from './format.js'
 const LOG_KEY = 'raastashare-sync-log-v1'
 
 // Vite reads VITE_WEBHOOK_URL from the .env.local file when the app starts.
-const WEBHOOK_URL = (import.meta.env.VITE_WEBHOOK_URL || '').trim()
+const WEBHOOK_URL = (import.meta.env?.VITE_WEBHOOK_URL || '').trim() // ?. : also loads in the unit tests (Node)
 
 // Every record sends ALL of these columns, in this order, so Make.com learns
 // the full list from the first sample and Google Sheets columns line up.

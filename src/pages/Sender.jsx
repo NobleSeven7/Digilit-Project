@@ -1,7 +1,7 @@
 // Sender page: post a shipment. The sender must tick every line of the
 // prohibited-items checklist before the parcel can be posted.
 import { useRef, useState } from 'react'
-import { CITIES, CITY_CODES, ITEM_TYPES, STATUS } from '../data/constants.js'
+import { CITIES, CITY_CODES, ITEM_TYPES, STATUS, BASE_FEE, FEE_PER_KG, PROHIBITED } from '../data/constants.js'
 import { findMatches, withSpaceLeft } from '../lib/matching.js'
 import { calculatePrice } from '../lib/pricing.js'
 import { sendToWebhook } from '../lib/webhook.js'
@@ -14,7 +14,6 @@ import CityMap from '../components/CityMap.jsx'
 import { CheckIcon } from '../components/Icons.jsx'
 import posthog, { posthogEnabled } from '../lib/posthog.js'
 
-// The sender confirms the parcel contains none of these.
 // Shows how many checklist lines are ticked. Amber while incomplete, green when done.
 function CheckCounter({ count, total }) {
   const done = count === total
@@ -42,13 +41,6 @@ function FieldError({ error, field }) {
   return <p id={`${field}-error`} role="alert" className="fade-in-quick mt-1 font-bold text-fail">{error.text}</p>
 }
 
-const PROHIBITED = [
-  'No weapons, ammunition or explosives',
-  'No illegal drugs, alcohol or tobacco in bulk',
-  'No cash, jewellery, passports or other high-value documents',
-  'No flammable, toxic or otherwise hazardous materials',
-  'No live animals',
-]
 
 // A route picked on the Home page ("Routes we cover") arrives in the address
 // as city codes: #/sender/ISB-KHI. Unknown codes, or the same city twice, are
@@ -261,7 +253,8 @@ export default function Sender({ state, save, id, profile, setProfile }) {
             </p>
 
             {/* The route and parcel fields on the left, with a map of the chosen route
-                beside them (below them on phones) */}
+                beside them. On phones the map moves to the end of this card, so the
+                fields read as one run without a picture in the middle. */}
             <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
               <div className="space-y-4">
                 <div>
@@ -309,7 +302,9 @@ export default function Sender({ state, save, id, profile, setProfile }) {
                   )}
                 </div>
               </div>
-              <CityMap origin={origin} destination={destination} />
+              <div className="hidden sm:block">
+                <CityMap origin={origin} destination={destination} />
+              </div>
             </div>
 
             <div>
@@ -391,7 +386,7 @@ export default function Sender({ state, save, id, profile, setProfile }) {
                   <p>{aiResult.reason}</p>
                   <p className="mt-2 text-sm text-muted">
                     {aiResult.prohibited
-                      ? 'If you post this parcel, a person will review it on the Admin page. '
+                      ? 'If you post this parcel, a person reviews it on the Admin page before carriers can see it. '
                       : ''}
                     This is a suggestion and can be wrong. You choose the item type and confirm the checklist.
                   </p>
@@ -399,6 +394,10 @@ export default function Sender({ state, save, id, profile, setProfile }) {
               )}
             </div>
 
+            {/* Phones: the route map, after the fields */}
+            <div className="sm:hidden">
+              <CityMap origin={origin} destination={destination} />
+            </div>
           </div>
 
           <div role="group" aria-labelledby="checklist-heading" className="card">
@@ -426,7 +425,7 @@ export default function Sender({ state, save, id, profile, setProfile }) {
             {formatPKR(weight > 0 ? calculatePrice(weight) : 0)}
           </p>
           <p className="text-sm text-muted">
-            PKR 200 base fee + PKR 60 × {weight > 0 ? weight : 0} kg. Nothing is paid until a
+            {formatPKR(BASE_FEE)} base fee + {formatPKR(FEE_PER_KG)} × {weight > 0 ? weight : 0} kg. Nothing is paid until a
             carrier accepts; then RaastaShare holds the money (escrow) until delivery is confirmed.
           </p>
 

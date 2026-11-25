@@ -1,12 +1,12 @@
 // Delivery page: both sides accept -> pickup code -> delivery code -> escrow release.
 // The payment is simulated: it is only a status tracked inside this app.
 import { useRef, useState } from 'react'
-import { STATUS, DELIVERY, ESCROW, MAX_CODE_TRIES } from '../data/constants.js'
+import { STATUS, DELIVERY, ESCROW, MAX_CODE_TRIES, COURIER_FEE } from '../data/constants.js'
 import { generateOtp, generateDifferentOtp } from '../lib/otp.js'
 import { sendToWebhook, noteInSyncLog } from '../lib/webhook.js'
 import { goTo } from '../lib/navigation.js'
 import { formatPKR, formatDateTime, formatShort, isolate } from '../lib/format.js'
-import { findMatches, isAvailable, withSpaceLeft } from '../lib/matching.js'
+import { anotherCarrierFits, isAvailable, withSpaceLeft } from '../lib/matching.js'
 import { calculateSaving } from '../lib/pricing.js'
 import { shake } from '../lib/motion.js'
 import PageHeader from '../components/PageHeader.jsx'
@@ -75,6 +75,15 @@ function CodeForm({ id, label, buttonText, onSubmit }) {
   )
 }
 
+// One delivery in the picker.
+function DeliveryOption({ delivery: d, shipment: s }) {
+  return (
+    <option value={d.id}>
+      {s.origin} to {s.destination}, {s.weightKg} kg, {s.senderName}, {formatShort(d.createdAt)} ({d.status})
+    </option>
+  )
+}
+
 // Only the carrier enters the codes (entering the delivery code releases the
 // money). Anyone else signed in sees a one-tap switch to the carrier instead.
 function CarrierOnly({ carrierName, setProfile }) {
@@ -89,6 +98,43 @@ function CarrierOnly({ carrierName, setProfile }) {
   )
 }
 
+// Who sees what in a code step. The code is a secret between the sender's
+// side and the carrier: the sender sees it (and, for delivery, passes it on to
+// the receiver), and the carrier must hear it at the handover and type it in.
+// So the carrier never sees the code on their own screen.
+function CodeStep({ kind, code, codeTestId, formId, buttonText, onSubmit, shipment, journey, isSender, isCarrier, setProfile }) {
+  const sender = shipment.senderName
+  const carrier = journey.carrierName
+  return (
+    <>
+      {isSender && (
+        <div className="mt-4">
+          <ParcelPass kind={kind} code={code} codeTestId={codeTestId} shipment={shipment} journey={journey} />
+        </div>
+      )}
+      {isCarrier ? (
+        <>
+          <CodeForm id={formId} buttonText={buttonText} onSubmit={onSubmit}
+            label={kind === 'Pickup' ? `Pickup code from ${sender}` : 'Delivery code from the receiver'} />
+          {/* Demo shortcut: the code is on the sender's screen */}
+          <p className="mt-3 text-sm text-muted">
+            In this demo, the code is on {sender}'s screen.{' '}
+            <button type="button" className="font-bold text-brand-ink underline underline-offset-2" data-testid="switch-to-sender"
+              onClick={() => setProfile({ role: 'sender', name: sender })}>
+              Switch to {sender}
+            </button>
+          </p>
+        </>
+      ) : (
+        <CarrierOnly carrierName={carrier} setProfile={setProfile} />
+      )}
+      {!isSender && !isCarrier && (
+        <p className="mt-3 text-sm text-muted">Only {sender} (the sender) can see the {kind.toLowerCase()} code.</p>
+      )}
+    </>
+  )
+}
+
 export default function Delivery({ state, save, id, profile, setProfile }) {
   // Message shown after an action, e.g. "Wrong code".
   const [message, setMessage] = useState(null) // { ok: true/false, text }
@@ -99,8 +145,18 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
   const [reportingFor, setReportingFor] = useState(null)
   const [problem, setProblem] = useState('')
 
+  // Is the signed-in demo person the sender or the carrier of a delivery?
+  const shipmentOf = (d) => state.shipments.find((s) => s.id === d.shipmentId)
+  const journeyOf = (d) => state.journeys.find((j) => j.id === d.journeyId)
+  const isMine = (d) => (profile.role === 'sender'
+    ? shipmentOf(d)?.senderName === profile.name
+    : journeyOf(d)?.carrierName === profile.name)
+
   const deliveries = [...state.deliveries].reverse() // newest first
-  const delivery = deliveries.find((d) => d.id === id) || deliveries[0]
+  const mine = deliveries.filter(isMine)
+  const others = deliveries.filter((d) => !isMine(d))
+  // The one in the address bar, else the signed-in person's newest, else the newest of all.
+  const delivery = deliveries.find((d) => d.id === id) || mine[0] || deliveries[0]
 
   // Motion is only for what changes while this page is open: a step card
   // rises in when the step changes, and an "Accepted" badge settles in when
@@ -204,8 +260,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
   // Retrying" only if none does (the same check as "Withdraw request").
   function handleDecline() {
     const rejectedJourneyIds = [...shipment.rejectedJourneyIds, journey.id]
-    const { eligible } = findMatches(shipment, withSpaceLeft(state))
-    const stillOpen = eligible.some((r) => !rejectedJourneyIds.includes(r.journey.id))
+    const stillOpen = anotherCarrierFits(shipment, state, rejectedJourneyIds)
     update(
       { status: DELIVERY.DECLINED },
       { status: stillOpen ? STATUS.FOUND : STATUS.RETRYING, rejectedJourneyIds },
@@ -221,8 +276,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
   function handleWithdraw() {
     const rejectedJourneyIds = delivery.carrierAccepted
       ? [...shipment.rejectedJourneyIds, journey.id] : shipment.rejectedJourneyIds
-    const { eligible } = findMatches(shipment, withSpaceLeft(state))
-    const stillOpen = eligible.some((r) => !rejectedJourneyIds.includes(r.journey.id))
+    const stillOpen = anotherCarrierFits(shipment, state, rejectedJourneyIds)
     save({
       ...state,
       deliveries: state.deliveries.filter((d) => d.id !== delivery.id),
@@ -331,7 +385,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
   return (
     <div>
       <PageHeader title="Delivery">
-        Codes appear on this screen for the demo. A live service would send them by SMS.
+        In this demo the sender sees the codes on this screen. A live service would send them by SMS.
       </PageHeader>
 
       {/* Pick which delivery to look at */}
@@ -339,14 +393,16 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
         <label className="label" htmlFor="deliveryPicker">Delivery</label>
         <select id="deliveryPicker" className="field" value={delivery.id}
           onChange={(e) => { setMessage(null); goTo(`delivery/${e.target.value}`) }}>
-          {deliveries.map((d) => {
-            const s = state.shipments.find((x) => x.id === d.shipmentId)
-            return (
-              <option key={d.id} value={d.id}>
-                {s.origin} to {s.destination}, {s.weightKg} kg, {s.senderName}, {formatShort(d.createdAt)} ({d.status})
-              </option>
-            )
-          })}
+          {mine.length > 0 && (
+            <optgroup label="Yours">
+              {mine.map((d) => <DeliveryOption key={d.id} delivery={d} shipment={shipmentOf(d)} />)}
+            </optgroup>
+          )}
+          {others.length > 0 && (
+            <optgroup label={mine.length > 0 ? 'Others' : 'All deliveries'}>
+              {others.map((d) => <DeliveryOption key={d.id} delivery={d} shipment={shipmentOf(d)} />)}
+            </optgroup>
+          )}
         </select>
       </div>
 
@@ -445,18 +501,11 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
             <section className={`card ${rise}`} data-testid="step-pickup">
               <h2 className="text-xl font-bold">Pickup</h2>
               <p className="mt-1 text-muted">
-                {isolate(shipment.senderName)} reads this code to {isolate(journey.carrierName)} when handing over the parcel.
+                {isolate(shipment.senderName)} reads the pickup code to {isolate(journey.carrierName)} when handing over the parcel.
               </p>
-              <div className="mt-4">
-                <ParcelPass kind="Pickup" code={delivery.pickupOtp} codeTestId="pickup-otp"
-                  shipment={shipment} journey={journey} />
-              </div>
-              {isCarrier ? (
-                <CodeForm id="pickup-code" label="Carrier enters the pickup code"
-                  buttonText="Confirm pickup" onSubmit={handlePickup} />
-              ) : (
-                <CarrierOnly carrierName={journey.carrierName} setProfile={setProfile} />
-              )}
+              <CodeStep kind="Pickup" code={delivery.pickupOtp} codeTestId="pickup-otp" formId="pickup-code"
+                buttonText="Confirm pickup" onSubmit={handlePickup} shipment={shipment} journey={journey}
+                isSender={isSender} isCarrier={isCarrier} setProfile={setProfile} />
             </section>
           )}
 
@@ -465,18 +514,11 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
             <section className={`card ${rise}`} data-testid="step-delivery">
               <h2 className="text-xl font-bold">Delivery</h2>
               <p className="mt-1 text-muted">
-                The receiver reads this code to {isolate(journey.carrierName)} once the parcel arrives safely.
+                {isolate(shipment.senderName)} passes the delivery code to the receiver, who reads it to {isolate(journey.carrierName)} once the parcel arrives safely.
               </p>
-              <div className="mt-4">
-                <ParcelPass kind="Delivery" code={delivery.deliveryOtp} codeTestId="delivery-otp"
-                  shipment={shipment} journey={journey} />
-              </div>
-              {isCarrier ? (
-                <CodeForm id="delivery-code" label="Carrier enters the delivery code"
-                  buttonText="Confirm delivery" onSubmit={handleDelivery} />
-              ) : (
-                <CarrierOnly carrierName={journey.carrierName} setProfile={setProfile} />
-              )}
+              <CodeStep kind="Delivery" code={delivery.deliveryOtp} codeTestId="delivery-otp" formId="delivery-code"
+                buttonText="Confirm delivery" onSubmit={handleDelivery} shipment={shipment} journey={journey}
+                isSender={isSender} isCarrier={isCarrier} setProfile={setProfile} />
             </section>
           )}
 
@@ -495,7 +537,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
               </p>
               <p className="mt-2" data-testid="outcome">
                 {saving > 0
-                  ? `${isolate(shipment.senderName)} paid about ${formatPKR(saving)} less than our PKR 1,000 courier estimate, and ${isolate(journey.carrierName)} earned ${amount} on a trip that was happening anyway.`
+                  ? `${isolate(shipment.senderName)} paid about ${formatPKR(saving)} less than our ${formatPKR(COURIER_FEE)} courier estimate, and ${isolate(journey.carrierName)} earned ${amount} on a trip that was happening anyway.`
                   : `${isolate(journey.carrierName)} earned ${amount} on a trip that was happening anyway.`}
               </p>
               <a href="#/dashboard" className="btn btn-secondary mt-4">See the dashboard</a>
@@ -528,7 +570,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
           )}
 
           {/* Report a problem (only while the delivery is under way) */}
-          {active && !reporting && (
+          {active && (isSender || isCarrier) && !reporting && (
             <button type="button" className="btn btn-danger" data-testid="report-problem"
               onClick={() => { setProblem(''); setReportingFor(delivery.id) }}>
               Report a problem
