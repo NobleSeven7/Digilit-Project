@@ -1545,3 +1545,32 @@ Kept on purpose:
   - side-by-side recordings at real and quarter speed (390px): the two look
     almost the same at real speed, and the road finishes about 100ms sooner;
   - all 12 tests pass; the design check and axe are clean.
+
+## Stage 57: paper grain and a halftone photo
+
+- **Idea:** a video of "22 backgrounds to make designs less flat". Two of
+  them suit the cargo-label look: paper texture and halftone. The rest
+  (glass, gradients, iridescent shapes, blurred photos) are banned by
+  DESIGN.md or don't connect to parcels and roads.
+- **Paper grain:** a faint speckle over the kraft page colour (`--paper-grain`
+  in `src/index.css`). It's a 240px SVG noise tile drawn by the browser, with
+  no image file and no library. Brown specks in light mode, quieter pale ones
+  in dark mode, and none with "increase contrast". It covers the page only;
+  cards and forms stay plain. It shifts the paper's average colour by about
+  4/255, so text contrast barely changes.
+- **Halftone photo:** the Daewoo terminal photo on Home is printed as dots in
+  two colours: label black on kraft (light) and kraft dots on black (dark).
+  The prints were made once with a small Python (Pillow) script, saved as
+  4-colour PNGs of about 140 KB each, and only the one for the current theme
+  loads. The photo credit now says "(cropped, printed as a halftone)", as the
+  CC BY-SA licence asks for changes to be noted; the README says the same.
+- **Fixed along the way:**
+  - the first print lost detail, so the dots were made finer;
+  - the first dark print read as a negative, so the dark version puts dots
+    on the light parts of the photo;
+  - the screenshot script never applied dark mode (a hash change doesn't
+    reload the page). It now reloads, and the map notes were rechecked in
+    real dark mode.
+- **Checked:** before and after at 1440px and 390px in both themes; all 12
+  tests pass; the design check is clean; axe is clean on 8 pages in both
+  themes.
