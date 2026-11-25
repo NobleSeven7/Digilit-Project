@@ -394,12 +394,8 @@ a {
 }
 
 /* The intro plays once per visit; coming back to Home shows the finished
-   picture at once (src/pages/Home.jsx sets .intro-done). The scroll
-   animation further down (the example code) also shows
-   finished after the first visit: the same values as the reduced-motion
-   block, so it is "finished, no motion". */
+   picture at once (src/pages/Home.jsx sets .intro-done). */
 .intro-done :is(.hero-enter, .route-draw, .stop-enter, .map-parcel) { animation: none; }
-.intro-done .code-roll > span { translate: 0 var(--end); transition: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .hero-enter, .route-draw, .stop-enter, .map-parcel { animation: none; }
@@ -522,17 +518,6 @@ html[data-transition="theme"]::view-transition-group(*) { animation-duration: 30
 html[data-theme="dark"] .shot-light { display: none; }
 html[data-theme="dark"] .shot-dark { display: block; }
 
-/* Home, step 03: each digit of the example code rolls up to its number like a
-   departure board, left to right, starting once the phone has arrived.
-   --end is how far the strip of digits moves; --n is the digit's place. */
-.code-roll { display: inline-block; height: 1em; overflow: hidden; vertical-align: top; }
-.code-roll > span {
-  display: block;
-  transition: translate calc(900ms + var(--n) * 180ms) var(--ease-out) 450ms;
-}
-.code-roll > span > span { display: block; height: 1em; }
-.is-seen .code-roll > span { translate: 0 var(--end); }
-
 /* Home photos fade in once they have loaded, instead of popping in. */
 .photo-fade { opacity: 0; transition: opacity 600ms var(--ease-out); }
 .photo-fade.is-loaded { opacity: 1; }
@@ -583,7 +568,6 @@ html[data-theme="dark"] .shot-dark { display: block; }
 /* Less motion: the finished picture straight away; the tick just fades in.
    (The wrong-code shake is skipped in src/lib/motion.js.) */
 @media (prefers-reduced-motion: reduce) {
-  .code-roll > span { translate: 0 var(--end); transition: none; }
   .photo-fade { transition: none; }
   .site-header { transition: none; }
   .tick-pop { animation: enter-fade 200ms var(--ease-out) both; }
