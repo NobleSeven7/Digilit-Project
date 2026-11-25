@@ -1,5 +1,6 @@
 // Browser tests: the 8 test cases in the project proposal (tests 1 to 8),
-// plus 4 tests for the AI parcel check (tests 9 to 12).
+// plus 4 tests for the AI parcel check (tests 9 to 12) and 2 for who may do
+// what (tests 13 and 14).
 // The script opens the app in a real (headless) Chromium browser, clicks
 // through it like a user, checks the result and saves a screenshot of each
 // case in the test-screenshots folder.
@@ -49,9 +50,19 @@ async function startDelivery(page) {
   await page.waitForSelector('[data-testid="step-pickup"]')
 }
 
+// Read a code the way the demo works: the carrier cannot see it, so switch to
+// the sender (who has it), read it, and switch back to the carrier.
+async function readCode(page, testId) {
+  check(await page.locator(`[data-testid="${testId}"]`).count() === 0, 'The carrier can see the code')
+  await page.click('[data-testid="switch-to-sender"]')
+  const code = await page.textContent(`[data-testid="${testId}"]`)
+  await page.click('[data-testid="switch-to-carrier"]')
+  return code
+}
+
 // Enter the correct pickup code so the parcel is "In transit".
 async function confirmPickup(page) {
-  const code = await page.textContent('[data-testid="pickup-otp"]')
+  const code = await readCode(page, 'pickup-otp')
   await page.fill('#pickup-code', code)
   await page.click('[data-testid="pickup-code-submit"]')
   await page.waitForSelector('[data-testid="step-delivery"]')
@@ -149,7 +160,7 @@ async function main() {
   await runTest(page, 7, 'Wrong delivery OTP entered', 'Payment stays in escrow', async () => {
     await startDelivery(page)
     await confirmPickup(page)
-    const real = await page.textContent('[data-testid="delivery-otp"]')
+    const real = await readCode(page, 'delivery-otp')
     const wrong = real === '0000' ? '1111' : '0000'
     await page.fill('#delivery-code', wrong)
     await page.click('[data-testid="delivery-code-submit"]')
@@ -164,7 +175,7 @@ async function main() {
   await runTest(page, 8, 'Correct delivery OTP entered', 'PKR 500 released; row added to Google Sheets', async () => {
     await startDelivery(page)
     await confirmPickup(page)
-    await page.fill('#delivery-code', await page.textContent('[data-testid="delivery-otp"]'))
+    await page.fill('#delivery-code', await readCode(page, 'delivery-otp'))
     await page.click('[data-testid="delivery-code-submit"]')
     await page.waitForSelector('[data-testid="step-done"]')
     const message = await page.textContent('[data-testid="delivery-message"]')
@@ -309,6 +320,28 @@ async function main() {
     check(second.type === 'Documents', `Keyword check suggested "${second.type}"`)
     await page.unroute(AI_ADDRESS).catch(() => {})
     return `No answer: "${result.source}" after ${waited} s, fireworks flagged. Unusable reply: "${second.source}", suggested ${second.type}`
+  })
+
+  await runTest(page, 13, "Another sender opens Ayesha's parcel", 'They cannot request a carrier for it', async () => {
+    await page.selectOption('#profilePicker', 'sender:Omar Farooq')
+    await page.goto(APP_URL + '#/matches/s-demo')
+    await page.waitForSelector('[data-testid="sender-only"]')
+    const buttons = await page.locator('[data-testid="request-carrier"]').count()
+    check(buttons === 0, `${buttons} "Request" button(s) shown to Omar`)
+    await page.click('[data-testid="sender-only"] [data-testid="switch-to-sender"]')
+    const ownButtons = await page.locator('[data-testid="request-carrier"]').count()
+    check(ownButtons > 0, 'Ayesha cannot request a carrier for her own parcel')
+    return `Omar: 0 Request buttons and a "Switch to Ayesha Khan" note; Ayesha: ${ownButtons}`
+  })
+
+  await runTest(page, 14, 'Carrier at the delivery step', 'The carrier cannot see the delivery code', async () => {
+    await startDelivery(page)
+    await confirmPickup(page)
+    const seen = await page.locator('[data-testid="delivery-otp"]').count()
+    check(seen === 0, 'The delivery code is on the carrier\'s screen')
+    check(await page.locator('#delivery-code').isVisible(), 'The carrier has no box to type the code')
+    await shot('test-14-carrier-cannot-see-code.png', page.locator('[data-testid="step-delivery"]'))
+    return 'Carrier sees the code box but not the code; the sender sees the delivery pass'
   })
 
   await browser.close()

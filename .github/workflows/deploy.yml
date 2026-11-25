@@ -25,6 +25,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Stop before publishing if the rules or the design checks fail.
+      - run: npm run test:unit
+      - run: npm run check:design
       - run: npm run build
         env:
           # The Make.com webhook URL comes from a repository secret named

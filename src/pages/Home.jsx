@@ -50,8 +50,8 @@ function ChoiceRow({ href, testId, title, text, onClick }) {
 // pickup and a delivery code and holds the fee until the second one).
 // Thin rules between them, no boxes.
 const TRUST = [
-  { fact: 'Four checks on every traveller', detail: 'Route, timing, space and vehicle, before anyone is ranked.' },
-  { fact: 'A code at each end', detail: 'The traveller enters a pickup code, then a delivery code.' },
+  { fact: 'Four checks on every carrier', detail: 'Route, timing, space and vehicle, before anyone is ranked.' },
+  { fact: 'A code at each end', detail: 'The carrier enters a pickup code, then a delivery code.' },
   { fact: 'Money held until delivery', detail: 'The fee is released only when the delivery code is entered.' },
 ]
 
@@ -283,8 +283,8 @@ export default function Home({ profile, setProfile }) {
             Send it with someone already going that way
           </h1>
           <p className="hero-enter mt-5 max-w-md text-lg text-muted [--d:60ms] sm:text-xl sm:leading-normal">
-            RaastaShare matches your parcel with a traveller who has spare space on the
-            same intercity route. Payment stays in escrow until delivery is confirmed.
+            RaastaShare matches your parcel with a carrier: someone already travelling
+            the same intercity route, with spare space. Payment stays in escrow until delivery is confirmed.
           </p>
           <p className="hero-enter mt-4 max-w-md font-bold [--d:110ms]" data-testid="hero-fact">
             <span aria-hidden="true">ISB → LHE</span><span className="sr-only">Islamabad to Lahore</span>, 5 kg:{' '}
@@ -300,7 +300,7 @@ export default function Home({ profile, setProfile }) {
             <ChoiceRow href="#/sender" testId="choose-sender" onClick={become('sender')}
               title="Sender" text="Post a parcel and pick who takes it" />
             <ChoiceRow href="#/carrier" testId="choose-carrier" onClick={become('carrier')}
-              title="Traveller" text="Post a journey and earn from spare space" />
+              title="Carrier" text="Post a journey and earn from spare space" />
           </div>
         </div>
 
@@ -374,7 +374,7 @@ export default function Home({ profile, setProfile }) {
       </section>
 
       {/* Closing: the same two choices again, as a two-colour split: label
-          black for senders, kraft for travellers. One line and one button each. */}
+          black for senders, kraft for carriers. One line and one button each. */}
       <section className="grid overflow-hidden rounded-2xl sm:grid-cols-2" data-testid="closing-split">
         <div className="flex flex-col items-start justify-between gap-7 bg-brand px-5 py-10 text-white sm:px-10 sm:py-14">
           <h2 className="text-3xl font-bold sm:text-4xl">Sending something? Put it on a trip that is already going.</h2>

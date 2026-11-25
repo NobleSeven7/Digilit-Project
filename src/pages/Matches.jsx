@@ -1,7 +1,7 @@
 // Matches page: ranked carriers for one shipment, and for every carrier
 // the result of each of the four rules, so the decision is transparent.
 import { useEffect, useState } from 'react'
-import { STATUS, DELIVERY, FLAG_AFTER_HOURS } from '../data/constants.js'
+import { STATUS, DELIVERY, FLAG_AFTER_HOURS, TIME_BUFFER_HOURS, COURIER_FEE } from '../data/constants.js'
 import { findMatches, withSpaceLeft } from '../lib/matching.js'
 import { calculatePrice, calculateSaving } from '../lib/pricing.js'
 import { goTo } from '../lib/navigation.js'
@@ -9,6 +9,7 @@ import { startDelivery } from '../lib/delivery.js'
 import { formatPKR, formatDateTime, formatShort } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import RouteLine from '../components/RouteLine.jsx'
+import { codeOf } from '../components/RouteCodes.jsx'
 import RuleCheck from '../components/RuleCheck.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import { VehicleIcon, CheckIcon, ChevronDownIcon } from '../components/Icons.jsx'
@@ -165,6 +166,29 @@ function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onReq
   )
 }
 
+// One parcel in the picker.
+function ShipmentOption({ shipment: s }) {
+  return (
+    <option value={s.id}>
+      {s.origin} to {s.destination}, {s.weightKg} kg {s.itemType.toLowerCase()}, {s.senderName}, {formatShort(s.createdAt)} ({s.status})
+    </option>
+  )
+}
+
+// Someone else's parcel: say who can request a carrier, with a one-tap switch
+// (the same idea as "Only the carrier enters this code" on the Delivery page).
+function SenderOnly({ senderName, setProfile }) {
+  return (
+    <div className="mb-6 rounded-lg bg-sunk px-3 py-3" data-testid="sender-only">
+      <p>Only <strong>{senderName}</strong> (the sender) can request a carrier for this parcel.</p>
+      <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-sender"
+        onClick={() => setProfile({ role: 'sender', name: senderName })}>
+        Switch to {senderName}
+      </button>
+    </div>
+  )
+}
+
 // On a busy route the lists can be long, so each starts with this many cards.
 const FIRST_SHOWN = 5
 
@@ -177,14 +201,18 @@ function ShowAll({ total, onClick }) {
   )
 }
 
-export default function Matches({ state, save, id }) {
+export default function Matches({ state, save, id, profile, setProfile }) {
   // Which lists are opened in full: "shipmentId:eligible" / "shipmentId:other".
   const [opened, setOpened] = useState([])
 
-  // Newest shipments first in the picker.
+  // Newest shipments first in the picker, the signed-in sender's own first.
+  const isMine = (s) => profile.role === 'sender' && s.senderName === profile.name
   const shipments = [...state.shipments].reverse()
-  // Show the shipment named in the address bar, or the newest one.
-  const shipment = shipments.find((s) => s.id === id) || shipments[0]
+  const mine = shipments.filter(isMine)
+  const others = shipments.filter((s) => !isMine(s))
+  // Show the shipment named in the address bar, or the sender's newest one
+  // (or the newest of all, when they have none).
+  const shipment = shipments.find((s) => s.id === id) || mine[0] || shipments[0]
 
   // Does this parcel's wave play? Decided when its results are first shown
   // (and again when another parcel is picked), then remembered for the tab.
@@ -214,16 +242,21 @@ export default function Matches({ state, save, id }) {
 
   const delivery = state.deliveries.find(
     (d) => d.shipmentId === shipment.id && d.status !== DELIVERY.DECLINED)
-  // The sender can request a carrier only while the shipment is still open.
-  const canRequest = [STATUS.FOUND, STATUS.RETRYING, STATUS.FLAGGED].includes(shipment.status)
+  // Only this parcel's own sender can request a carrier, and only while the
+  // shipment is still open.
+  const ownParcel = isMine(shipment)
+  const isOpenRequest = [STATUS.FOUND, STATUS.RETRYING, STATUS.FLAGGED].includes(shipment.status)
+  // A parcel the item check marked "possibly prohibited" waits for an admin first.
+  const awaitingReview = shipment.aiFlag === 'pending'
+  const canRequest = ownParcel && isOpenRequest && !awaitingReview
   const price = calculatePrice(shipment.weightKg)
 
   // Long lists show the first few cards until "Show all" is pressed.
   const isOpen = (list) => opened.includes(`${shipment.id}:${list}`)
   const open = (list) => setOpened([...opened, `${shipment.id}:${list}`])
   const shownOffered = isOpen('eligible') ? offered : offered.slice(0, FIRST_SHOWN)
-  const others = [...declined.map((r) => ({ ...r, declined: true })), ...ineligible]
-  const shownOthers = isOpen('other') ? others : others.slice(0, FIRST_SHOWN)
+  const notAvailable = [...declined.map((r) => ({ ...r, declined: true })), ...ineligible]
+  const shownOthers = isOpen('other') ? notAvailable : notAvailable.slice(0, FIRST_SHOWN)
 
   // Sender picks a carrier: create a delivery that both sides must accept.
   function handleRequest(journey) {
@@ -254,18 +287,31 @@ export default function Matches({ state, save, id }) {
         <label className="label" htmlFor="shipmentPicker">Parcel</label>
         <select id="shipmentPicker" className="field" value={shipment.id}
           onChange={(e) => goTo(`matches/${e.target.value}`)}>
-          {shipments.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.origin} to {s.destination}, {s.weightKg} kg {s.itemType.toLowerCase()}, {s.senderName}, {formatShort(s.createdAt)} ({s.status})
-            </option>
-          ))}
+          {mine.length > 0 && (
+            <optgroup label="Your parcels">
+              {mine.map((s) => <ShipmentOption key={s.id} shipment={s} />)}
+            </optgroup>
+          )}
+          {others.length > 0 && (
+            <optgroup label={mine.length > 0 ? 'Other senders' : 'All parcels'}>
+              {others.map((s) => <ShipmentOption key={s.id} shipment={s} />)}
+            </optgroup>
+          )}
         </select>
       </div>
 
       {/* Shipment summary */}
       <section className="card mb-6" data-testid="shipment-summary">
-        <RouteLine origin={shipment.origin} destination={shipment.destination} />
-        <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
+        {/* Phones: the route on one line, so the ranked carriers start on the
+            first screen. Wider screens keep the full route line. */}
+        <p className="font-display text-2xl font-bold sm:hidden">
+          {codeOf(shipment.origin)} → {codeOf(shipment.destination)}{' '}
+          <span className="font-sans text-base font-normal text-muted">{shipment.origin} to {shipment.destination}</span>
+        </p>
+        <div className="hidden sm:block">
+          <RouteLine origin={shipment.origin} destination={shipment.destination} />
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 sm:mt-4">
           <p><strong>{shipment.weightKg} kg</strong> {shipment.itemType.toLowerCase()}</p>
           <p>Deadline <strong>{formatDateTime(shipment.deadline)}</strong></p>
           <p>Price <strong>{formatPKR(price)}</strong></p>
@@ -273,7 +319,7 @@ export default function Matches({ state, save, id }) {
         </div>
         {calculateSaving(shipment.weightKg) > 0 && (
           <p className="mt-2 text-sm text-muted">
-            About {formatPKR(calculateSaving(shipment.weightKg))} less than our PKR 1,000 courier estimate.
+            About {formatPKR(calculateSaving(shipment.weightKg))} less than our {formatPKR(COURIER_FEE)} courier estimate.
           </p>
         )}
         {delivery && (
@@ -281,16 +327,18 @@ export default function Matches({ state, save, id }) {
         )}
       </section>
 
-      {/* The published score formula (transparency) */}
-      {/* Opens smoothly, like "See details" on each card (.rule-details) */}
-      <details className="rule-details card mb-6">
-        <summary className="flex min-h-11 cursor-pointer items-center font-bold active:opacity-70">How the score is calculated</summary>
-        <ul className="mt-3 list-disc space-y-1 pl-5">
-          <li>Time buffer: 50 points if the carrier departs at least 6 hours before your deadline, otherwise 25.</li>
-          <li>Capacity fit: 50 × (parcel kg ÷ carrier spare kg). A fuller fit scores higher.</li>
-          <li>The two are added for a total out of 100. The highest total is suggested first.</li>
-        </ul>
-      </details>
+      {/* Possibly prohibited: no carrier can be asked until an admin allows it */}
+      {awaitingReview && isOpenRequest && (
+        <div className="card mb-6 border-hold bg-hold-tint" data-testid="awaiting-review">
+          <p className="font-bold">An admin checks this item before any carrier is asked.</p>
+          <p className="mt-1">The item check said it may be prohibited. Until a person allows it on the Admin page, carriers do not see this parcel.</p>
+        </div>
+      )}
+
+      {/* Someone else's open parcel: only its sender can request a carrier */}
+      {!ownParcel && isOpenRequest && !awaitingReview && (
+        <SenderOnly senderName={shipment.senderName} setProfile={setProfile} />
+      )}
 
       {/* Eligible carriers, ranked */}
       <section className="mb-8">
@@ -321,6 +369,17 @@ export default function Matches({ state, save, id }) {
         )}
       </section>
 
+      {/* The published score formula (transparency) */}
+      {/* Opens smoothly, like "See details" on each card (.rule-details) */}
+      <details className="rule-details card mb-8">
+        <summary className="flex min-h-11 cursor-pointer items-center font-bold active:opacity-70">How the score is calculated</summary>
+        <ul className="mt-3 list-disc space-y-1 pl-5">
+          <li>Time buffer: 50 points if the carrier departs at least {TIME_BUFFER_HOURS} hours before your deadline, otherwise 25.</li>
+          <li>Capacity fit: 50 × (parcel kg ÷ carrier spare kg). A fuller fit scores higher.</li>
+          <li>The two are added for a total out of 100. The highest total is suggested first.</li>
+        </ul>
+      </details>
+
       {/* Carriers that were rejected, with the reason */}
       {(ineligible.length > 0 || declined.length > 0) && (
         <section>
@@ -332,8 +391,8 @@ export default function Matches({ state, save, id }) {
               <CarrierCard key={result.journey.id} result={result} shipment={shipment} declined={result.declined} />
             ))}
           </ul>
-          {shownOthers.length < others.length && (
-            <ShowAll total={`${others.length} not available`} onClick={() => open('other')} />
+          {shownOthers.length < notAvailable.length && (
+            <ShowAll total={`${notAvailable.length} not available`} onClick={() => open('other')} />
           )}
         </section>
       )}

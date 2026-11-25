@@ -162,3 +162,12 @@ export function findMatches(shipment, journeys) {
   const ineligible = results.filter((result) => !result.eligible)
   return { eligible, ineligible }
 }
+
+// Is any carrier still free for this parcel, leaving out the journeys in
+// rejectedJourneyIds (carriers who declined, or whose request expired)?
+// Decline, Withdraw and the expiry tidy-up all ask this one question, so it
+// lives in one place and the three can never drift apart.
+export function anotherCarrierFits(shipment, state, rejectedJourneyIds = shipment.rejectedJourneyIds) {
+  return findMatches(shipment, withSpaceLeft(state)).eligible
+    .some((r) => !rejectedJourneyIds.includes(r.journey.id))
+}
