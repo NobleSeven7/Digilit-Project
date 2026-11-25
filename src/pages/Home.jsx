@@ -163,6 +163,53 @@ function Shot({ light, dark }) {
   )
 }
 
+// The hero's route picker (a "where to?" box, as on booking sites): choose
+// two cities and go straight to the Send page with that route filled in
+// (#/sender/ISB-KHI, the same address the route list uses). The price line
+// under it is the demo 5 kg parcel; the price does not depend on the route.
+function RoutePicker({ onGo }) {
+  const [from, setFrom] = useState(HUB)
+  const [to, setTo] = useState('Lahore')
+  const same = from === to
+  const time = roadTime(tripHours(from, to))
+  const pick = (setter) => (event) => setter(event.target.value)
+  return (
+    <div className="hero-enter mt-6 max-w-md border-t border-line pt-4 [--d:110ms]" data-testid="route-picker">
+      <p className="font-bold text-ink">Where is it going?</p>
+      <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+        <label className="min-w-0">
+          <span className="sr-only">From</span>
+          <select className="field" value={from} onChange={pick(setFrom)} data-testid="picker-from">
+            {CITIES.map((city) => <option key={city}>{city}</option>)}
+          </select>
+        </label>
+        <span aria-hidden="true" className="text-brand-ink"><ArrowRightIcon size={20} /></span>
+        <label className="min-w-0">
+          <span className="sr-only">To</span>
+          <select className="field" value={to} onChange={pick(setTo)} data-testid="picker-to">
+            {CITIES.map((city) => <option key={city}>{city}</option>)}
+          </select>
+        </label>
+      </div>
+      <p className="mt-3 text-sm text-muted" data-testid="hero-fact" aria-live="polite">
+        {same ? 'Choose two different cities.' : (
+          <>
+            <span className="font-bold text-ink">
+              {DEMO_KG} kg: {formatPKR(calculatePrice(DEMO_KG))} instead of about {formatPKR(COURIER_FEE)} by courier
+            </span>{' '}(our estimate){time && `, ${time} by road`}.
+          </>
+        )}
+      </p>
+      {same
+        ? <button type="button" className="btn btn-primary mt-3 w-full" disabled>See carriers on this route</button>
+        : <a href={`#/sender/${CITY_CODES[from]}-${CITY_CODES[to]}`} onClick={onGo} data-testid="picker-go"
+            className="btn btn-primary mt-3 w-full gap-2 no-underline">
+            See carriers on this route <ArrowRightIcon size={20} />
+          </a>}
+    </div>
+  )
+}
+
 // The pickup pass for the demo parcel (Ayesha Khan's 5 kg, carried by Bilal
 // Ahmed). The code is an example; real codes are random.
 // Worked out once, when the page code loads, not on every redraw.
@@ -286,10 +333,7 @@ export default function Home({ profile, setProfile }) {
             RaastaShare matches your parcel with a carrier: someone already travelling
             the same intercity route, with spare space. Payment stays in escrow until delivery is confirmed.
           </p>
-          <p className="hero-enter mt-4 max-w-md font-bold [--d:110ms]" data-testid="hero-fact">
-            <span aria-hidden="true">ISB → LHE</span><span className="sr-only">Islamabad to Lahore</span>, 5 kg:{' '}
-            {formatPKR(calculatePrice(DEMO_KG))} instead of about {formatPKR(COURIER_FEE)} by courier (our estimate).
-          </p>
+          <RoutePicker onGo={become('sender')} />
 
           {/* The two profile choices, split side by side (simulated accounts:
               no login needed). Same links and profile switch as before. */}
