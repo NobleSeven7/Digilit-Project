@@ -646,10 +646,17 @@ For the presentation (the courier price and step count are our estimates):
 
 ## Work report: 25 November 2026
 
-Two small changes: status notes on the Home map, and a shorter delivery
-road on the Delivery tracker. Full details are in `BUILD_LOG.md`, Stages 55
-and 56. Pull requests #52 and #54 were merged and deployed. This report was
-first written in the README-only pull request #53.
+A day of small finishing touches:
+- status notes on the Home map;
+- a shorter delivery road on the Delivery tracker;
+- a small fix to a skill template;
+- paper grain and a halftone photo;
+- a design check for motion that runs too long.
+
+The matching rules, scores, pricing, statuses, simulated sign-in, webhooks,
+AI check and tests did not change. Full details are in `BUILD_LOG.md`, Stages
+55–58. Pull requests #52, #54, #55 and #56 were merged and deployed. This
+report was written in the README-only pull requests #53 and #57.
 
 ### Status notes on the Home map (#52)
 
@@ -671,10 +678,6 @@ The first wording ("Matched with Bilal Ahmed", "PKR 500 released to carrier")
 ran out of its boxes, so it was shortened after measuring the text in the
 browser.
 
-Also looked at, with no change made: 21st.dev, a library of ready-made React
-pieces. Most are TypeScript, need extra libraries, or are the gradients and
-glows our design rules ban, so it is useful for ideas only.
-
 ### Delivery road timing (#54)
 
 While checking the old `ccr-7df6bb23-nw9pnq` branch before deleting it, two
@@ -684,19 +687,90 @@ instead of 300ms. Side-by-side recordings showed almost no visible difference
 at real speed, and 250ms brings the road back within DESIGN.md's "300ms or
 less" rule, so the change was taken.
 
+### Plan template fix (#55)
+
+Another Claude session pushed one more commit to the old branch: it removes
+four invisible characters from the improve-animations skill's plan template,
+so the template displays as one block. It was brought over so that nothing on
+the branch would be lost when it is deleted. No app code changed.
+
+### Paper grain and halftone photo (#56)
+
+The idea came from a video of "22 backgrounds to make designs less flat". Two
+of them suit the cargo-label look:
+
+- **Paper grain:**
+  - a faint speckle over the kraft page colour, so the page reads as paper
+    instead of a flat fill;
+  - drawn by the browser from a small SVG noise pattern, with no image file
+    and no library;
+  - brown specks in light mode, quieter pale ones in dark mode, and none with
+    "increase contrast";
+  - cards and forms stay plain, like labels stuck on paper;
+  - it moves the paper's average colour by about 4/255, so text contrast
+    barely changes.
+- **Halftone photo:**
+  - the Daewoo terminal photo on Home is printed as dots: black on kraft in
+    light mode, kraft dots on black in dark mode;
+  - the prints are made once by `scripts/halftone.py`, and only the one for
+    the current theme loads;
+  - the photo credit now says "(cropped, printed as a halftone)", as the
+    CC BY-SA licence asks.
+
+The rest of the video's list (glass, gradients, iridescent shapes, blurred
+photos) is banned by DESIGN.md or has nothing to do with parcels and roads.
+
+### Motion duration check (#56)
+
+`npm run check:design` now fails on any animation over 300ms. The motions
+allowed to run longer are named in DESIGN.md, each with its reason:
+- the success tick and the tracker's "Paid" stop;
+- the Home intro, price bars, code and photo fade (once per visit);
+- the AI check's 8-second wait bar.
+
+The check would have caught the 350ms road that #54 fixed. To test it, the
+old road was put back: the check flagged it with the right line number.
+
+### Looked at, no change made
+
+- **21st.dev:** a library of ready-made React pieces. Most are TypeScript,
+  need extra libraries, or are the gradients and glows our design rules ban.
+- **originkit.dev:** about 800 animated showpiece effects (3D, glows, animated
+  backgrounds), which go against our motion and surface rules.
+- **kawai-text-animation:** 100 text effects. We already use the two that fit
+  (the code roll and the wrong-code shake). The rest are decorative, and most
+  split words into single letters, which some screen readers spell out.
+
 ### Checks
 
-- Before and after screenshots at 390px and 1440px, and in dark mode: no note
-  covers a city, a route or the fare tag.
-- All 12 browser tests pass; axe and `npm run check:design` are clean.
-- Live site after #52, at 390px: all three notes show, no sideways
-  scrolling, 0 cookies.
+- #52: before and after screenshots at 390px and 1440px. No note covers a
+  city, a route or the fare tag.
+- #56: before and after at 1440px and 390px in both themes, including the
+  strip above the phone tab bar.
+- **A correction:** the first "dark mode" screenshots for #52 were really
+  light mode. The script changed the theme setting but never reloaded the
+  page. It was fixed, and the map notes were rechecked in real dark mode.
+- Every change: all 12 browser tests pass; axe and `npm run check:design`
+  are clean, and axe is clean on all 8 pages in both themes after #56.
+- Live site:
+  - after #52: all three notes show at 390px;
+  - after #54: the stylesheet has the 250ms road;
+  - after #56: the grain and the right print for each theme show, with no
+    sideways scrolling at 390px or 1440px.
+  - Every time: 0 cookies and no errors.
 
 ### Still to do
 
-- **Check on a phone:** open Home in a private tab and watch the notes appear
-  with the parcel's ride.
-- **Tidy-up:** once #54 is merged, delete the `ccr-7df6bb23-nw9pnq` branch.
+- **Check on a phone:**
+  - open Home in a private tab and watch the map notes appear with the
+    parcel's ride;
+  - look at the paper grain, including the strip above the tab bar.
+- **Open question:** the Home price bars and code animate when you scroll to
+  them. They are named as allowed exceptions, but strictly they break the
+  "no scroll-reveal entrances" rule, because the bars stay empty until
+  reached. Decide whether they should simply be there.
+- **Tidy-up:** the `ccr-7df6bb23-nw9pnq` branch is now fully merged and can
+  be deleted on GitHub (this session is not allowed to delete it).
 - The items under "Still to do" in the 24 November report still apply.
 
 ## Photo credits
