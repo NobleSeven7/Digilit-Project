@@ -1574,3 +1574,24 @@ Kept on purpose:
 - **Checked:** before and after at 1440px and 390px in both themes; all 12
   tests pass; the design check is clean; axe is clean on 8 pages in both
   themes.
+
+## Stage 58: grain under the tab bar, a duration check, the halftone script
+
+- **Grain above the phone tab bar:** the 16px strip where the page fades
+  into the tab bar was flat paper colour, so it showed as a smooth band
+  against the grain. It now uses the grainy paper, faded out with a mask.
+- **Motion durations are now checked (C5 in `npm run check:design`):**
+  - it reads every animation and transition in `src/index.css` and fails on
+    any lasting over 300ms;
+  - the motions allowed to run longer are now named in DESIGN.md and in
+    `LONG_MOTION_ALLOWED`: the success tick and the "Paid" stop; the Home
+    intro, price bars, code and photo fade (once per visit); and the AI
+    check's 8-second wait bar;
+  - tested by putting the old 350ms delivery road back: the check caught it
+    with the right line number.
+- **`scripts/halftone.py`:** the Pillow script that prints the terminal photo
+  as a halftone (`light` or `dark`). The two prints were regenerated with it
+  so the files match the script; they differ from the approved ones by about
+  2/255 on average, which doesn't show.
+- **Checked:** all 12 tests pass, the design check (with C5) is clean, and
+  axe is clean on 8 pages in both themes.

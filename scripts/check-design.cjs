@@ -80,6 +80,51 @@ for (const file of files(SRC)) {
   })
 }
 
+// C5: UI motion lasts 300ms or less (DESIGN.md > Motion). Reads every
+// animation and transition in src/index.css and takes each one's duration
+// (the first time in it; later times are delays). The motions DESIGN.md
+// names as exceptions are listed here, each with its reason.
+const LONG_MOTION_ALLOWED = {
+  '.ai-wait-bar': 'shows the AI check\'s 8-second wait',
+  '.hero-enter': 'Home map intro, once per visit',
+  '.route-draw': 'Home map intro, once per visit',
+  '.stop-enter': 'Home map intro, once per visit',
+  '.map-parcel': 'Home map intro, once per visit',
+  '.bar-grow': 'Home price bars, once per visit',
+  '.code-roll': 'Home departure-board code, once per visit',
+  '.photo-fade': 'Home photos fading in once loaded',
+  '.stop-settle': 'the delivery celebration (paid)',
+  '.tick-pop': 'the success tick',
+}
+{
+  const file = path.join(SRC, 'index.css')
+  // Blank out comments but keep line breaks, so line numbers stay right.
+  const css = fs.readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '))
+  const rule = /([^{}]+)\{([^{}]*)\}/g
+  let match
+  while ((match = rule.exec(css))) {
+    const selector = match[1].trim().split('\n').pop().trim()
+    if (Object.keys(LONG_MOTION_ALLOWED).some((name) => selector.startsWith(name))) continue
+    let offset = match.index + match[1].length + 1
+    for (const declaration of match[2].split(';')) {
+      const motion = declaration.match(/^\s*(?:animation|transition)(?:-duration)?\s*:(.*)$/s)
+      if (motion) {
+        for (const item of motion[1].split(/,(?![^(]*\))/)) {
+          const time = item.match(/(\d+(?:\.\d+)?)(ms|s)\b/)
+          const ms = time ? (time[2] === 's' ? Number(time[1]) * 1000 : Number(time[1])) : 0
+          if (ms <= 300) continue
+          problems++
+          const line = css.slice(0, offset).split('\n').length + (declaration.match(/^\s*/)[0].split('\n').length - 1)
+          console.log(`C5 ${path.relative(ROOT, file)}:${line}  UI motion lasts 300ms or less (DESIGN.md > Motion)`)
+          console.log(`    ${selector} { ${declaration.trim().slice(0, 100)} }  (${ms}ms)`)
+          console.log('    Fix: shorten it to 300ms or less, or name it as an exception in DESIGN.md and LONG_MOTION_ALLOWED.')
+        }
+      }
+      offset += declaration.length + 1
+    }
+  }
+}
+
 if (problems) {
   console.log(`\n${problems} design rule problem(s). See DESIGN.md.`)
   process.exit(1)

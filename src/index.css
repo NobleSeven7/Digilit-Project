@@ -275,7 +275,10 @@ a {
   bottom: 100%;
   height: 1rem;
   pointer-events: none;
-  background: linear-gradient(to top, var(--color-paper), transparent);
+  /* Grainy paper faded out with a mask, so the strip matches the page */
+  background-color: var(--color-paper);
+  background-image: var(--paper-grain);
+  mask-image: linear-gradient(to top, black, transparent);
 }
 
 /* ---- More contrast (a device accessibility setting) -----------------------
