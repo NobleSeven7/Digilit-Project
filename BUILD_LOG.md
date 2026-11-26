@@ -1595,3 +1595,23 @@ Kept on purpose:
   2/255 on average, which doesn't show.
 - **Checked:** all 12 tests pass, the design check (with C5) is clean, and
   axe is clean on 8 pages in both themes.
+
+## Stage 59: finishing the Home design pass
+
+- **Prices on phones:** "PKR 1,000" and "PKR 500" in "What it costs" broke
+  onto two lines at 390px. The cause was in `src/index.css`: the
+  `text-wrap: pretty` (paragraphs) and `text-wrap: balance` (headings) rules
+  sat outside a CSS layer, so they beat every Tailwind class and also switched
+  wrapping back on, which cancelled `whitespace-nowrap`. Both rules now sit in
+  the `base` layer, so a class on the element wins. "PKR 60" in the price note
+  is also kept on one line with no-break spaces.
+- **Motion tokens:** the Sender/Carrier choice and the route rows used plain
+  `ease`; they now use `--ease-out`, as DESIGN.md asks.
+- **Old comments:** "green band" and "amber bar" were left from the old green
+  style; they now say label-black band and red bar.
+- **New test 17:** the hero's "Where is it going?" picker (added in PR #65,
+  never tested): the same city twice turns the button off; Lahore to
+  Karachi opens the Send page on that route, and switches a carrier to a sender.
+- **Checked:** 17 of 17 browser tests pass; unit tests and the design check
+  are clean; Home at 1440px and 390px in both themes; every other page is
+  pixel-identical before and after at 1440px and 390px.
