@@ -1596,7 +1596,56 @@ Kept on purpose:
 - **Checked:** all 12 tests pass, the design check (with C5) is clean, and
   axe is clean on 8 pages in both themes.
 
-## Stage 59: fixes from the UX review (27 Nov 2026)
+## Stage 60: shared backend, part 1 (accounts and shared data)
+
+- **What:** with `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` set,
+  the app uses Supabase: email-and-password accounts (sender or carrier, one
+  admin) and one shared database for trips, parcels, deliveries and codes.
+  Without them nothing changes: localStorage and demo profiles.
+- **How:** `src/lib/server.js` (sign-in, load, save) and
+  `src/lib/serverRows.js` (records to rows and back, only changed rows are
+  sent). Pages keep calling `save()`. A new `SignIn` page appears for every
+  page except Home and About when signed out. "Switch to …" buttons, the demo
+  picker and "Reset demo data" are hidden with real accounts. The Admin page
+  is for the admin only.
+- **Rules:** `database/02-sign-in-and-rules.sql`. Signed-in people see trips,
+  parcels and deliveries; they add only their own; they change only what they
+  take part in (any carrier may mark a waiting parcel "Carriers found"); the
+  admin can change anything; codes are visible to the two people on the
+  delivery; signed-out visitors see nothing.
+- **Left for part 2:** checking codes on the server (so the carrier no longer
+  needs to read them), the timed rules, the Make.com calls, and stricter
+  checks on which fields each person may change.
+- **Checked:** against a local copy of Supabase, two real accounts did the
+  whole flow (post, match, accept, pickup code, delivery code, payment
+  released); a third account could not read the codes or change the parcel
+  through the API; signed-out requests were refused. Unit tests (with new row
+  tests) and all 16 browser tests pass without the backend.
+
+## Stage 61: shared backend, part 2 (codes and timers on the server)
+
+- **Codes:** when both people accept, the server makes the two codes
+  (`database/03-codes-and-timers.sql`). Only the sender and the admin can
+  read them; the carrier's phone never receives them. The carrier types a
+  code and the server checks it (`enter_code`), keeping the wrong-code count
+  and freezing the payment after 3 wrong codes, as before.
+- **Guard:** only the server or the admin can mark a delivery picked up or
+  delivered, move the money, change the wrong-code counts, or accept for
+  the other person. Tried from the carrier's account: refused.
+- **Timers:** every 5 minutes (pg_cron) the server ends requests whose
+  carrier left before both accepted, sends their parcel back to matching, and
+  flags parcels unmatched for 2 hours. The "another carrier fits" check on the
+  server looks at route, time and space, not the vehicle type.
+- **App:** with the backend, the Delivery page asks the server to check a
+  code and then reloads; a save is followed by a reload so new codes appear.
+  Without the backend nothing changes.
+- **Checked:** against a local copy of Supabase: the full flow with a wrong
+  code first ("2 tries left"); the carrier read 0 codes and could not mark the
+  delivery delivered; 3 wrong codes froze the payment; the tidy-up declined
+  an expired request and flagged a 3-hour-old parcel. Unit tests and all 16
+  browser tests pass without the backend.
+
+## Stage 62: fixes from the UX review (27 Nov 2026)
 
 The eight fixes from the UX and accessibility review, one change each:
 

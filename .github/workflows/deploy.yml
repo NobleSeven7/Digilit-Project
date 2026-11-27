@@ -43,6 +43,12 @@ jobs:
           # are missing, the live site simply sends no analytics.
           VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
           VITE_POSTHOG_HOST: ${{ secrets.VITE_POSTHOG_HOST }}
+          # Shared backend (Supabase): secrets named VITE_SUPABASE_URL and
+          # VITE_SUPABASE_PUBLISHABLE_KEY. The publishable key is meant to be
+          # public; the database rules decide what each account may do. If
+          # they are missing, the live site keeps data in each browser, as before.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

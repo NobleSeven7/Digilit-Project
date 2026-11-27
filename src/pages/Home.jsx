@@ -311,7 +311,8 @@ export default function Home({ profile, setProfile }) {
   // Choosing a side also signs you in as a demo person with that role
   // (unless you already have it).
   const become = (role) => () => {
-    if (profile.role !== role) setProfile(firstWithRole(role))
+    // Real accounts (shared backend) keep their role; the page then explains.
+    if (setProfile && profile.role !== role) setProfile(firstWithRole(role))
   }
 
   return (

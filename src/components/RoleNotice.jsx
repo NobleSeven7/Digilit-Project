@@ -1,5 +1,6 @@
 // Shown when the signed-in demo person has the wrong role for a page,
-// e.g. a carrier opening the Send page. One button switches profile.
+// e.g. a carrier opening the Send page. One button switches profile (demo
+// profiles only; a real account is told to sign in with the other role).
 import { firstWithRole } from '../lib/profile.js'
 
 export default function RoleNotice({ profile, setProfile, needs, action }) {
@@ -9,10 +10,15 @@ export default function RoleNotice({ profile, setProfile, needs, action }) {
       <p className="font-bold">
         You are signed in as {profile.name}, a {profile.role}. Only a {needs} can {action}.
       </p>
-      <button type="button" className="btn btn-primary mt-3" data-testid="switch-role"
-        onClick={() => setProfile(other)}>
-        Switch to {other.name} ({needs})
-      </button>
+      {/* Real accounts (shared backend) cannot switch: sign in with a {needs} account instead */}
+      {setProfile ? (
+        <button type="button" className="btn btn-primary mt-3" data-testid="switch-role"
+          onClick={() => setProfile(other)}>
+          Switch to {other.name} ({needs})
+        </button>
+      ) : (
+        <p className="mt-2">To {action}, sign out and sign in with a {needs} account.</p>
+      )}
     </div>
   )
 }
