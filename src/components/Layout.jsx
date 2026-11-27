@@ -65,6 +65,27 @@ function ThemeSwitch() {
   )
 }
 
+// Shared backend (real accounts): who is signed in, and a way to sign out.
+function AccountBar({ profile, onSignOut }) {
+  if (!profile) return null
+  return (
+    <aside aria-label="Your account" className="border-b border-line bg-surface">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 safe-x py-2">
+        <p className="min-w-0" data-testid="account-name">
+          Signed in as <strong className="text-brand-ink">{profile.name}</strong> ({profile.role}{profile.isAdmin ? ', admin' : ''})
+        </p>
+        <button type="button" onClick={onSignOut} data-testid="sign-out"
+          className="min-h-11 font-bold text-brand-ink underline underline-offset-2">
+          Sign out
+        </button>
+        <span className="ml-auto hidden font-display text-xl font-bold text-brand-ink sm:inline" data-testid="role-view">
+          {profile.role === 'carrier' ? 'Carrier view' : 'Sender view'}
+        </span>
+      </div>
+    </aside>
+  )
+}
+
 // The simulated sign-in: pick which fictional person you are.
 function ProfileBar({ profile, setProfile }) {
   return (
@@ -116,7 +137,7 @@ function focusHeading() {
   heading.focus({ preventScroll: true })
 }
 
-export default function Layout({ currentPage, onReset, profile, setProfile, saveFailed, children }) {
+export default function Layout({ currentPage, onReset, profile, setProfile, onSignOut, saveFailed, serverProblem, children }) {
   // After a page change (not on the first load): new title, focus on its heading.
   const firstPage = useRef(true)
   useEffect(() => {
@@ -127,7 +148,8 @@ export default function Layout({ currentPage, onReset, profile, setProfile, save
 
   // Name of the page we are on (shown in the phone header, where there is no top menu).
   const current = NAV_ITEMS.find((item) => item.page === currentPage)
-  const menu = menuFor(profile.role)
+  // Signed out (shared backend): the sender pages are shown, and ask to sign in.
+  const menu = menuFor(profile?.role ?? 'sender')
   // Phones: the header slides away while scrolling down (see .site-header).
   const headerHidden = useHideOnScroll()
 
@@ -180,7 +202,16 @@ export default function Layout({ currentPage, onReset, profile, setProfile, save
         </div>
       </header>
 
-      <ProfileBar profile={profile} setProfile={setProfile} />
+      {setProfile
+        ? <ProfileBar profile={profile} setProfile={setProfile} />
+        : <AccountBar profile={profile} onSignOut={onSignOut} />}
+
+      {/* Shared backend: loading or saving went wrong */}
+      {serverProblem && (
+        <p role="alert" data-testid="server-problem" className="border-b border-fail bg-fail-tint">
+          <span className="mx-auto block max-w-5xl safe-x py-2 font-bold text-fail">{serverProblem}</span>
+        </p>
+      )}
 
       {/* The browser would not save: say so, instead of losing changes silently */}
       {saveFailed && (
@@ -211,14 +242,19 @@ export default function Layout({ currentPage, onReset, profile, setProfile, save
               </ul>
             </details>
             <p>
-              Student prototype. All people and trips are fictional; codes and payments are simulated.{' '}
+              {onReset
+                ? 'Student prototype. All people and trips are fictional; codes and payments are simulated. '
+                : 'Student prototype. Accounts and trips are real; codes and payments are simulated. '}
               <a href="#/about" data-testid="about-link" className="font-bold text-brand-ink underline underline-offset-2">About this demo</a>
             </p>
           </div>
-          <button type="button" onClick={onReset} data-testid="reset-demo"
-            className="btn btn-secondary shrink-0 self-start text-base sm:self-auto">
-            Reset demo data
-          </button>
+          {/* Shared data is never wiped from one person's browser */}
+          {onReset && (
+            <button type="button" onClick={onReset} data-testid="reset-demo"
+              className="btn btn-secondary shrink-0 self-start text-base sm:self-auto">
+              Reset demo data
+            </button>
+          )}
         </div>
       </footer>
 

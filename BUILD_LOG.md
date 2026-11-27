@@ -1595,3 +1595,29 @@ Kept on purpose:
   2/255 on average, which doesn't show.
 - **Checked:** all 12 tests pass, the design check (with C5) is clean, and
   axe is clean on 8 pages in both themes.
+
+## Stage 60: shared backend, part 1 (accounts and shared data)
+
+- **What:** with `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` set,
+  the app uses Supabase: email-and-password accounts (sender or carrier, one
+  admin) and one shared database for trips, parcels, deliveries and codes.
+  Without them nothing changes: localStorage and demo profiles.
+- **How:** `src/lib/server.js` (sign-in, load, save) and
+  `src/lib/serverRows.js` (records to rows and back, only changed rows are
+  sent). Pages keep calling `save()`. A new `SignIn` page appears for every
+  page except Home and About when signed out. "Switch to …" buttons, the demo
+  picker and "Reset demo data" are hidden with real accounts. The Admin page
+  is for the admin only.
+- **Rules:** `database/02-sign-in-and-rules.sql`. Signed-in people see trips,
+  parcels and deliveries; they add only their own; they change only what they
+  take part in (any carrier may mark a waiting parcel "Carriers found"); the
+  admin can change anything; codes are visible to the two people on the
+  delivery; signed-out visitors see nothing.
+- **Left for part 2:** checking codes on the server (so the carrier no longer
+  needs to read them), the timed rules, the Make.com calls, and stricter
+  checks on which fields each person may change.
+- **Checked:** against a local copy of Supabase, two real accounts did the
+  whole flow (post, match, accept, pickup code, delivery code, payment
+  released); a third account could not read the codes or change the parcel
+  through the API; signed-out requests were refused. Unit tests (with new row
+  tests) and all 16 browser tests pass without the backend.

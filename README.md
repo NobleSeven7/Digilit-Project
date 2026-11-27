@@ -118,6 +118,27 @@ Secrets and variables > Actions); the deploy workflow passes them to the build.
 The project token is meant to be public (it can only send events), but keep it
 in secrets anyway so the code holds no keys.
 
+### Optional: the shared backend (Supabase)
+
+With a Supabase project connected, people create real accounts (email and
+password) and everyone sees the same parcels, trips and deliveries. Without
+it, the app keeps everything in the browser with demo profiles, as before.
+
+1. Run `database/01-tables.sql`, then `database/02-sign-in-and-rules.sql`, in
+   Supabase's SQL Editor. The second file holds the rules for who may see and
+   change what.
+2. In Supabase, under Authentication: keep email sign-in on, and switch
+   **Confirm email** off (Supabase's free email only reaches the project's own
+   team). Set the Site URL to the live site.
+3. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` to
+   `.env.local`, and as GitHub secrets for the live site. Never use the
+   secret key in the app.
+4. Create your own account in the app, then make it the admin in the SQL
+   Editor: `update profiles set is_admin = true where name = 'Your Name';`
+
+Not yet on the server (next step): the code check, the timed rules (expired
+requests, the 2-hour flag) and the Make.com calls still run in the browser.
+
 ### Optional: connect the live site to Make.com
 
 The live GitHub Pages site gets the webhook URL from a repository secret:
@@ -192,15 +213,15 @@ decided while building:
 | User interface and forms | Real | Working React web app |
 | Matching engine | Real | Rule filter and score in `src/lib/matching.js` |
 | AI parcel check | Real when connected | The Send page sends the item description to a Make.com webhook, which asks an AI model (Google Gemini) and replies. Without the webhook, or with no answer in 8 seconds, a keyword check labelled "Offline check (not AI)" is used |
-| Data storage | Real, local | Saved in the browser's localStorage so the demo works offline |
+| Data storage | Real | Without the backend: saved in the browser's localStorage so the demo works offline. With Supabase connected: one shared database |
 | Make.com / Google Sheets / email | Real when connected | The app posts to the webhook URL in `.env.local`; the Make.com scenario and Sheet are set up separately |
 | Looker Studio dashboard | Real | Reads the Google Sheet (link above); the in-app Dashboard shows the same metrics from this device's data |
-| User accounts | Simulated | A "Signed in as" picker with fictional demo senders and carriers. No passwords and no real accounts |
+| User accounts | Real when connected | With Supabase: email and password accounts, each a sender or a carrier, and one admin. Without it: a "Signed in as" picker with fictional demo people |
 | OTP codes | Simulated | Random 4-digit codes shown on screen instead of SMS |
 | Payment | Simulated | Escrow is a status tracked in the app; no real money or wallet |
 | Test data | Simulated | Fictional senders and carriers; no real personal data |
 
-Not built (listed as future work in the proposal): maps, real login and ID
+Not built (listed as future work in the proposal): maps, ID
 checks, real SMS, real payments, live tracking, Urdu interface.
 
 ## Limitations

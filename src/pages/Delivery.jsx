@@ -90,10 +90,12 @@ function CarrierOnly({ carrierName, setProfile }) {
   return (
     <div className="mt-4 rounded-lg bg-sunk px-3 py-3">
       <p>Only <strong>{carrierName}</strong> (the carrier) enters this code.</p>
-      <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-carrier"
-        onClick={() => setProfile({ role: 'carrier', name: carrierName })}>
-        Switch to {carrierName}
-      </button>
+      {setProfile && (
+        <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-carrier"
+          onClick={() => setProfile({ role: 'carrier', name: carrierName })}>
+          Switch to {carrierName}
+        </button>
+      )}
     </div>
   )
 }
@@ -117,13 +119,17 @@ function CodeStep({ kind, code, codeTestId, formId, buttonText, onSubmit, shipme
           <CodeForm id={formId} buttonText={buttonText} onSubmit={onSubmit}
             label={kind === 'Pickup' ? `Pickup code from ${sender}` : 'Delivery code from the receiver'} />
           {/* Demo shortcut: the code is on the sender's screen */}
-          <p className="mt-3 text-sm text-muted">
-            In this demo, the code is on {sender}'s screen.{' '}
-            <button type="button" className="font-bold text-brand-ink underline underline-offset-2" data-testid="switch-to-sender"
-              onClick={() => setProfile({ role: 'sender', name: sender })}>
-              Switch to {sender}
-            </button>
-          </p>
+          {setProfile ? (
+            <p className="mt-3 text-sm text-muted">
+              In this demo, the code is on {sender}'s screen.{' '}
+              <button type="button" className="font-bold text-brand-ink underline underline-offset-2" data-testid="switch-to-sender"
+                onClick={() => setProfile({ role: 'sender', name: sender })}>
+                Switch to {sender}
+              </button>
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-muted">Ask {sender} for the code shown on their screen.</p>
+          )}
         </>
       ) : (
         <CarrierOnly carrierName={carrier} setProfile={setProfile} />
@@ -478,11 +484,13 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
                     : isSender ? (
                       <button type="button" className="btn btn-primary" data-testid="accept-sender"
                         onClick={() => handleAccept('sender')}>Accept</button>
-                    ) : (
+                    ) : setProfile ? (
                       <button type="button" className="btn btn-secondary" data-testid="switch-to-sender"
                         onClick={() => setProfile({ role: 'sender', name: shipment.senderName })}>
                         Switch to {shipment.senderName}
                       </button>
+                    ) : (
+                      <p className="text-muted" data-testid="waiting-sender">Waiting for {shipment.senderName}</p>
                     )}
                 </div>
                 {/* The carrier's row: only the carrier can accept or decline here */}
@@ -496,11 +504,13 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
                         <button type="button" className="btn btn-danger" data-testid="decline-carrier"
                           onClick={handleDecline}>Decline</button>
                       </div>
-                    ) : (
+                    ) : setProfile ? (
                       <button type="button" className="btn btn-secondary" data-testid="switch-to-carrier"
                         onClick={() => setProfile({ role: 'carrier', name: journey.carrierName })}>
                         Switch to {journey.carrierName}
                       </button>
+                    ) : (
+                      <p className="text-muted" data-testid="waiting-carrier">Waiting for {journey.carrierName}</p>
                     )}
                 </div>
               </div>

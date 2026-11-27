@@ -63,7 +63,7 @@ function Section({ title, count, emptyText, testId, children }) {
   )
 }
 
-export default function Admin({ state, save }) {
+export default function Admin({ state, save, profile, setProfile }) {
   const flagged = state.shipments.filter((s) => s.status === STATUS.FLAGGED)
   const unmatched = state.shipments.filter((s) => s.status === STATUS.RETRYING)
   const disputed = state.deliveries.filter((d) => d.status === DELIVERY.DISPUTED)
@@ -138,6 +138,21 @@ export default function Admin({ state, save }) {
       </div>
     </li>
   )
+
+  // Real accounts (shared backend, where setProfile is null): only the admin
+  // may use this page. The server rules enforce it as well.
+  if (!setProfile && !profile?.isAdmin) {
+    return (
+      <div>
+        <PageHeader title="Admin review">
+          Requests the system could not settle on its own. A person makes the final call.
+        </PageHeader>
+        <p className="card border-hold bg-hold-tint font-bold" data-testid="admin-only">
+          Only the RaastaShare admin can review requests. You are signed in as {profile?.name}.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div>
