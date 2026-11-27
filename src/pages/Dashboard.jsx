@@ -10,7 +10,7 @@ import RouteCodes from '../components/RouteCodes.jsx'
 const STATUS_ORDER = [STATUS.FOUND, STATUS.MATCHED, STATUS.DELIVERED,
   STATUS.RETRYING, STATUS.FLAGGED, STATUS.DISPUTED, STATUS.CANCELLED]
 // Bar colour per status family (same families as the status badges).
-const BAR = { good: 'bg-brand-ink', waiting: 'bg-hold', bad: 'bg-fail' }
+const BAR = { good: 'bg-brand-ink', waiting: 'bg-muted', attention: 'bg-hold', bad: 'bg-fail' }
 // The road on a delivery card: its colour matches the status badge beside
 // it, and it fills as far as the parcel has got. A delivery that went wrong
 // (disputed, refunded, declined) shows the whole road in red.
@@ -20,7 +20,7 @@ const ROAD_FILL = {
   [DELIVERY.IN_TRANSIT]: 66,
 }
 function road(status) {
-  return { colour: BAR[statusTone(status)] ?? 'bg-hold', fill: ROAD_FILL[status] ?? 100 }
+  return { colour: BAR[statusTone(status)] ?? 'bg-muted', fill: ROAD_FILL[status] ?? 100 }
 }
 
 // The proposal's target band for spare capacity used.

@@ -42,7 +42,9 @@ function ConfirmButton({ label, question, yesLabel, onConfirm, className, testId
     <div role="group" aria-label={question} className="fade-in-quick w-full rounded-lg border border-hold bg-hold-tint p-3">
       <p className="font-bold">{question}</p>
       <div className="mt-3 flex flex-wrap gap-3">
-        <button type="button" className={className} data-testid={testId && `${testId}-yes`} onClick={onConfirm} autoFocus>
+        {/* The "yes" is the main action here, so a plain outline button becomes solid */}
+        <button type="button" className={className.replace('btn-secondary', 'btn-primary')}
+          data-testid={testId && `${testId}-yes`} onClick={onConfirm} autoFocus>
           {yesLabel}
         </button>
         <button type="button" className="btn btn-secondary" onClick={() => setAsking(false)}>Keep it</button>
@@ -202,7 +204,7 @@ export default function Admin({ state, save }) {
                 <StatusBadge status={`${formatPKR(d.price)} frozen`} />
               </div>
               <div className="mt-3 flex flex-wrap gap-3">
-                <ConfirmButton className="btn btn-primary" testId="release-to-carrier" label="Release to carrier"
+                <ConfirmButton className="btn btn-secondary" testId="release-to-carrier" label="Release to carrier"
                   question={`Release ${formatPKR(d.price)} to ${j.carrierName}? This cannot be undone.`}
                   yesLabel={`Yes, pay ${j.carrierName}`} onConfirm={() => resolveDispute(d, true)} />
                 <ConfirmButton className="btn btn-secondary" testId="refund-sender" label="Refund sender"

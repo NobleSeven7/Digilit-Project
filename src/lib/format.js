@@ -41,6 +41,24 @@ export function toPakistanTime(value) {
   return new Date(value).toLocaleString('sv-SE', { timeZone: 'Asia/Karachi' })
 }
 
+// A day only, e.g. "Sat 28 Nov" (or "28 Nov" without the weekday). Short
+// enough for a picker on a phone.
+export function formatDay(value, weekday = true) {
+  return new Date(value).toLocaleDateString('en-GB',
+    weekday ? { weekday: 'short', day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short' })
+}
+
+// Picker labels that stay short on a phone: "Islamabad to Lahore, 5 kg, 27 Nov".
+// Only when two items would read the same is the time added, to tell them apart.
+// items: [{ id, base, at }] -> Map of id to label.
+export function pickerLabels(items) {
+  const short = (item) => `${item.base}, ${formatDay(item.at, false)}`
+  const count = {}
+  items.forEach((item) => { count[short(item)] = (count[short(item)] || 0) + 1 })
+  return new Map(items.map((item) => [item.id,
+    count[short(item)] > 1 ? `${short(item)}, ${formatShort(item.at).split(', ')[1]}` : short(item)]))
+}
+
 // A short date and time for picker lists, e.g. "17 Nov, 2:23 pm".
 export function formatShort(value) {
   return new Date(value).toLocaleString('en-GB', {
