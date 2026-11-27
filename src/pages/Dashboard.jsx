@@ -30,16 +30,18 @@ const TARGET_HIGH = 60
 // Spare capacity used, drawn as one bar on a 0-100% track with the target
 // band (40-60%) marked, so the number can be read against its goal.
 function CapacityMeter({ value }) {
-  const verdict = value < TARGET_LOW ? 'Below the target' : value > TARGET_HIGH ? 'Above the target' : 'Within the target'
+  const verdict = value < TARGET_LOW ? 'Below the target'
+    : value > 100 ? 'Over 100%: parcels weigh more than the spare space carriers gave'
+      : value > TARGET_HIGH ? 'Above the target' : 'Within the target'
   return (
     <div className="mt-3">
       <div className="relative h-4 rounded-full bg-line" role="img"
         aria-label={`${value}% used. Target ${TARGET_LOW} to ${TARGET_HIGH}%. ${verdict}.`}>
-        {/* Target band */}
+        {/* Value (the bar stops at 100%, even if more was used) */}
+        <div className="h-4 rounded-full bg-brand-ink" style={{ width: `${Math.min(100, value)}%` }} />
+        {/* Target band, drawn on top so a full bar never hides it */}
         <div className="absolute inset-y-[-4px] rounded-md border-2 border-dashed border-brand-ink/70"
           style={{ left: `${TARGET_LOW}%`, width: `${TARGET_HIGH - TARGET_LOW}%` }} />
-        {/* Value */}
-        <div className="h-4 rounded-full bg-brand-ink" style={{ width: `${Math.min(100, value)}%` }} />
       </div>
       {/* gap-x-3 is only a minimum (justify-between spreads them anyway): with
           very large text the labels wrap instead of running into each other. */}

@@ -10,32 +10,83 @@
   }
 }
 
-/* ---- Brand design tokens --------------------------------------------
-   Defining a colour here creates Tailwind classes for it automatically,
-   e.g. --color-brand gives us bg-brand, text-brand-ink and border-brand-ink.   */
+/* ---- Design tokens, in three layers ---------------------------------
+   1. Primitive: the raw "Cargo label" colours, named for what they are
+      (kraft paper, label ink, fragile tape, oxblood). Pages never use these.
+   2. Semantic (in @theme below): what a colour is FOR (page, card, text,
+      accent, problem). Pages and components use these, e.g. bg-paper,
+      text-muted. Dark mode swaps only this layer.
+   3. Component (further down): one name per part, e.g. --btn-primary-bg,
+      so a button or card can change without hunting through the CSS.
+   Changing a primitive changes every place that uses it. */
+:root {
+  /* Kraft paper and label stock (light) */
+  --kraft-100: #F6EFE1;  /* label stock */
+  --kraft-150: #E9E0CF;  /* pale kraft, text on black blocks */
+  --kraft-200: #E2D3B6;  /* kraft paper */
+  --kraft-300: #D6C4A3;  /* sunk kraft */
+  --kraft-350: #D3C3A4;  /* kraft tint behind good badges */
+  --kraft-400: #B9A385;  /* kraft fold line */
+  --kraft-500: #A8957A;
+  --kraft-700: #6B5B45;
+  --kraft-800: #4E4436;
+  /* Label ink */
+  --ink-900: #1C1A17;    /* printing ink */
+  --ink-1000: #000000;
+  --white: #FFFFFF;
+  /* Fragile tape red and oxblood (light) */
+  --tape-100: #F1D2C6;
+  --tape-500: #D7261E;
+  --tape-700: #A51C15;
+  --oxblood-100: #E8C4B8;
+  --oxblood-800: #7A1810;
+  /* Night label (dark theme) */
+  --night-950: #141311;
+  --night-925: #181715;
+  --night-900: #1F1D1A;
+  --night-850: #2E2A24;
+  --night-800: #39342D;
+  --night-750: #3B352D;
+  --night-700: #4A4339;
+  --night-650: #4A4033;
+  --night-500: #8A7759;
+  --night-300: #C4B8A3;
+  --night-200: #E8D9BC;
+  --night-150: #EFE6D6;
+  --night-100: #F1E9DA;
+  --tape-night-500: #E5392F;
+  --tape-night-300: #FF8F85;
+  --tape-night-900: #3D1C18;
+  --oxblood-night-300: #FF9E8F;
+  --oxblood-night-900: #3B1F1A;
+}
+
+/* Semantic layer. Defining a colour here creates Tailwind classes for it
+   automatically, e.g. --color-brand gives us bg-brand, text-brand-ink and
+   border-brand-ink. */
 @theme {
   /* Cargo label: the page is brown kraft paper (60%), blocks and actions are
      printed label black (30%), and "fragile tape" red marks the few things
      that need attention (10%): the saving, money held, the current page. */
-  --color-paper: #E2D3B6;        /* kraft paper: page background (60%) */
-  --color-surface: #F6EFE1;      /* label stock: cards, form fields, menus */
-  --color-sunk: #D6C4A3;         /* panels set into a card (accept rows, map backdrop) */
-  --color-line: #B9A385;         /* thin dividing lines and borders */
-  --color-ink: #1C1A17;          /* main text: printing ink */
-  --color-muted: #4E4436;        /* secondary text */
-  --color-brand: #1C1A17;        /* label black: header, buttons, bands (30%) */
-  --color-brand-ink: #1C1A17;    /* black used for text and outlines */
-  --color-brand-dark: #000000;   /* pressed / hover state */
-  --color-brand-tint: #D3C3A4;   /* soft background behind "good" badges */
-  --color-route-2: #6B5B45;      /* second route colour on the Home map */
-  --color-route-3: #A8957A;      /* third route colour on the Home map */
-  --color-on-brand-soft: #E9E0CF;/* secondary text on black blocks (4.5:1 or more) */
-  --color-hold: #D7261E;         /* fragile-tape red: the 10% accent, money held */
-  --color-on-hold: #FFFFFF;      /* text on the red */
-  --color-hold-ink: #A51C15;     /* red dark enough to read as text */
-  --color-hold-tint: #F1D2C6;
-  --color-fail: #7A1810;         /* oxblood: failed rule, dispute (darker than the accent) */
-  --color-fail-tint: #E8C4B8;
+  --color-paper: var(--kraft-200);         /* page background (60%) */
+  --color-surface: var(--kraft-100);       /* cards, form fields, menus */
+  --color-sunk: var(--kraft-300);          /* panels set into a card (accept rows, map backdrop) */
+  --color-line: var(--kraft-400);          /* thin dividing lines and borders */
+  --color-ink: var(--ink-900);             /* main text */
+  --color-muted: var(--kraft-800);         /* secondary text */
+  --color-brand: var(--ink-900);           /* header, buttons, bands (30%) */
+  --color-brand-ink: var(--ink-900);       /* black used for text and outlines */
+  --color-brand-dark: var(--ink-1000);     /* pressed / hover state */
+  --color-brand-tint: var(--kraft-350);    /* soft background behind "good" badges */
+  --color-route-2: var(--kraft-700);       /* second route colour on the Home map */
+  --color-route-3: var(--kraft-500);       /* third route colour on the Home map */
+  --color-on-brand-soft: var(--kraft-150); /* secondary text on black blocks (4.5:1 or more) */
+  --color-hold: var(--tape-500);           /* the 10% accent, money held */
+  --color-on-hold: var(--white);           /* text on the red */
+  --color-hold-ink: var(--tape-700);       /* red dark enough to read as text */
+  --color-hold-tint: var(--tape-100);
+  --color-fail: var(--oxblood-800);        /* failed rule, dispute (darker than the accent) */
+  --color-fail-tint: var(--oxblood-100);
 
   /* Corners: nearly square, like a printed label. */
   --radius-md: 3px;
@@ -83,26 +134,42 @@
   color-scheme: light;
 }
 :root[data-theme="dark"] {
-  /* Dark: a black label with kraft-coloured printing. */
+  /* Dark: a black label with kraft-coloured printing. Only the semantic
+     layer changes; the component layer follows it. */
   color-scheme: dark;
-  --color-paper: #141311;
-  --color-surface: #1F1D1A;
-  --color-sunk: #181715;
-  --color-line: #39342D;
-  --color-ink: #F1E9DA;
-  --color-muted: #C4B8A3;
-  --color-brand: #3B352D;
-  --color-brand-ink: #E8D9BC;
-  --color-brand-dark: #4A4339;
-  --color-brand-tint: #2E2A24;
-  --color-route-2: #8A7759;
-  --color-route-3: #4A4033;
-  --color-on-brand-soft: #EFE6D6;
-  --color-hold: #E5392F;
-  --color-hold-ink: #FF8F85;
-  --color-hold-tint: #3D1C18;
-  --color-fail: #FF9E8F;
-  --color-fail-tint: #3B1F1A;
+  --color-paper: var(--night-950);
+  --color-surface: var(--night-900);
+  --color-sunk: var(--night-925);
+  --color-line: var(--night-800);
+  --color-ink: var(--night-100);
+  --color-muted: var(--night-300);
+  --color-brand: var(--night-750);
+  --color-brand-ink: var(--night-200);
+  --color-brand-dark: var(--night-700);
+  --color-brand-tint: var(--night-850);
+  --color-route-2: var(--night-500);
+  --color-route-3: var(--night-650);
+  --color-on-brand-soft: var(--night-150);
+  --color-hold: var(--tape-night-500);
+  --color-hold-ink: var(--tape-night-300);
+  --color-hold-tint: var(--tape-night-900);
+  --color-fail: var(--oxblood-night-300);
+  --color-fail-tint: var(--oxblood-night-900);
+}
+/* Component layer: one name per part, built from the semantic colours. */
+:root {
+  --card-bg: var(--color-surface);
+  --card-border: var(--color-line);
+  --btn-primary-bg: var(--color-brand);
+  --btn-primary-bg-hover: var(--color-brand-dark);
+  --btn-primary-ink: var(--color-on-hold);
+  --btn-secondary-bg: var(--color-surface);
+  --btn-secondary-bg-hover: var(--color-brand-tint);
+  --btn-secondary-ink: var(--color-brand-ink);
+  --btn-danger-bg-hover: var(--color-fail-tint);
+  --btn-danger-ink: var(--color-fail);
+  --field-bg: var(--color-surface);
+  --focus-ring: var(--color-hold);
 }
 /* Paper grain: a faint speckle over the kraft colour, so the page reads as
    paper rather than a flat fill. A 240px SVG noise tile drawn once by the
@@ -208,45 +275,59 @@ a {
 h1[tabindex="-1"]:focus { outline: none; }
 
 :focus-visible {
-  outline: 3px solid var(--color-hold);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
 /* ---- Reusable building blocks (used all over the pages) ------------- */
 @layer components {
-  .card { @apply rounded-xl border border-line bg-surface p-4 sm:p-5; }
+  .card {
+    @apply rounded-xl border p-4 sm:p-5;
+    border-color: var(--card-border);
+    background-color: var(--card-bg);
+  }
   /* A whole card that is a link: rests on a soft shadow, its border darkens
      when pointed at (mouse only) and it presses in when tapped. No lift: these
      sit on the Dashboard, among numbers people are reading. */
   .card-link {
     box-shadow: var(--shadow-rest);
-    transition: scale 160ms var(--ease-out), border-color 150ms ease;
+    transition: scale 160ms var(--ease-out), border-color 150ms var(--ease-out);
   }
   .card-link:active { scale: 0.98; }
   @media (hover: hover) and (pointer: fine) {
     .card-link:hover { border-color: var(--color-brand-ink); }
   }
   /* Less motion: no press-shrink, but the border still changes colour softly. */
-  @media (prefers-reduced-motion: reduce) { .card-link { transition: border-color 150ms ease; } }
+  @media (prefers-reduced-motion: reduce) { .card-link { transition: border-color 150ms var(--ease-out); } }
 
   .btn {
     @apply inline-flex min-h-12 cursor-pointer items-center justify-center rounded-lg
            px-5 py-2.5 text-center font-bold;
     /* Colour changes softly; a press shrinks the button a touch, so it feels
        like it answers the finger. */
-    transition: background-color 150ms ease, scale 100ms var(--ease-out);
+    transition: background-color 150ms var(--ease-out), scale 100ms var(--ease-out);
   }
   /* ":not(:disabled)" (not "enabled") so that links styled as buttons get
      the same press and hover effects as real buttons. */
   .btn:not(:disabled):active { scale: 0.97; } /* 100ms: the press shows at once */
-  .btn-primary { @apply bg-brand text-white; }
-  .btn-secondary { @apply border-2 border-brand-ink bg-surface text-brand-ink; }
-  .btn-danger { @apply border-2 border-fail bg-surface text-fail; }
+  .btn-primary { background-color: var(--btn-primary-bg); color: var(--btn-primary-ink); }
+  .btn-secondary {
+    @apply border-2;
+    border-color: var(--btn-secondary-ink);
+    background-color: var(--btn-secondary-bg);
+    color: var(--btn-secondary-ink);
+  }
+  .btn-danger {
+    @apply border-2;
+    border-color: var(--btn-danger-ink);
+    background-color: var(--btn-secondary-bg);
+    color: var(--btn-danger-ink);
+  }
   /* Hover colours only with a mouse, so they do not stick after a tap. */
   @media (hover: hover) and (pointer: fine) {
-    .btn-primary:not(:disabled):hover { background-color: var(--color-brand-dark); }
-    .btn-secondary:not(:disabled):hover { background-color: var(--color-brand-tint); }
-    .btn-danger:not(:disabled):hover { background-color: var(--color-fail-tint); }
+    .btn-primary:not(:disabled):hover { background-color: var(--btn-primary-bg-hover); }
+    .btn-secondary:not(:disabled):hover { background-color: var(--btn-secondary-bg-hover); }
+    .btn-danger:not(:disabled):hover { background-color: var(--btn-danger-bg-hover); }
   }
   /* A button that cannot be pressed yet: grey with a dashed outline, so it
      reads as "not ready" instead of a faded version of the real button. */
@@ -256,8 +337,9 @@ h1[tabindex="-1"]:focus { outline: none; }
 
   .label { @apply mb-1 block font-bold; }
   .field {
-    @apply block min-h-12 w-full rounded-lg border border-muted/60 bg-surface px-3 py-2
+    @apply block min-h-12 w-full rounded-lg border border-muted/60 px-3 py-2
            text-ink placeholder:text-muted;
+    background-color: var(--field-bg);
   }
   .hint { @apply mt-1 text-sm text-muted; }
   /* A field with a problem: red border, matching the message under it. */
@@ -416,7 +498,7 @@ h1[tabindex="-1"]:focus { outline: none; }
 @media (prefers-reduced-motion: reduce) {
   .hero-enter, .route-draw, .stop-enter, .map-parcel { animation: none; }
   /* No press-shrink, but the background colour still changes softly. */
-  .btn { transition: background-color 150ms ease; }
+  .btn { transition: background-color 150ms var(--ease-out); }
 }
 
 /* ---- Motion: state changes on the Delivery, Matches, Send and Admin pages ----

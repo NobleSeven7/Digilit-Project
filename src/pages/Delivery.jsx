@@ -5,7 +5,8 @@ import { STATUS, DELIVERY, ESCROW, MAX_CODE_TRIES, COURIER_FEE } from '../data/c
 import { generateOtp, generateDifferentOtp } from '../lib/otp.js'
 import { sendToWebhook, noteInSyncLog } from '../lib/webhook.js'
 import { goTo } from '../lib/navigation.js'
-import { formatPKR, formatDateTime, formatShort, pickerLabels, isolate } from '../lib/format.js'
+import { formatPKR, formatDateTime, formatShort, pickerLabels, isolate, buttonName, travelBy } from '../lib/format.js'
+import { codeOf } from '../components/RouteCodes.jsx'
 import { anotherCarrierFits, isAvailable, withSpaceLeft } from '../lib/matching.js'
 import { calculateSaving } from '../lib/pricing.js'
 import { shake } from '../lib/motion.js'
@@ -95,7 +96,7 @@ function CarrierOnly({ carrierName, setProfile }) {
       {setProfile && (
         <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-carrier"
           onClick={() => setProfile({ role: 'carrier', name: carrierName })}>
-          Switch to {carrierName}
+          Switch to {buttonName(carrierName, 'the carrier')}
         </button>
       )}
     </div>
@@ -126,7 +127,7 @@ function CodeStep({ kind, code, codeTestId, formId, buttonText, onSubmit, shipme
               In this demo, the code is on {sender}'s screen.{' '}
               <button type="button" className="font-bold text-brand-ink underline underline-offset-2" data-testid="switch-to-sender"
                 onClick={() => setProfile({ role: 'sender', name: sender })}>
-                Switch to {sender}
+                Switch to {buttonName(sender, 'the sender')}
               </button>
             </p>
           ) : (
@@ -165,7 +166,7 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
   const others = deliveries.filter((d) => !isMine(d))
   const labels = pickerLabels(deliveries.map((d) => {
     const s = shipmentOf(d)
-    return { id: d.id, base: `${s.origin} to ${s.destination}, ${s.weightKg} kg`, at: d.createdAt }
+    return { id: d.id, base: `${codeOf(s.origin)} to ${codeOf(s.destination)}, ${s.weightKg} kg`, at: d.createdAt }
   }))
   // The one in the address bar, else the signed-in person's newest, else the newest of all.
   const delivery = deliveries.find((d) => d.id === id) || mine[0] || deliveries[0]
@@ -259,7 +260,7 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
       })
       // Booked: the one moment both sides have said yes. The message carries
       // the success tick (see below).
-      setMessage({ ok: true, booked: true, text: `Match confirmed. ${amount} is now held in escrow.` })
+      setMessage({ ok: true, booked: true, text: `Match confirmed. ${amount} is now held safely by RaastaShare.` })
       sendToWebhook('match', { ...record, escrow: ESCROW.HELD },
         `Match accepted: ${shipment.senderName} and ${journey.carrierName}`)
     } else {
@@ -368,7 +369,7 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
     const tries = `${left} ${left === 1 ? 'try' : 'tries'} left.`
     setMessage({ ok: false, text: isPickup
       ? `Wrong pickup code. The parcel has not been handed over. ${tries} Ask ${isolate(shipment.senderName)} to read the code again.`
-      : `Wrong delivery code. ${amount} stays in escrow. ${tries} Ask the receiver to read the code again.` })
+      : `Wrong delivery code. ${amount} stays held safely by RaastaShare. ${tries} Ask the receiver to read the code again.` })
     return false
   }
 
@@ -434,7 +435,7 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
       } else {
         const left = MAX_CODE_TRIES - tries
         update({ wrongAttempts: tries })
-        setMessage({ ok: false, text: `Wrong delivery code. ${amount} stays in escrow. ${left} ${left === 1 ? 'try' : 'tries'} left. Ask the receiver to read the code again.` })
+        setMessage({ ok: false, text: `Wrong delivery code. ${amount} stays held safely by RaastaShare. ${left} ${left === 1 ? 'try' : 'tries'} left. Ask the receiver to read the code again.` })
       }
       return false
     }
@@ -495,7 +496,7 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
               problem={delivery.status === DELIVERY.DISPUTED} />
             <p className="mt-4 text-muted">
               {shipment.weightKg} kg {shipment.itemType.toLowerCase()} from {isolate(shipment.senderName)},
-              carried by {isolate(journey.carrierName)} ({journey.vehicleType}), departing {formatDateTime(journey.departure)}.
+              carried by {isolate(journey.carrierName)} {travelBy(journey.vehicleType)}, departing {formatDateTime(journey.departure)}.
             </p>
           </section>
 
@@ -540,7 +541,7 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
                     ) : setProfile ? (
                       <button type="button" className="btn btn-secondary" data-testid="switch-to-sender"
                         onClick={() => setProfile({ role: 'sender', name: shipment.senderName })}>
-                        Switch to {shipment.senderName}
+                        Switch to {buttonName(shipment.senderName, 'the sender')}
                       </button>
                     ) : (
                       <p className="text-muted" data-testid="waiting-sender">Waiting for {shipment.senderName}</p>
@@ -560,7 +561,7 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
                     ) : setProfile ? (
                       <button type="button" className="btn btn-secondary" data-testid="switch-to-carrier"
                         onClick={() => setProfile({ role: 'carrier', name: journey.carrierName })}>
-                        Switch to {journey.carrierName}
+                        Switch to {buttonName(journey.carrierName, 'the carrier')}
                       </button>
                     ) : (
                       <p className="text-muted" data-testid="waiting-carrier">Waiting for {journey.carrierName}</p>
@@ -687,15 +688,15 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
           )}
         </div>
 
-        {/* Escrow panel */}
+        {/* Payment panel (the simulated escrow) */}
         <aside className="card h-fit" data-testid="escrow-panel">
-          <h2 className="text-xl font-bold">Escrow</h2>
+          <h2 className="text-xl font-bold">Payment</h2>
           <p className="mt-2 font-display text-4xl font-bold tabular-nums text-brand-ink">{amount}</p>
           <p className="mt-2" data-testid="escrow-status"><StatusBadge status={delivery.escrow} /></p>
           <p className="mt-3 text-sm text-muted">
-            Escrow means RaastaShare holds the money safely: it is held when both sides
-            accept and paid to the carrier only when the correct delivery code is entered.
-            The payment is simulated in this demo.
+            RaastaShare holds the money safely once both sides accept, and pays the
+            carrier only when the correct delivery code is entered. The payment is
+            simulated in this demo.
           </p>
           {(delivery.wrongPickupAttempts ?? 0) > 0 && delivery.escrow === ESCROW.HELD && (
             <p className="mt-2 text-sm text-fail">

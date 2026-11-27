@@ -1700,3 +1700,34 @@ The eight fixes from the UX and accessibility review, one change each:
 - **Checked:** 17 of 17 browser tests pass; unit tests and the design check
   are clean; Home at 1440px and 390px in both themes; every other page is
   pixel-identical before and after at 1440px and 390px.
+
+## Stage 64: polish pass from the redesign brief (27 Nov 2026)
+
+The team kept the "Cargo label" look and asked for a polish pass instead of a
+new style.
+
+- **Stress test (break-ui):** worst-case data (very long, very short and Urdu
+  names, a 199.5 kg parcel, zero carriers, 120 extra deliveries) was loaded
+  into the saved data and every page checked at 320, 390 and 1280px. Fixed:
+  names over 20 characters no longer wrap the Request / Switch buttons
+  ("Request this carrier"); pickers use city codes ("ISB to LHE, 5 kg,
+  27 Nov") so they fit at 320px; "(Bus traveller (luggage))" now reads "by
+  bus, as luggage"; "0 eligible carriers, ranked" is now "No carriers yet";
+  the Dashboard target band is drawn on top of the bar, with its own wording
+  over 100%; names are capped at 60 characters (sign-up form, and
+  `database/04-name-limit.sql` on the server).
+- **Colour tokens in three layers:** primitive (`--kraft-200`, `--tape-500`…),
+  semantic (`--color-paper`…, the only layer dark mode changes) and component
+  (`--btn-primary-bg`, `--card-border`…). Every page is pixel-identical in
+  light and dark apart from the fixes. Button and card colour fades now use
+  `--ease-out`.
+- **Plain words:** "escrow" is no longer shown to users. The badge reads
+  "Held safely by RaastaShare" (the stored value stays "Held in escrow", so
+  the database and Sheet are unchanged) and the panel is titled "Payment".
+  The zero-carrier box and the past-departure error say what happens next.
+  The Make.com email text is unchanged.
+- **Checked:** 17 of 17 browser tests and 17 unit tests pass, design check
+  clean; axe-core 4.10 (WCAG 2.2 AA + best practice) finds 0 problems on 8
+  pages at phone light, phone dark and desktop; the full journey (post, match,
+  accept, both codes, payment released) passes at 1280px and 390px with all
+  outside requests blocked.

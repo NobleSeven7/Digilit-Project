@@ -6,7 +6,7 @@ import { findMatches, withSpaceLeft } from '../lib/matching.js'
 import { calculatePrice, calculateSaving } from '../lib/pricing.js'
 import { goTo } from '../lib/navigation.js'
 import { startDelivery } from '../lib/delivery.js'
-import { formatPKR, formatDateTime, formatShort, pickerLabels } from '../lib/format.js'
+import { formatPKR, formatDateTime, formatShort, pickerLabels, buttonName } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import RouteLine from '../components/RouteLine.jsx'
 import { codeOf } from '../components/RouteCodes.jsx'
@@ -177,7 +177,7 @@ function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onReq
       {eligible && !declined && canRequest && (
         <button type="button" className={`btn mt-4 w-full sm:w-auto ${rank === 1 ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => onRequest(journey)} data-testid="request-carrier">
-          Request {journey.carrierName}
+          Request {buttonName(journey.carrierName, 'this carrier')}
         </button>
       )}
     </li>
@@ -199,7 +199,7 @@ function SenderOnly({ senderName, setProfile }) {
       {setProfile && (
         <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-sender"
           onClick={() => setProfile({ role: 'sender', name: senderName })}>
-          Switch to {senderName}
+          Switch to {buttonName(senderName, 'the sender')}
         </button>
       )}
     </div>
@@ -228,7 +228,7 @@ export default function Matches({ state, save, id, profile, setProfile }) {
   const mine = shipments.filter(isMine)
   const others = shipments.filter((s) => !isMine(s))
   const labels = pickerLabels(shipments.map((s) => ({
-    id: s.id, base: `${s.origin} to ${s.destination}, ${s.weightKg} kg`, at: s.createdAt })))
+    id: s.id, base: `${codeOf(s.origin)} to ${codeOf(s.destination)}, ${s.weightKg} kg`, at: s.createdAt })))
   // Show the shipment named in the address bar, or the sender's newest one
   // (or the newest of all, when they have none).
   const shipment = shipments.find((s) => s.id === id) || mine[0] || shipments[0]
@@ -365,15 +365,16 @@ export default function Matches({ state, save, id, profile, setProfile }) {
       {/* Eligible carriers, ranked */}
       <section className="mb-8">
         <h2 className="mb-3 text-2xl font-bold" data-testid="eligible-heading">
-          {offered.length} eligible {offered.length === 1 ? 'carrier' : 'carriers'}, ranked
+          {offered.length === 0 ? 'No carriers yet'
+            : `${offered.length} eligible ${offered.length === 1 ? 'carrier' : 'carriers'}, ranked`}
         </h2>
         {offered.length === 0 ? (
           <div className="card border-hold bg-hold-tint" data-testid="no-match">
-            <p className="font-bold">No carrier passes all four rules yet.</p>
+            <p className="font-bold">None of the carriers posted so far pass all four rules for this parcel.</p>
             <p className="mt-1">
-              This request stays on “{STATUS.RETRYING}” and is checked again whenever a new
-              journey is posted. After {FLAG_AFTER_HOURS} hours without a match it is flagged
-              for a human admin to review.
+              You don’t need to do anything. We check again every time a new journey is
+              posted. If no carrier fits within {FLAG_AFTER_HOURS} hours, a person on our team
+              looks at your request.
             </p>
           </div>
         ) : (

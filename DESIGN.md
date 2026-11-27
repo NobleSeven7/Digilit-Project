@@ -23,6 +23,19 @@ style and the old instruction not to change the design style.
   <!-- 2026-11-27: "Run all the fixes" (UX review fix 2) -->
   Never write a raw hex colour in a component; use a token class or
   `var(--color-…)`. **(checked)**
+- **Colour tokens come in three layers** in `src/index.css`: primitive (the
+  raw colours, e.g. `--kraft-200`, `--tape-500`), semantic (`--color-paper`,
+  `--color-hold`…, the only layer dark mode changes) and component
+  (`--btn-primary-bg`, `--card-border`…). Pages use the semantic layer;
+  `.btn`, `.card`, `.field` and the focus ring use the component layer.
+  Why: one place to change a colour, and dark mode stays one short list.
+  <!-- 2026-11-27: redesign brief, phase 2 ("run all the fixes") -->
+- **A button never wraps a long person's name.** Names over 20 characters
+  become the role on the button ("Request this carrier", "Switch to the
+  sender"); the full name is always shown beside it. Names are at most 60
+  characters (sign-up form and `database/04-name-limit.sql`).
+  Why: the stress test showed 3-line buttons on phones.
+  <!-- 2026-11-27: redesign brief, phase 2 ("run all the fixes") -->
   Why: the brief asks for "60% main colour, 30% secondary and 10% a colour that
   completely contrasts". The accent only works if it stays rare.
   <!-- 2026-11-23: "For coloring, use a 60-30-10 scheme…" -->

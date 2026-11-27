@@ -158,7 +158,7 @@ async function main() {
     return `Order shown: ${names.map((n, i) => `${n} (${scores[i]})`).join(', ')}`
   })
 
-  await runTest(page, 7, 'Wrong delivery OTP entered', 'Payment stays in escrow', async () => {
+  await runTest(page, 7, 'Wrong delivery OTP entered', 'Payment stays held safely by RaastaShare', async () => {
     await startDelivery(page)
     await confirmPickup(page)
     const real = await readCode(page, 'delivery-otp')
@@ -167,7 +167,7 @@ async function main() {
     await page.click('[data-testid="delivery-code-submit"]')
     const message = await page.textContent('[data-testid="delivery-message"]')
     const escrow = (await page.textContent('[data-testid="escrow-status"]')).trim()
-    check(escrow === 'Held in escrow', `Escrow status is "${escrow}"`)
+    check(escrow === 'Held safely by RaastaShare', `Escrow status is "${escrow}"`)
     check(await page.locator('[data-testid="step-delivery"]').isVisible(), 'Delivery step is no longer open')
     await shot('test-7-wrong-otp-stays-in-escrow.png')
     return `"${message}" Escrow: ${escrow}`

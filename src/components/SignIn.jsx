@@ -6,6 +6,8 @@ import PageHeader from './PageHeader.jsx'
 import { createAccount, signIn } from '../lib/server.js'
 
 const MIN_PASSWORD = 8
+// Longest name allowed (the same limit is set in database/04-name-limit.sql).
+const MAX_NAME = 60
 
 export default function SignIn() {
   const [mode, setMode] = useState('signin') // 'signin' or 'create'
@@ -22,6 +24,7 @@ export default function SignIn() {
     if (!email.includes('@')) return setError('Enter your email address.')
     if (password.length < MIN_PASSWORD) return setError(`Use a password of at least ${MIN_PASSWORD} characters.`)
     if (creating && name.trim().length < 2) return setError('Enter your name, as others will see it.')
+    if (creating && name.trim().length > MAX_NAME) return setError(`Use ${MAX_NAME} characters or fewer for your name.`)
     setError('')
     setBusy(true)
     const problem = creating
@@ -48,7 +51,7 @@ export default function SignIn() {
         {creating && (
           <div>
             <label className="label" htmlFor="accountName">Your name</label>
-            <input id="accountName" className="field" autoComplete="name" value={name}
+            <input id="accountName" className="field" autoComplete="name" value={name} maxLength={MAX_NAME}
               onChange={(e) => setName(e.target.value)} />
           </div>
         )}
