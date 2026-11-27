@@ -136,8 +136,12 @@ it, the app keeps everything in the browser with demo profiles, as before.
 4. Create your own account in the app, then make it the admin in the SQL
    Editor: `update profiles set is_admin = true where name = 'Your Name';`
 
-Not yet on the server (next step): the code check, the timed rules (expired
-requests, the 2-hour flag) and the Make.com calls still run in the browser.
+5. Run `database/03-codes-and-timers.sql`: the server makes the pickup and
+   delivery codes (only the sender can read them), checks the code the
+   carrier types, and every 5 minutes ends expired requests and flags parcels
+   unmatched for 2 hours.
+
+Not yet on the server: the Make.com calls still go from the browser.
 
 ### Optional: connect the live site to Make.com
 
