@@ -202,7 +202,7 @@ export default function Admin({ state, save, profile, setProfile }) {
       </Section>
 
       <Section title="Disputed" count={disputed.length} testId="admin-disputed"
-        emptyText="No disputes. Reported problems freeze the escrow and appear here.">
+        emptyText="No disputes. Reported problems freeze the payment and appear here.">
         {disputed.map((d) => {
           const s = state.shipments.find((x) => x.id === d.shipmentId)
           const j = state.journeys.find((x) => x.id === d.journeyId)

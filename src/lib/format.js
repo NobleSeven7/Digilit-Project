@@ -48,7 +48,8 @@ export function formatDay(value, weekday = true) {
     weekday ? { weekday: 'short', day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short' })
 }
 
-// Picker labels that stay short on a phone: "Islamabad to Lahore, 5 kg, 27 Nov".
+// Picker labels that stay short on a phone: "ISB to LHE, 5 kg, 27 Nov" (city
+// codes, so even a 199.5 kg parcel fits on a 320px screen).
 // Only when two items would read the same is the time added, to tell them apart.
 // items: [{ id, base, at }] -> Map of id to label.
 export function pickerLabels(items) {
@@ -72,3 +73,23 @@ export function formatShort(value) {
 export function isolate(name) {
   return `\u2068${name}\u2069`
 }
+
+// A name for a button. Short names are used as they are ("Request Bilal
+// Ahmed"). A long one would wrap the button onto three lines on a phone, so
+// the button names the role instead ("Request this carrier"); the full name
+// is always shown right next to the button.
+const MAX_BUTTON_NAME = 20
+export function buttonName(name, role) {
+  return name.length <= MAX_BUTTON_NAME ? name : role
+}
+
+// How a carrier travels, inside a sentence: "carried by Bilal Ahmed by car".
+// The vehicle names on their own ("Bus traveller (luggage)") already have
+// brackets, which read badly inside more brackets.
+const TRAVEL = {
+  'Car': 'by car',
+  'Motorbike': 'by motorbike',
+  'Van / Pickup': 'by van or pickup',
+  'Bus traveller (luggage)': 'by bus, as luggage',
+}
+export const travelBy = (vehicleType) => TRAVEL[vehicleType] || `by ${vehicleType.toLowerCase()}`

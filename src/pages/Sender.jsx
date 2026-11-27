@@ -426,7 +426,7 @@ export default function Sender({ state, save, id, profile, setProfile }) {
           </p>
           <p className="text-sm text-muted">
             {formatPKR(BASE_FEE)} base fee + {formatPKR(FEE_PER_KG)} × {weight > 0 ? weight : 0} kg. Nothing is paid until a
-            carrier accepts; then RaastaShare holds the money (escrow) until delivery is confirmed.
+            carrier accepts; then RaastaShare holds the money safely until delivery is confirmed.
           </p>
 
           {/* After pressing "Post parcel": say what to fix, naming the field.

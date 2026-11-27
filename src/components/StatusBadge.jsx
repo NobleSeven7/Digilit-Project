@@ -1,4 +1,4 @@
-// A small coloured label for a status such as "Delivered" or "Held in escrow".
+// A small coloured label for a status such as "Delivered" or "Frozen".
 import { STATUS, DELIVERY, ESCROW } from '../data/constants.js'
 
 // Which colour family each status uses.
@@ -38,12 +38,18 @@ const COLOURS = {
 // shrink-0 keeps it on one line in a row; max-w-full lets it wrap only when it
 // is wider than the whole space it has (very large text), instead of pushing
 // the page sideways.
+// Words shown for a stored status, where plainer words read better. The
+// stored value stays the same (it is saved in the database and the Sheet).
+const LABELS = {
+  [ESCROW.HELD]: 'Held safely by RaastaShare',
+}
+
 export default function StatusBadge({ status }) {
   const colours = COLOURS[statusTone(status)]
 
   return (
     <span data-testid="status" className={`inline-flex max-w-full shrink-0 items-center rounded-full border px-3 py-1 text-sm font-bold leading-tight tracking-[0.01em] tabular-nums transition-colors duration-200 ${colours}`}>
-      {status}
+      {LABELS[status] ?? status}
     </span>
   )
 }

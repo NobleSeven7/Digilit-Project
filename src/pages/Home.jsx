@@ -234,7 +234,7 @@ const STEPS = [
   {
     label: 'Accept',
     title: 'Pick a carrier',
-    text: 'Carriers who pass all four rules are ranked by a score out of 100. Once both sides accept, the fee is held in escrow.',
+    text: 'Carriers who pass all four rules are ranked by a score out of 100. Once both sides accept, the fee is held safely by RaastaShare.',
     phone: 'A phone showing three carriers ranked by score, Bilal Ahmed first with 75 out of 100',
     screen: <Shot light={matchLight} dark={matchDark} />,
   },
@@ -336,7 +336,7 @@ export default function Home({ profile, setProfile }) {
           </h1>
           <p className="hero-enter mt-5 max-w-md text-lg text-muted [--d:60ms] sm:text-xl sm:leading-normal">
             RaastaShare matches your parcel with a carrier: someone already travelling
-            the same intercity route, with spare space. Payment stays in escrow until delivery is confirmed.
+            the same intercity route, with spare space. RaastaShare holds the payment safely until delivery is confirmed.
           </p>
           <RoutePicker onGo={become('sender')} />
 

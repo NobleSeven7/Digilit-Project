@@ -276,7 +276,7 @@ export default function Carrier({ state, save, profile, setProfile }) {
     // the same top value the capacity box allows, so typos are caught.
     const limit = vehicle.maxKg ?? MAX_SPARE_KG
     if (spare > limit) return fail('spare', `A ${vehicleType} can carry up to ${limit} kg.`)
-    if (new Date(departure) <= new Date()) return fail('departure', 'The departure time must be in the future.')
+    if (new Date(departure) <= new Date()) return fail('departure', 'That time has already passed. Choose a later departure time.')
 
     // Stop the same journey being posted twice (e.g. tapping the button again).
     const alreadyPosted = state.journeys.some((j) =>
