@@ -60,7 +60,7 @@ export default function About() {
           <p>
             Signed-in people can see trips, parcels and deliveries, with names and cities, because
             matching needs them. Your email is never shown to anyone. Pickup and delivery codes are
-            visible only to the sender and the carrier of that delivery. Signed-out visitors see
+            visible only to the sender of that delivery; the server checks the code the carrier types. Signed-out visitors see
             nothing. The site sets <strong>no cookies</strong>; your sign-in is kept in this
             browser&rsquo;s storage until you sign out.
           </p>

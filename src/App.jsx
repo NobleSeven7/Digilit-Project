@@ -77,9 +77,13 @@ export default function App() {
   // Shared backend: fetch the latest data (after signing in, and whenever
   // the person comes back to this tab, so other people's changes show up).
   // After a refused save the notice stays up (keepNotice), so it is not lost.
+  // A save made while a refresh is on its way wins: that refresh is dropped.
+  const saveCount = useRef(0)
   const refresh = useCallback(async (keepNotice = false) => {
+    const startedAt = saveCount.current
     try {
       const fresh = await loadServerState()
+      if (saveCount.current !== startedAt) return
       serverCopy.current = fresh
       setState(fresh)
       if (!keepNotice) setServerProblem('')
@@ -129,13 +133,13 @@ export default function App() {
     }
     const before = serverCopy.current
     serverCopy.current = newState
+    const count = ++saveCount.current
     pushChanges(before, newState).then((problem) => {
-      if (problem) {
-        setServerProblem(problem)
-        refresh(true)
-      } else {
-        setServerProblem('')
-      }
+      if (problem) setServerProblem(problem)
+      else setServerProblem('')
+      // Load what the server made of it (for example new codes), unless
+      // another save has started since.
+      if (saveCount.current === count) refresh(Boolean(problem))
     })
   }
 
@@ -150,7 +154,12 @@ export default function App() {
   // Every page receives the same things: the data, the save function, the
   // id from the address bar (if there is one) and who is signed in. With real
   // accounts there is no switching to another person, so setProfile is null.
-  const pageProps = { state, save, id, profile, setProfile: serverEnabled ? null : setProfile }
+  const pageProps = {
+    state, save, id, profile,
+    setProfile: serverEnabled ? null : setProfile,
+    // Shared backend: load the latest data now (after a code is checked).
+    reload: serverEnabled ? () => refresh(false) : null,
+  }
   const pages = {
     home: <Home {...pageProps} />,
     sender: <Sender {...pageProps} />,

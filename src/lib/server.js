@@ -123,10 +123,7 @@ export async function pushChanges(before, after) {
       if (data.length === 0) return refused
     }
   }
-  if (changes.codes.length) {
-    const { error } = await supabase.from('delivery_codes').upsert(changes.codes)
-    if (error) return failed(error)
-  }
+  // Codes are never sent: the server makes them (database/03-codes-and-timers.sql).
   for (const table of [...TABLES].reverse()) {
     if (changes.remove[table].length) {
       const { error } = await supabase.from(table).delete().in('id', changes.remove[table])
@@ -134,4 +131,14 @@ export async function pushChanges(before, after) {
     }
   }
   return null
+}
+
+// The carrier enters a pickup or delivery code; the server checks it.
+// kind is 'pickup' or 'delivery'. Returns { outcome: 'ok' | 'wrong' | 'frozen',
+// triesLeft } or { error: 'a sentence' }.
+export async function enterCode(deliveryId, kind, code) {
+  const supabase = await getClient()
+  const { data, error } = await supabase.rpc('enter_code', { delivery: deliveryId, kind, code })
+  if (error) return { error: plain(error, 'Could not check the code. Try again.') }
+  return data
 }

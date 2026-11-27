@@ -1621,3 +1621,26 @@ Kept on purpose:
   released); a third account could not read the codes or change the parcel
   through the API; signed-out requests were refused. Unit tests (with new row
   tests) and all 16 browser tests pass without the backend.
+
+## Stage 61: shared backend, part 2 (codes and timers on the server)
+
+- **Codes:** when both people accept, the server makes the two codes
+  (`database/03-codes-and-timers.sql`). Only the sender and the admin can
+  read them; the carrier's phone never receives them. The carrier types a
+  code and the server checks it (`enter_code`), keeping the wrong-code count
+  and freezing the payment after 3 wrong codes, as before.
+- **Guard:** only the server or the admin can mark a delivery picked up or
+  delivered, move the money, change the wrong-code counts, or accept for
+  the other person. Tried from the carrier's account: refused.
+- **Timers:** every 5 minutes (pg_cron) the server ends requests whose
+  carrier left before both accepted, sends their parcel back to matching, and
+  flags parcels unmatched for 2 hours. The "another carrier fits" check on the
+  server looks at route, time and space, not the vehicle type.
+- **App:** with the backend, the Delivery page asks the server to check a
+  code and then reloads; a save is followed by a reload so new codes appear.
+  Without the backend nothing changes.
+- **Checked:** against a local copy of Supabase: the full flow with a wrong
+  code first ("2 tries left"); the carrier read 0 codes and could not mark the
+  delivery delivered; 3 wrong codes froze the payment; the tidy-up declined
+  an expired request and flagged a 3-hour-old parcel. Unit tests and all 16
+  browser tests pass without the backend.

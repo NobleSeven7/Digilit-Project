@@ -14,6 +14,7 @@ import RouteLine from '../components/RouteLine.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import SuccessTick from '../components/SuccessTick.jsx'
 import posthog, { posthogEnabled } from '../lib/posthog.js'
+import { serverEnabled, enterCode } from '../lib/server.js'
 import ParcelPass from '../components/ParcelPass.jsx'
 
 // Reasons a sender or carrier can give when reporting a problem.
@@ -57,7 +58,11 @@ function CodeForm({ id, label, buttonText, onSubmit }) {
   const input = useRef(null)
   function handleSubmit(e) {
     e.preventDefault()
-    if (onSubmit(code) === false) shake(input.current)
+    // onSubmit may answer at once (codes in this browser) or a moment later
+    // (shared backend: the server checks the code).
+    Promise.resolve(onSubmit(code)).then((result) => {
+      if (result === false) shake(input.current)
+    })
     setCode('')
   }
   return (
@@ -141,7 +146,7 @@ function CodeStep({ kind, code, codeTestId, formId, buttonText, onSubmit, shipme
   )
 }
 
-export default function Delivery({ state, save, id, profile, setProfile }) {
+export default function Delivery({ state, save, id, profile, setProfile, reload }) {
   // Message shown after an action, e.g. "Wrong code".
   const [message, setMessage] = useState(null) // { ok: true/false, text }
   // "Report a problem" opens a short form first: nothing is frozen until the
@@ -243,8 +248,10 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
     if (senderAccepted && carrierAccepted) {
       // Both accepted: create the two one-time codes and hold the payment.
-      const pickupOtp = generateOtp()
-      const deliveryOtp = generateDifferentOtp(pickupOtp)
+      // (Shared backend: the server makes the codes, so the carrier's phone
+      // never has them.)
+      const pickupOtp = serverEnabled ? null : generateOtp()
+      const deliveryOtp = serverEnabled ? null : generateDifferentOtp(pickupOtp)
       update({
         senderAccepted, carrierAccepted, pickupOtp, deliveryOtp,
         status: DELIVERY.AWAITING_PICKUP, escrow: ESCROW.HELD,
@@ -324,8 +331,49 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
   const next = nextStep()
   const saving = calculateSaving(shipment.weightKg)
 
+  // ---- Shared backend: the server checks the code ---------------------
+  // Same messages as below; the server keeps the wrong-code count and
+  // freezes the payment after MAX_CODE_TRIES wrong codes.
+  async function checkOnServer(kind, code) {
+    const result = await enterCode(delivery.id, kind, code)
+    reload()
+    if (result.error) {
+      setMessage({ ok: false, text: result.error })
+      return false
+    }
+    const isPickup = kind === 'pickup'
+    if (result.outcome === 'ok') {
+      if (isPickup) {
+        if (posthogEnabled) posthog.capture('pickup_confirmed', { shipment_ref: shipment.id })
+        setMessage({ ok: true, text: 'Pickup confirmed. The parcel is on its way.' })
+      } else {
+        const deliveredAt = new Date().toISOString()
+        setMessage({ ok: true, text: `Delivery confirmed. ${amount} released to ${isolate(journey.carrierName)}.` })
+        if (posthogEnabled) posthog.capture('delivery_confirmed', { shipment_ref: shipment.id })
+        sendToWebhook('delivery', { ...record, escrow: ESCROW.RELEASED, deliveredAt },
+          `Delivery completed: ${amount} released to ${journey.carrierName}`)
+      }
+      return true
+    }
+    if (result.outcome === 'frozen') {
+      const reason = `${MAX_CODE_TRIES} wrong ${kind} codes were entered`
+      setMessage({ ok: false, text: `Wrong ${kind} code again. After ${MAX_CODE_TRIES} wrong codes, ${amount} is frozen and an admin will check this delivery.` })
+      if (posthogEnabled) posthog.capture('delivery_disputed', { shipment_ref: shipment.id, dispute_source: `maximum_${kind}_code_attempts` })
+      sendToWebhook('dispute', { ...record, escrow: ESCROW.FROZEN },
+        `Dispute raised: ${reason}, ${shipment.origin} to ${shipment.destination}`)
+      return false
+    }
+    const left = result.triesLeft
+    const tries = `${left} ${left === 1 ? 'try' : 'tries'} left.`
+    setMessage({ ok: false, text: isPickup
+      ? `Wrong pickup code. The parcel has not been handed over. ${tries} Ask ${isolate(shipment.senderName)} to read the code again.`
+      : `Wrong delivery code. ${amount} stays in escrow. ${tries} Ask the receiver to read the code again.` })
+    return false
+  }
+
   // ---- Step 2: pickup code ---------------------------------------------
   function handlePickup(code) {
+    if (serverEnabled) return checkOnServer('pickup', code)
     if (code === delivery.pickupOtp) {
       update({ status: DELIVERY.IN_TRANSIT })
       if (posthogEnabled) posthog.capture('pickup_confirmed', { shipment_ref: shipment.id })
@@ -356,6 +404,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
   // ---- Step 3: delivery code -> escrow release --------------------------
   function handleDelivery(code) {
+    if (serverEnabled) return checkOnServer('delivery', code)
     if (code === delivery.deliveryOtp) {
       const deliveredAt = new Date().toISOString()
       update(
