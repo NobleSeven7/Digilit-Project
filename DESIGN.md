@@ -18,6 +18,9 @@ style and the old instruction not to change the design style.
   - 10%: `--color-hold` red, only for the few things that need attention:
     savings, money held, the current page and focus rings.
   Errors and disputes use `--color-fail` (oxblood), never the accent red.
+  Something that is only waiting (not done yet, nothing wrong) uses plain
+  paper with a dashed outline, like a button that is not ready, never pink.
+  <!-- 2026-11-27: "Run all the fixes" (UX review fix 2) -->
   Never write a raw hex colour in a component; use a token class or
   `var(--color-…)`. **(checked)**
   Why: the brief asks for "60% main colour, 30% secondary and 10% a colour that

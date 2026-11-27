@@ -65,6 +65,27 @@ function ThemeSwitch() {
   )
 }
 
+// Shared backend (real accounts): who is signed in, and a way to sign out.
+function AccountBar({ profile, onSignOut }) {
+  if (!profile) return null
+  return (
+    <aside aria-label="Your account" className="border-b border-line bg-surface">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 safe-x py-2">
+        <p className="min-w-0" data-testid="account-name">
+          Signed in as <strong className="text-brand-ink">{profile.name}</strong> ({profile.role}{profile.isAdmin ? ', admin' : ''})
+        </p>
+        <button type="button" onClick={onSignOut} data-testid="sign-out"
+          className="min-h-11 font-bold text-brand-ink underline underline-offset-2">
+          Sign out
+        </button>
+        <span className="ml-auto hidden font-display text-xl font-bold text-brand-ink sm:inline" data-testid="role-view">
+          {profile.role === 'carrier' ? 'Carrier view' : 'Sender view'}
+        </span>
+      </div>
+    </aside>
+  )
+}
+
 // The simulated sign-in: pick which fictional person you are.
 function ProfileBar({ profile, setProfile }) {
   return (
@@ -116,7 +137,7 @@ function focusHeading() {
   heading.focus({ preventScroll: true })
 }
 
-export default function Layout({ currentPage, onReset, profile, setProfile, saveFailed, children }) {
+export default function Layout({ currentPage, onReset, profile, setProfile, onSignOut, saveFailed, serverProblem, children }) {
   // After a page change (not on the first load): new title, focus on its heading.
   const firstPage = useRef(true)
   useEffect(() => {
@@ -127,9 +148,10 @@ export default function Layout({ currentPage, onReset, profile, setProfile, save
 
   // Name of the page we are on (shown in the phone header, where there is no top menu).
   const current = NAV_ITEMS.find((item) => item.page === currentPage)
-  const menu = menuFor(profile.role)
+  // Signed out (shared backend): the sender pages are shown, and ask to sign in.
+  const menu = menuFor(profile?.role ?? 'sender')
   // Phones: the header slides away while scrolling down (see .site-header).
-  const headerHidden = useHideOnScroll()
+  const [headerHidden, headerInstant] = useHideOnScroll()
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -140,16 +162,18 @@ export default function Layout({ currentPage, onReset, profile, setProfile, save
         Skip to content
       </button>
       {/* Header (on phones it stays at the top and hides while scrolling down) */}
-      <header className="site-header bg-brand" data-hidden={headerHidden}>
+      <header className="site-header bg-brand" data-hidden={headerHidden} data-instant={headerInstant}>
         {/* flex-wrap: if the menu does not fit beside the logo (very large text
             on a tablet), it moves onto its own line instead of pushing the
             page sideways. At normal sizes everything fits on one line. */}
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-2 gap-y-2 safe-x py-3 sm:gap-x-4">
           <Logo />
-          {/* Phones: show which page you are on */}
+          {/* Phones: show which page you are on. Under 360px wide there is no
+              room beside the logo, so it is left out (the tab bar below marks
+              the current page too) and the header stays on one line. */}
           <div className="flex shrink-0 items-center gap-1 md:order-last">
             {current && (
-              <span className="rounded-full bg-surface px-3 py-1 text-sm font-bold text-brand-ink md:hidden">
+              <span className="rounded-full bg-surface px-3 py-1 text-sm font-bold text-brand-ink max-[22.5rem]:hidden md:hidden">
                 {current.label}
               </span>
             )}
@@ -180,7 +204,16 @@ export default function Layout({ currentPage, onReset, profile, setProfile, save
         </div>
       </header>
 
-      <ProfileBar profile={profile} setProfile={setProfile} />
+      {setProfile
+        ? <ProfileBar profile={profile} setProfile={setProfile} />
+        : <AccountBar profile={profile} onSignOut={onSignOut} />}
+
+      {/* Shared backend: loading or saving went wrong */}
+      {serverProblem && (
+        <p role="alert" data-testid="server-problem" className="border-b border-fail bg-fail-tint">
+          <span className="mx-auto block max-w-5xl safe-x py-2 font-bold text-fail">{serverProblem}</span>
+        </p>
+      )}
 
       {/* The browser would not save: say so, instead of losing changes silently */}
       {saveFailed && (
@@ -211,14 +244,19 @@ export default function Layout({ currentPage, onReset, profile, setProfile, save
               </ul>
             </details>
             <p>
-              Student prototype. All people and trips are fictional; codes and payments are simulated.{' '}
+              {onReset
+                ? 'Student prototype. All people and trips are fictional; codes and payments are simulated. '
+                : 'Student prototype. Accounts and trips are real; codes and payments are simulated. '}
               <a href="#/about" data-testid="about-link" className="font-bold text-brand-ink underline underline-offset-2">About this demo</a>
             </p>
           </div>
-          <button type="button" onClick={onReset} data-testid="reset-demo"
-            className="btn btn-secondary shrink-0 self-start text-base sm:self-auto">
-            Reset demo data
-          </button>
+          {/* Shared data is never wiped from one person's browser */}
+          {onReset && (
+            <button type="button" onClick={onReset} data-testid="reset-demo"
+              className="btn btn-secondary shrink-0 self-start text-base sm:self-auto">
+              Reset demo data
+            </button>
+          )}
         </div>
       </footer>
 
@@ -231,7 +269,7 @@ export default function Layout({ currentPage, onReset, profile, setProfile, save
             key={item.page}
             href={`#/${item.page}`}
             aria-current={currentPage === item.page ? 'page' : undefined}
-            className={`flex min-h-14 min-w-0 flex-auto flex-col items-center justify-center gap-0.5 border-t-4 px-1 pb-1 text-xs font-bold active:bg-brand-tint ${
+            className={`flex min-h-14 min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 border-t-4 px-1 pb-1 text-xs font-bold active:bg-brand-tint max-[22.5rem]:px-0 max-[22.5rem]:text-[0.6875rem] ${
               index === menu.own.length ? 'shadow-[inset_1px_0_0_var(--color-line)]' : ''} ${
               currentPage === item.page ? 'border-brand-ink text-brand-ink' : 'border-transparent text-muted'
             }`}

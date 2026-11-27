@@ -552,6 +552,18 @@ html[data-theme="dark"] .shot-dark { display: block; }
     translate: 0 -100%;
     transition-duration: 200ms; /* getting out of the way is quicker */
   }
+  /* Just after a page change the header is simply there: no slide
+     (DESIGN.md: no animation when changing pages). */
+  .site-header[data-instant="true"] { transition: none; }
+
+  /* When "Next" on the phone keyboard (or Tab) moves to a field or button,
+     the browser scrolls it into view. These gaps keep it clear of the tab bar
+     fixed to the bottom and of the header at the top, so what you are on is
+     never hidden behind them. */
+  html {
+    scroll-padding-top: 5rem;
+    scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
 }
 
 /* Success (src/components/SuccessTick.jsx): the circle grows from 90% on a

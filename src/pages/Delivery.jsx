@@ -5,7 +5,7 @@ import { STATUS, DELIVERY, ESCROW, MAX_CODE_TRIES, COURIER_FEE } from '../data/c
 import { generateOtp, generateDifferentOtp } from '../lib/otp.js'
 import { sendToWebhook, noteInSyncLog } from '../lib/webhook.js'
 import { goTo } from '../lib/navigation.js'
-import { formatPKR, formatDateTime, formatShort, isolate } from '../lib/format.js'
+import { formatPKR, formatDateTime, formatShort, pickerLabels, isolate } from '../lib/format.js'
 import { anotherCarrierFits, isAvailable, withSpaceLeft } from '../lib/matching.js'
 import { calculateSaving } from '../lib/pricing.js'
 import { shake } from '../lib/motion.js'
@@ -14,6 +14,7 @@ import RouteLine from '../components/RouteLine.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import SuccessTick from '../components/SuccessTick.jsx'
 import posthog, { posthogEnabled } from '../lib/posthog.js'
+import { serverEnabled, enterCode } from '../lib/server.js'
 import ParcelPass from '../components/ParcelPass.jsx'
 
 // Reasons a sender or carrier can give when reporting a problem.
@@ -57,7 +58,11 @@ function CodeForm({ id, label, buttonText, onSubmit }) {
   const input = useRef(null)
   function handleSubmit(e) {
     e.preventDefault()
-    if (onSubmit(code) === false) shake(input.current)
+    // onSubmit may answer at once (codes in this browser) or a moment later
+    // (shared backend: the server checks the code).
+    Promise.resolve(onSubmit(code)).then((result) => {
+      if (result === false) shake(input.current)
+    })
     setCode('')
   }
   return (
@@ -76,12 +81,9 @@ function CodeForm({ id, label, buttonText, onSubmit }) {
 }
 
 // One delivery in the picker.
-function DeliveryOption({ delivery: d, shipment: s }) {
-  return (
-    <option value={d.id}>
-      {s.origin} to {s.destination}, {s.weightKg} kg, {s.senderName}, {formatShort(d.createdAt)} ({d.status})
-    </option>
-  )
+// Short, so it is not cut off on a phone; the details are under the picker.
+function DeliveryOption({ delivery: d, labels }) {
+  return <option value={d.id}>{labels.get(d.id)}</option>
 }
 
 // Only the carrier enters the codes (entering the delivery code releases the
@@ -90,10 +92,12 @@ function CarrierOnly({ carrierName, setProfile }) {
   return (
     <div className="mt-4 rounded-lg bg-sunk px-3 py-3">
       <p>Only <strong>{carrierName}</strong> (the carrier) enters this code.</p>
-      <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-carrier"
-        onClick={() => setProfile({ role: 'carrier', name: carrierName })}>
-        Switch to {carrierName}
-      </button>
+      {setProfile && (
+        <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-carrier"
+          onClick={() => setProfile({ role: 'carrier', name: carrierName })}>
+          Switch to {carrierName}
+        </button>
+      )}
     </div>
   )
 }
@@ -117,13 +121,17 @@ function CodeStep({ kind, code, codeTestId, formId, buttonText, onSubmit, shipme
           <CodeForm id={formId} buttonText={buttonText} onSubmit={onSubmit}
             label={kind === 'Pickup' ? `Pickup code from ${sender}` : 'Delivery code from the receiver'} />
           {/* Demo shortcut: the code is on the sender's screen */}
-          <p className="mt-3 text-sm text-muted">
-            In this demo, the code is on {sender}'s screen.{' '}
-            <button type="button" className="font-bold text-brand-ink underline underline-offset-2" data-testid="switch-to-sender"
-              onClick={() => setProfile({ role: 'sender', name: sender })}>
-              Switch to {sender}
-            </button>
-          </p>
+          {setProfile ? (
+            <p className="mt-3 text-sm text-muted">
+              In this demo, the code is on {sender}'s screen.{' '}
+              <button type="button" className="font-bold text-brand-ink underline underline-offset-2" data-testid="switch-to-sender"
+                onClick={() => setProfile({ role: 'sender', name: sender })}>
+                Switch to {sender}
+              </button>
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-muted">Ask {sender} for the code shown on their screen.</p>
+          )}
         </>
       ) : (
         <CarrierOnly carrierName={carrier} setProfile={setProfile} />
@@ -135,7 +143,7 @@ function CodeStep({ kind, code, codeTestId, formId, buttonText, onSubmit, shipme
   )
 }
 
-export default function Delivery({ state, save, id, profile, setProfile }) {
+export default function Delivery({ state, save, id, profile, setProfile, reload }) {
   // Message shown after an action, e.g. "Wrong code".
   const [message, setMessage] = useState(null) // { ok: true/false, text }
   // "Report a problem" opens a short form first: nothing is frozen until the
@@ -155,6 +163,10 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
   const deliveries = [...state.deliveries].reverse() // newest first
   const mine = deliveries.filter(isMine)
   const others = deliveries.filter((d) => !isMine(d))
+  const labels = pickerLabels(deliveries.map((d) => {
+    const s = shipmentOf(d)
+    return { id: d.id, base: `${s.origin} to ${s.destination}, ${s.weightKg} kg`, at: d.createdAt }
+  }))
   // The one in the address bar, else the signed-in person's newest, else the newest of all.
   const delivery = deliveries.find((d) => d.id === id) || mine[0] || deliveries[0]
 
@@ -237,8 +249,10 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
     if (senderAccepted && carrierAccepted) {
       // Both accepted: create the two one-time codes and hold the payment.
-      const pickupOtp = generateOtp()
-      const deliveryOtp = generateDifferentOtp(pickupOtp)
+      // (Shared backend: the server makes the codes, so the carrier's phone
+      // never has them.)
+      const pickupOtp = serverEnabled ? null : generateOtp()
+      const deliveryOtp = serverEnabled ? null : generateDifferentOtp(pickupOtp)
       update({
         senderAccepted, carrierAccepted, pickupOtp, deliveryOtp,
         status: DELIVERY.AWAITING_PICKUP, escrow: ESCROW.HELD,
@@ -318,8 +332,49 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
   const next = nextStep()
   const saving = calculateSaving(shipment.weightKg)
 
+  // ---- Shared backend: the server checks the code ---------------------
+  // Same messages as below; the server keeps the wrong-code count and
+  // freezes the payment after MAX_CODE_TRIES wrong codes.
+  async function checkOnServer(kind, code) {
+    const result = await enterCode(delivery.id, kind, code)
+    reload()
+    if (result.error) {
+      setMessage({ ok: false, text: result.error })
+      return false
+    }
+    const isPickup = kind === 'pickup'
+    if (result.outcome === 'ok') {
+      if (isPickup) {
+        if (posthogEnabled) posthog.capture('pickup_confirmed', { shipment_ref: shipment.id })
+        setMessage({ ok: true, text: 'Pickup confirmed. The parcel is on its way.' })
+      } else {
+        const deliveredAt = new Date().toISOString()
+        setMessage({ ok: true, text: `Delivery confirmed. ${amount} released to ${isolate(journey.carrierName)}.` })
+        if (posthogEnabled) posthog.capture('delivery_confirmed', { shipment_ref: shipment.id })
+        sendToWebhook('delivery', { ...record, escrow: ESCROW.RELEASED, deliveredAt },
+          `Delivery completed: ${amount} released to ${journey.carrierName}`)
+      }
+      return true
+    }
+    if (result.outcome === 'frozen') {
+      const reason = `${MAX_CODE_TRIES} wrong ${kind} codes were entered`
+      setMessage({ ok: false, text: `Wrong ${kind} code again. After ${MAX_CODE_TRIES} wrong codes, ${amount} is frozen and an admin will check this delivery.` })
+      if (posthogEnabled) posthog.capture('delivery_disputed', { shipment_ref: shipment.id, dispute_source: `maximum_${kind}_code_attempts` })
+      sendToWebhook('dispute', { ...record, escrow: ESCROW.FROZEN },
+        `Dispute raised: ${reason}, ${shipment.origin} to ${shipment.destination}`)
+      return false
+    }
+    const left = result.triesLeft
+    const tries = `${left} ${left === 1 ? 'try' : 'tries'} left.`
+    setMessage({ ok: false, text: isPickup
+      ? `Wrong pickup code. The parcel has not been handed over. ${tries} Ask ${isolate(shipment.senderName)} to read the code again.`
+      : `Wrong delivery code. ${amount} stays in escrow. ${tries} Ask the receiver to read the code again.` })
+    return false
+  }
+
   // ---- Step 2: pickup code ---------------------------------------------
   function handlePickup(code) {
+    if (serverEnabled) return checkOnServer('pickup', code)
     if (code === delivery.pickupOtp) {
       update({ status: DELIVERY.IN_TRANSIT })
       if (posthogEnabled) posthog.capture('pickup_confirmed', { shipment_ref: shipment.id })
@@ -350,6 +405,7 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
 
   // ---- Step 3: delivery code -> escrow release --------------------------
   function handleDelivery(code) {
+    if (serverEnabled) return checkOnServer('delivery', code)
     if (code === delivery.deliveryOtp) {
       const deliveredAt = new Date().toISOString()
       update(
@@ -413,15 +469,18 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
           onChange={(e) => { setMessage(null); goTo(`delivery/${e.target.value}`) }}>
           {mine.length > 0 && (
             <optgroup label="Yours">
-              {mine.map((d) => <DeliveryOption key={d.id} delivery={d} shipment={shipmentOf(d)} />)}
+              {mine.map((d) => <DeliveryOption key={d.id} delivery={d} labels={labels} />)}
             </optgroup>
           )}
           {others.length > 0 && (
             <optgroup label={mine.length > 0 ? 'Others' : 'All deliveries'}>
-              {others.map((d) => <DeliveryOption key={d.id} delivery={d} shipment={shipmentOf(d)} />)}
+              {others.map((d) => <DeliveryOption key={d.id} delivery={d} labels={labels} />)}
             </optgroup>
           )}
         </select>
+        <p className="hint" data-testid="delivery-details">
+          Sent by {shipmentOf(delivery).senderName}, started {formatShort(delivery.createdAt)}. {delivery.status}.
+        </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
@@ -478,11 +537,13 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
                     : isSender ? (
                       <button type="button" className="btn btn-primary" data-testid="accept-sender"
                         onClick={() => handleAccept('sender')}>Accept</button>
-                    ) : (
+                    ) : setProfile ? (
                       <button type="button" className="btn btn-secondary" data-testid="switch-to-sender"
                         onClick={() => setProfile({ role: 'sender', name: shipment.senderName })}>
                         Switch to {shipment.senderName}
                       </button>
+                    ) : (
+                      <p className="text-muted" data-testid="waiting-sender">Waiting for {shipment.senderName}</p>
                     )}
                 </div>
                 {/* The carrier's row: only the carrier can accept or decline here */}
@@ -496,11 +557,13 @@ export default function Delivery({ state, save, id, profile, setProfile }) {
                         <button type="button" className="btn btn-danger" data-testid="decline-carrier"
                           onClick={handleDecline}>Decline</button>
                       </div>
-                    ) : (
+                    ) : setProfile ? (
                       <button type="button" className="btn btn-secondary" data-testid="switch-to-carrier"
                         onClick={() => setProfile({ role: 'carrier', name: journey.carrierName })}>
                         Switch to {journey.carrierName}
                       </button>
+                    ) : (
+                      <p className="text-muted" data-testid="waiting-carrier">Waiting for {journey.carrierName}</p>
                     )}
                 </div>
               </div>

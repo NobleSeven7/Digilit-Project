@@ -6,7 +6,7 @@ import { findMatches, withSpaceLeft } from '../lib/matching.js'
 import { calculatePrice, calculateSaving } from '../lib/pricing.js'
 import { goTo } from '../lib/navigation.js'
 import { startDelivery } from '../lib/delivery.js'
-import { formatPKR, formatDateTime, formatShort } from '../lib/format.js'
+import { formatPKR, formatDateTime, formatShort, pickerLabels } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import RouteLine from '../components/RouteLine.jsx'
 import { codeOf } from '../components/RouteCodes.jsx'
@@ -92,6 +92,7 @@ function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onReq
   const { journey, rules, eligible, score } = result
   const usedPercent = Math.round((shipment.weightKg / journey.spareKg) * 100)
   const showChips = eligible && !declined // passed everything: keep it compact
+  const passedCount = rules.filter((rule) => rule.pass).length
 
   return (
     <li
@@ -150,10 +151,27 @@ function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onReq
           </details>
         </>
       ) : (
-        /* Not eligible (or declined): show every rule in full so the reason is clear */
-        <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-          {rules.map((rule) => <RuleCheck key={rule.key} rule={rule} />)}
-        </ul>
+        /* Not eligible (or declined): only the rule that failed, so the reason
+           is clear without a long list; the other checks open on request.
+           (A carrier who declined passed every rule: the badge says why.) */
+        <>
+          {rules.some((rule) => !rule.pass) && (
+            <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+              {rules.filter((rule) => !rule.pass).map((rule) => <RuleCheck key={rule.key} rule={rule} />)}
+            </ul>
+          )}
+          <details className="rule-details group mt-2">
+            <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-lg font-bold text-brand-ink active:opacity-70
+                                [&::-webkit-details-marker]:hidden">
+              <span className="group-open:hidden">See the {passedCount} {passedCount === 1 ? 'check' : 'checks'} passed</span>
+              <span className="hidden group-open:inline">Hide passed checks</span>
+              <ChevronDownIcon size={18} className="transition-transform duration-[250ms] ease-[var(--ease-out)] group-open:rotate-180 motion-reduce:transition-none" />
+            </summary>
+            <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+              {rules.filter((rule) => rule.pass).map((rule) => <RuleCheck key={rule.key} rule={rule} />)}
+            </ul>
+          </details>
+        </>
       )}
 
       {eligible && !declined && canRequest && (
@@ -166,13 +184,10 @@ function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onReq
   )
 }
 
-// One parcel in the picker.
-function ShipmentOption({ shipment: s }) {
-  return (
-    <option value={s.id}>
-      {s.origin} to {s.destination}, {s.weightKg} kg {s.itemType.toLowerCase()}, {s.senderName}, {formatShort(s.createdAt)} ({s.status})
-    </option>
-  )
+// One parcel in the picker: short, so it is not cut off on a phone. The
+// sender, time and status are shown under the picker instead.
+function ShipmentOption({ shipment: s, labels }) {
+  return <option value={s.id}>{labels.get(s.id)}</option>
 }
 
 // Someone else's parcel: say who can request a carrier, with a one-tap switch
@@ -181,10 +196,12 @@ function SenderOnly({ senderName, setProfile }) {
   return (
     <div className="mb-6 rounded-lg bg-sunk px-3 py-3" data-testid="sender-only">
       <p>Only <strong>{senderName}</strong> (the sender) can request a carrier for this parcel.</p>
-      <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-sender"
-        onClick={() => setProfile({ role: 'sender', name: senderName })}>
-        Switch to {senderName}
-      </button>
+      {setProfile && (
+        <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-sender"
+          onClick={() => setProfile({ role: 'sender', name: senderName })}>
+          Switch to {senderName}
+        </button>
+      )}
     </div>
   )
 }
@@ -210,6 +227,8 @@ export default function Matches({ state, save, id, profile, setProfile }) {
   const shipments = [...state.shipments].reverse()
   const mine = shipments.filter(isMine)
   const others = shipments.filter((s) => !isMine(s))
+  const labels = pickerLabels(shipments.map((s) => ({
+    id: s.id, base: `${s.origin} to ${s.destination}, ${s.weightKg} kg`, at: s.createdAt })))
   // Show the shipment named in the address bar, or the sender's newest one
   // (or the newest of all, when they have none).
   const shipment = shipments.find((s) => s.id === id) || mine[0] || shipments[0]
@@ -289,15 +308,18 @@ export default function Matches({ state, save, id, profile, setProfile }) {
           onChange={(e) => goTo(`matches/${e.target.value}`)}>
           {mine.length > 0 && (
             <optgroup label="Your parcels">
-              {mine.map((s) => <ShipmentOption key={s.id} shipment={s} />)}
+              {mine.map((s) => <ShipmentOption key={s.id} shipment={s} labels={labels} />)}
             </optgroup>
           )}
           {others.length > 0 && (
             <optgroup label={mine.length > 0 ? 'Other senders' : 'All parcels'}>
-              {others.map((s) => <ShipmentOption key={s.id} shipment={s} />)}
+              {others.map((s) => <ShipmentOption key={s.id} shipment={s} labels={labels} />)}
             </optgroup>
           )}
         </select>
+        <p className="hint" data-testid="parcel-details">
+          {shipment.weightKg} kg {shipment.itemType.toLowerCase()} from {shipment.senderName}, posted {formatShort(shipment.createdAt)}.
+        </p>
       </div>
 
       {/* Shipment summary */}

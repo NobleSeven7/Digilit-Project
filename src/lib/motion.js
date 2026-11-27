@@ -30,15 +30,26 @@ export function withViewTransition(change, kind) {
   transition.finished.finally(() => { if (id === latestTransition) delete root.dataset.transition })
 }
 
-// React hook: true while the person is scrolling down the page (past the
-// first 120px), false as soon as they scroll back up. The phone header uses
-// it to get out of the way while reading and come back when needed.
+// React hook: "hidden" is true while the person is scrolling down the page
+// (past the first 120px), false as soon as they scroll back up. The phone
+// header uses it to get out of the way while reading and come back when needed.
+// "instant" is true for a moment after a page change: the new page starts at
+// the top with the header already in place, so it must not slide in.
 export function useHideOnScroll() {
   const [hidden, setHidden] = useState(false)
+  const [instant, setInstant] = useState(false)
 
   useEffect(() => {
     let lastY = window.scrollY
     let frame = 0
+    let timer = 0
+    const onPageChange = () => {
+      setInstant(true)
+      setHidden(false)
+      lastY = 0
+      clearTimeout(timer)
+      timer = setTimeout(() => setInstant(false), 300)
+    }
     const onScroll = () => {
       if (frame) return
       frame = requestAnimationFrame(() => {
@@ -52,13 +63,16 @@ export function useHideOnScroll() {
       })
     }
     window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('hashchange', onPageChange)
     return () => {
       window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('hashchange', onPageChange)
       cancelAnimationFrame(frame)
+      clearTimeout(timer)
     }
   }, [])
 
-  return hidden
+  return [hidden, instant]
 }
 
 // A short side-to-side shake, the familiar "no". Used when a wrong code is

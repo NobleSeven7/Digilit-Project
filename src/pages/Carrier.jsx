@@ -7,7 +7,7 @@ import { calculatePrice } from '../lib/pricing.js'
 import { startDelivery } from '../lib/delivery.js'
 import { goTo } from '../lib/navigation.js'
 import { sendToWebhook } from '../lib/webhook.js'
-import { dayAt, makeId, formatDateTime, formatPKR, isolate } from '../lib/format.js'
+import { dayAt, makeId, formatDateTime, formatDay, formatPKR, isolate } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import RoleNotice from '../components/RoleNotice.jsx'
 import RouteLine from '../components/RouteLine.jsx'
@@ -20,31 +20,33 @@ import posthog, { posthogEnabled } from '../lib/posthog.js'
 // Largest spare capacity accepted for a car or van (kg).
 const MAX_SPARE_KG = 500
 
+// What each field is called in the message beside "Post journey", so the
+// message names the field instead of pointing at a colour (as on Send).
+const FIELD_NAMES = { route: 'From and To', departure: 'the departure time', spare: 'the spare capacity' }
+
+// The message under a field that needs fixing (nothing when it is fine).
+// Same look and behaviour as the Send page.
+function FieldError({ error, field }) {
+  if (error?.field !== field) return null
+  return <p id={`${field}-error`} className="fade-in-quick mt-1 font-bold text-fail">{error.text}</p>
+}
+
 // The carrier's side of matching. For one journey it shows:
 //   1. requests senders have already sent to this carrier
 //   2. parcels that pass all four rules (the carrier can offer to carry one)
 //   3. parcels that do not fit, with the rule that failed
 // It uses the same four rules as the sender's Matches page.
-function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
-  // Only the signed-in carrier's journeys that are open and have not left yet, newest first.
-  // spareKg here is the space still free after parcels already booked.
-  const journeys = withSpaceLeft(state)
+// The signed-in carrier's journeys that are open and have not left yet, newest
+// first. spareKg here is the space still free after parcels already booked.
+function openJourneys(state, carrierName) {
+  return withSpaceLeft(state)
     .filter((j) => isAvailable(j) && j.carrierName === carrierName)
     .reverse()
-  // Show the picked journey if it is one of them, else the newest.
-  const journey = journeys.find((j) => j.id === journeyId) || journeys[0]
+}
 
-  if (!journey) {
-    return (
-      <section className="mt-10" data-testid="journey-parcels">
-        <h2 className="text-2xl font-bold">Parcels for your journey</h2>
-        <p className="card mt-3 text-muted" data-testid="no-journeys">
-          {carrierName} has no open journeys. Post one above to see the parcels that fit it.
-        </p>
-      </section>
-    )
-  }
-
+// For one journey: requests waiting for the carrier's answer, parcels that
+// fit, and parcels that do not (with the rules checked).
+function parcelsFor(state, journey) {
   // Requests a sender has sent for this journey that still need an answer.
   const requests = state.deliveries.filter(
     (d) => d.journeyId === journey.id && d.status === DELIVERY.AWAITING_ACCEPT)
@@ -59,6 +61,50 @@ function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
   const fits = results.filter((r) => r.eligible && !declined(r))
     .sort((a, b) => b.shipment.weightKg - a.shipment.weightKg) // biggest fee first
   const others = results.filter((r) => !r.eligible || declined(r))
+  return { requests, fits, others, declined }
+}
+
+// Under the page title: a carrier who already has a journey sees at once
+// what is waiting for it, with a jump to the list (which sits below the form).
+function JourneySummary({ state, carrierName, journeyId, onJump }) {
+  const journeys = openJourneys(state, carrierName)
+  const journey = journeys.find((j) => j.id === journeyId) || journeys[0]
+  if (!journey) return null
+  const { requests, fits } = parcelsFor(state, journey)
+  const parts = []
+  if (requests.length > 0) parts.push(`${requests.length} ${requests.length === 1 ? 'request is' : 'requests are'} waiting for your answer`)
+  parts.push(`${fits.length} ${fits.length === 1 ? 'parcel fits' : 'parcels fit'}`)
+  return (
+    <div className="card mb-6 flex max-w-2xl flex-wrap items-center justify-between gap-3" data-testid="journey-summary">
+      <p>
+        Your {journey.origin} to {journey.destination} trip, {formatDateTime(journey.departure)}:{' '}
+        <strong>{parts.join(', ')}</strong>.
+      </p>
+      <button type="button" className={`btn ${requests.length > 0 ? 'btn-primary' : 'btn-secondary'}`}
+        data-testid="jump-to-parcels" onClick={onJump}>
+        See parcels
+      </button>
+    </div>
+  )
+}
+
+function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
+  const journeys = openJourneys(state, carrierName)
+  // Show the picked journey if it is one of them, else the newest.
+  const journey = journeys.find((j) => j.id === journeyId) || journeys[0]
+
+  if (!journey) {
+    return (
+      <section className="mt-10" data-testid="journey-parcels">
+        <h2 className="text-2xl font-bold">Parcels for your journey</h2>
+        <p className="card mt-3 text-muted" data-testid="no-journeys">
+          {carrierName} has no open journeys. Post one above to see the parcels that fit it.
+        </p>
+      </section>
+    )
+  }
+
+  const { requests, fits, others, declined } = parcelsFor(state, journey)
 
   // The carrier offers to carry a parcel. The sender still has to accept.
   function handleOffer(shipment) {
@@ -92,10 +138,14 @@ function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
         <select id="journeyPicker" className="field" value={journey.id} onChange={(e) => onPick(e.target.value)}>
           {journeys.map((j) => (
             <option key={j.id} value={j.id}>
-              {j.origin} to {j.destination}, {formatDateTime(j.departure)}, {j.vehicleType}, {j.spareKg} kg spare{j.postedSpareKg !== undefined ? ' left' : ''}
+              {j.origin} to {j.destination}, {formatDay(j.departure)}
             </option>
           ))}
         </select>
+        {/* The rest of the journey under the picker, where it is never cut off */}
+        <p className="hint" data-testid="journey-details">
+          Departs {formatDateTime(journey.departure)}. {journey.vehicleType}, {journey.spareKg} kg spare{journey.postedSpareKg !== undefined ? ' left' : ''}.
+        </p>
       </div>
 
       {/* 1. Requests already sent to this carrier */}
@@ -189,7 +239,12 @@ export default function Carrier({ state, save, profile, setProfile }) {
   const [departure, setDeparture] = useState(dayAt(1, 8)) // default: tomorrow 8 am
   const [vehicleType, setVehicleType] = useState('Car')
   const [spareKg, setSpareKg] = useState('10')
-  const [error, setError] = useState('')
+  // The problem to fix: { field, text }. "field" is 'route', 'departure',
+  // 'spare' or 'form' (not about one field, e.g. already posted).
+  const [error, setError] = useState(null)
+  // Props for a field: marks it as wrong and links it to its message.
+  const errorProps = (field) => (error?.field === field
+    ? { 'aria-invalid': true, 'aria-describedby': `${field}-error` } : {})
   const [posted, setPosted] = useState(null) // the journey just posted, for the confirmation
   const [journeyId, setJourneyId] = useState(null) // which journey the parcel list is showing
   const parcelList = useRef(null) // points at the "Parcels for your journey" section
@@ -209,13 +264,19 @@ export default function Carrier({ state, save, profile, setProfile }) {
   function handleSubmit(event) {
     event.preventDefault()
 
-    if (origin === destination) return setError('Choose two different cities.')
-    if (!(spare >= 0.5)) return setError('Enter your spare capacity in kg (at least 0.5).')
+    // A problem: show it under its field and move the cursor there, so the
+    // person (and a screen reader) lands right on what needs fixing.
+    const fail = (field, text) => {
+      setError({ field, text })
+      if (field !== 'form') document.getElementById(field === 'route' ? 'destination' : field === 'spare' ? 'spareKg' : field)?.focus()
+    }
+    if (origin === destination) return fail('route', 'Choose two different cities.')
+    if (!(spare >= 0.5)) return fail('spare', 'Enter your spare capacity in kg (at least 0.5).')
     // Motorbike and bus have fixed limits; for a car or van we stop at 500 kg,
     // the same top value the capacity box allows, so typos are caught.
     const limit = vehicle.maxKg ?? MAX_SPARE_KG
-    if (spare > limit) return setError(`A ${vehicleType} can carry up to ${limit} kg.`)
-    if (new Date(departure) <= new Date()) return setError('The departure time must be in the future.')
+    if (spare > limit) return fail('spare', `A ${vehicleType} can carry up to ${limit} kg.`)
+    if (new Date(departure) <= new Date()) return fail('departure', 'The departure time must be in the future.')
 
     // Stop the same journey being posted twice (e.g. tapping the button again).
     const alreadyPosted = state.journeys.some((j) =>
@@ -223,9 +284,9 @@ export default function Carrier({ state, save, profile, setProfile }) {
       j.destination === destination && j.departure === departure &&
       j.vehicleType === vehicleType && j.spareKg === spare)
     if (alreadyPosted) {
-      return setError('This journey is already posted. Change a detail to post a different one.')
+      return fail('form', 'This journey is already posted. Change a detail to post a different one.')
     }
-    setError('')
+    setError(null)
 
     const journey = {
       id: makeId('j'),
@@ -281,6 +342,12 @@ export default function Carrier({ state, save, profile, setProfile }) {
         Already driving between cities? Share your spare space and earn the delivery fee.
       </PageHeader>
 
+      {/* Already has a journey: what is waiting for it, before the form */}
+      {!posted && (
+        <JourneySummary state={state} carrierName={carrierName} journeyId={journeyId}
+          onJump={() => parcelList.current.scrollIntoView({ block: 'start' })} />
+      )}
+
       {/* Confirmation shown after posting */}
       {posted && (
         <div ref={confirmation} role="status" data-testid="journey-posted"
@@ -313,23 +380,26 @@ export default function Carrier({ state, save, profile, setProfile }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="label" htmlFor="origin">From</label>
-            <select id="origin" className="field" value={origin} onChange={(e) => setOrigin(e.target.value)}>
+            <select id="origin" className="field" value={origin} {...errorProps('route')}
+              onChange={(e) => { setOrigin(e.target.value); if (error?.field === 'route') setError(null) }}>
               {CITIES.map((city) => <option key={city}>{city}</option>)}
             </select>
           </div>
           <div>
             <label className="label" htmlFor="destination">To</label>
-            <select id="destination" className="field" value={destination}
-              onChange={(e) => setDestination(e.target.value)}>
+            <select id="destination" className="field" value={destination} {...errorProps('route')}
+              onChange={(e) => { setDestination(e.target.value); if (error?.field === 'route') setError(null) }}>
               {CITIES.map((city) => <option key={city}>{city}</option>)}
             </select>
+            <FieldError error={error} field="route" />
           </div>
         </div>
 
         <div>
           <label className="label" htmlFor="departure">Departure date and time</label>
-          <input id="departure" className="field" type="datetime-local" value={departure}
-            onChange={(e) => setDeparture(e.target.value)} />
+          <input id="departure" className="field" type="datetime-local" value={departure} {...errorProps('departure')}
+            onChange={(e) => { setDeparture(e.target.value); if (error?.field === 'departure') setError(null) }} />
+          <FieldError error={error} field="departure" />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -343,8 +413,9 @@ export default function Carrier({ state, save, profile, setProfile }) {
           <div>
             <label className="label" htmlFor="spareKg">Spare capacity (kg)</label>
             <input id="spareKg" className="field" type="number" inputMode="decimal"
-              min="0.5" max={vehicle.maxKg ?? MAX_SPARE_KG} step="0.5" value={spareKg}
-              onChange={(e) => setSpareKg(e.target.value)} />
+              min="0.5" max={vehicle.maxKg ?? MAX_SPARE_KG} step="0.5" value={spareKg} {...errorProps('spare')}
+              onChange={(e) => { setSpareKg(e.target.value); if (error?.field === 'spare') setError(null) }} />
+            <FieldError error={error} field="spare" />
           </div>
         </div>
 
@@ -355,8 +426,12 @@ export default function Carrier({ state, save, profile, setProfile }) {
           {vehicle.maxKg !== null ? `Weight limit ${vehicle.maxKg} kg.` : 'Weight limit as you declare.'}
         </p>
 
+        {/* Beside the button: what to fix, naming the field (or the whole
+            message when it is not about one field). Read out at once. */}
         {error && (
-          <p role="alert" className="rounded-lg bg-fail-tint px-3 py-2 font-bold text-fail">{error}</p>
+          <p role="alert" className="rounded-lg bg-fail-tint px-3 py-2 font-bold text-fail">
+            {error.field === 'form' ? error.text : `Check ${FIELD_NAMES[error.field]}.`}
+          </p>
         )}
 
         <button type="submit" className="btn btn-primary w-full sm:w-auto" data-testid="post-journey">
