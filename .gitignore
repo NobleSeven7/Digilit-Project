@@ -4,6 +4,15 @@ node_modules
 dist
 # Private settings such as the Make.com webhook URL - never commit this
 .env.local
-# Local AI-assistant skills and browser-test leftovers
-.claude
+# Local AI-assistant files and browser-test leftovers.
+# Everything in .claude stays private EXCEPT the shared project setup:
+# the settings file (hooks), the hook scripts, the reviewer agent and the
+# /ship-ui skill. Those are saved so every session (also in the cloud) gets them.
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
+!.claude/agents/
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/ship-ui/
 .playwright-cli
