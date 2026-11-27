@@ -1612,8 +1612,8 @@ The eight fixes from the UX and accessibility review, one change each:
    and `aria-describedby` and focused, as on Send; the box by the button
    names the field.
 4. **Matches, "not available":** each carrier shows only the rule that
-   failed; the checks it passed open on request. The phone page is about
-   a third shorter.
+   failed; the checks it passed open on request. On a phone that list is
+   about a third shorter (the whole page 13%).
 5. **Admin disputes:** "Release to carrier" and "Refund sender" are both
    outline buttons, so neither looks like the expected answer. The "Yes"
    in the confirm step is solid.
