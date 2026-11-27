@@ -1,7 +1,7 @@
 // Browser tests: the 8 test cases in the project proposal (tests 1 to 8),
 // plus 4 tests for the AI parcel check (tests 9 to 12), 2 for who may do
-// what (tests 13 and 14), 1 for wrong pickup codes (15) and 1 for a browser
-// that will not save (16).
+// what (tests 13 and 14), 1 for wrong pickup codes (15), 1 for a browser
+// that will not save (16) and 1 for the Home route picker (17).
 // The script opens the app in a real (headless) Chromium browser, clicks
 // through it like a user, checks the result and saves a screenshot of each
 // case in the test-screenshots folder.
@@ -380,6 +380,27 @@ async function main() {
     } finally {
       await blocked.close()
     }
+  })
+
+  await runTest(page, 17, 'Home: the "Where is it going?" picker', 'The same city twice cannot be sent; two cities open the Send page with that route chosen', async () => {
+    // Start as a carrier, to check the picker also switches you to a sender.
+    await page.selectOption('#profilePicker', 'carrier:Bilal Ahmed')
+    await page.goto(APP_URL + '#/home')
+    await page.selectOption('[data-testid="picker-from"]', 'Lahore')
+    await page.selectOption('[data-testid="picker-to"]', 'Lahore')
+    check(await page.locator('[data-testid="picker-go"]').count() === 0, 'The same city twice still has a working button')
+    const sameNote = (await page.textContent('[data-testid="hero-fact"]')).trim()
+    check(sameNote === 'Choose two different cities.', `Note for the same city twice is "${sameNote}"`)
+    await page.selectOption('[data-testid="picker-to"]', 'Karachi')
+    await page.click('[data-testid="picker-go"]')
+    await page.waitForSelector('#origin')
+    const from = await page.inputValue('#origin')
+    const to = await page.inputValue('#destination')
+    check(from === 'Lahore' && to === 'Karachi', `Send page opened on ${from} to ${to}`)
+    const signedIn = await page.inputValue('#profilePicker')
+    check(signedIn.startsWith('sender:'), `Still signed in as "${signedIn}"`)
+    await shot('test-17-home-route-picker.png')
+    return `Same city: button off and "${sameNote}"; Lahore to Karachi opened the Send page on ${from} to ${to}, as a sender`
   })
 
   await browser.close()

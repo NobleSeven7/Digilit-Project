@@ -35,7 +35,7 @@ function ChoiceRow({ href, testId, title, text, onClick }) {
   return (
     <a href={href} data-testid={testId} onClick={onClick}
       className="flex min-h-32 min-w-0 flex-col justify-between gap-3 bg-paper px-4 py-4 text-ink no-underline transition-colors
-                 duration-100 ease-[ease] hover:bg-surface active:bg-sunk">
+                 duration-100 ease-[var(--ease-out)] hover:bg-surface active:bg-sunk">
       <span className="min-w-0">
         <span className="block font-display text-2xl font-bold text-brand-ink sm:text-3xl">{title}</span>
         <span className="mt-1 block text-sm text-muted">{text}</span>
@@ -100,7 +100,7 @@ function RouteList({ routes, onChoose }) {
         <li key={to}>
           <a href={fromCode && toCode ? `#/sender/${fromCode}-${toCode}` : '#/sender'} onClick={onChoose} data-testid="route-link"
             className="flex min-h-16 items-center gap-4 border-b border-line py-3 text-ink no-underline transition-colors
-                       duration-100 ease-[ease] hover:bg-surface/60 active:bg-sunk">
+                       duration-100 ease-[var(--ease-out)] hover:bg-surface/60 active:bg-sunk">
             <span className="min-w-0 flex-1">
               <span aria-hidden="true" className="block font-display text-2xl font-bold text-brand-ink">
                 {/* A city without a code yet shows its name instead */}
@@ -120,7 +120,7 @@ function RouteList({ routes, onChoose }) {
 }
 
 // One line of the price comparison: a name, a price, and a bar drawn to scale.
-// It sits on the green band, so everything is white.
+// It sits on the label-black band, so everything is white.
 // The bars are drawn at once (no scroll-in fill: DESIGN.md > Motion).
 function PriceRow({ name, note, price, highlight }) {
   return (
@@ -141,6 +141,10 @@ function PriceRow({ name, note, price, highlight }) {
     </li>
   )
 }
+
+// Joins "PKR 60" with a no-break space, so a narrow screen never puts
+// "PKR" at the end of one line and "60" at the start of the next.
+const keepTogether = (text) => text.replace(/ /g, '\u00a0')
 
 // A phone outline. Whatever is inside is its screen.
 function Phone({ label, children }) {
@@ -399,7 +403,7 @@ export default function Home({ profile, setProfile }) {
         </div>
       </section>
 
-      {/* Price comparison from the proposal, on a band of motorway green */}
+      {/* Price comparison from the proposal, on a label-black band */}
       <section className="rounded-2xl bg-brand px-5 py-9 text-white sm:px-12 sm:py-14">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -414,7 +418,7 @@ export default function Home({ profile, setProfile }) {
         <ul className="mt-9 space-y-9">
           <PriceRow name="Courier" note="Our estimate of a typical quote" price={COURIER_FEE} />
           <PriceRow name="RaastaShare" highlight price={calculatePrice(DEMO_KG)}
-            note={`${formatPKR(BASE_FEE)} base + ${formatPKR(FEE_PER_KG)} × ${DEMO_KG} kg`} />
+            note={`${keepTogether(formatPKR(BASE_FEE))} base + ${keepTogether(formatPKR(FEE_PER_KG))} × ${DEMO_KG}\u00a0kg`} />
         </ul>
       </section>
 

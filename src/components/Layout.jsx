@@ -180,7 +180,7 @@ export default function Layout({ currentPage, onReset, profile, setProfile, onSi
             <ThemeSwitch />
           </div>
           {/* Desktop navigation (hidden on phones). The current page is a white tab
-              with a short amber bar under its name; the others are plain text. */}
+              with a short red bar under its name; the others are plain text. */}
           <nav aria-label="Main" className="hidden flex-wrap items-center gap-1 md:ml-auto md:flex">
             {[...menu.own, ...menu.team].map((item, index) => (
               <a

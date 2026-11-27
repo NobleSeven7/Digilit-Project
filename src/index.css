@@ -127,17 +127,19 @@ body {
 }
 h1, h2, h3 {
   font-family: var(--font-display);
-  text-wrap: balance; /* even line lengths in headings */
 }
 /* A heading's default line height. It sits in the "base" layer so that a
    heading's size class (text-xl, text-4xl ...) can set its own line height
    and letter spacing from the scale above: a small heading that wraps needs
-   more room between lines than a big one. */
+   more room between lines than a big one.
+   The wrapping styles sit in the same layer for the same reason: outside a
+   layer, "text-wrap" beat every class (it also turns wrapping back on), so
+   "whitespace-nowrap" did nothing and Home's prices broke onto two lines. */
 @layer base {
-  h1, h2, h3 { line-height: 1.05; }
+  h1, h2, h3 { line-height: 1.05; text-wrap: balance; /* even line lengths */ }
+  /* Body text avoids a lone word on its last line, where the browser supports it. */
+  p, li { text-wrap: pretty; }
 }
-/* Body text avoids a lone word on its last line, where the browser supports it. */
-p, li { text-wrap: pretty; }
 /* The parts of the page the browser draws also use the brand colours:
    selected text, the typing cursor, checkboxes and the scrollbar. */
 ::selection {
