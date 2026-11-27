@@ -5,7 +5,7 @@ import { STATUS, DELIVERY, ESCROW, MAX_CODE_TRIES, COURIER_FEE } from '../data/c
 import { generateOtp, generateDifferentOtp } from '../lib/otp.js'
 import { sendToWebhook, noteInSyncLog } from '../lib/webhook.js'
 import { goTo } from '../lib/navigation.js'
-import { formatPKR, formatDateTime, formatShort, isolate } from '../lib/format.js'
+import { formatPKR, formatDateTime, formatShort, pickerLabels, isolate } from '../lib/format.js'
 import { anotherCarrierFits, isAvailable, withSpaceLeft } from '../lib/matching.js'
 import { calculateSaving } from '../lib/pricing.js'
 import { shake } from '../lib/motion.js'
@@ -81,12 +81,9 @@ function CodeForm({ id, label, buttonText, onSubmit }) {
 }
 
 // One delivery in the picker.
-function DeliveryOption({ delivery: d, shipment: s }) {
-  return (
-    <option value={d.id}>
-      {s.origin} to {s.destination}, {s.weightKg} kg, {s.senderName}, {formatShort(d.createdAt)} ({d.status})
-    </option>
-  )
+// Short, so it is not cut off on a phone; the details are under the picker.
+function DeliveryOption({ delivery: d, labels }) {
+  return <option value={d.id}>{labels.get(d.id)}</option>
 }
 
 // Only the carrier enters the codes (entering the delivery code releases the
@@ -166,6 +163,10 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
   const deliveries = [...state.deliveries].reverse() // newest first
   const mine = deliveries.filter(isMine)
   const others = deliveries.filter((d) => !isMine(d))
+  const labels = pickerLabels(deliveries.map((d) => {
+    const s = shipmentOf(d)
+    return { id: d.id, base: `${s.origin} to ${s.destination}, ${s.weightKg} kg`, at: d.createdAt }
+  }))
   // The one in the address bar, else the signed-in person's newest, else the newest of all.
   const delivery = deliveries.find((d) => d.id === id) || mine[0] || deliveries[0]
 
@@ -468,15 +469,18 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
           onChange={(e) => { setMessage(null); goTo(`delivery/${e.target.value}`) }}>
           {mine.length > 0 && (
             <optgroup label="Yours">
-              {mine.map((d) => <DeliveryOption key={d.id} delivery={d} shipment={shipmentOf(d)} />)}
+              {mine.map((d) => <DeliveryOption key={d.id} delivery={d} labels={labels} />)}
             </optgroup>
           )}
           {others.length > 0 && (
             <optgroup label={mine.length > 0 ? 'Others' : 'All deliveries'}>
-              {others.map((d) => <DeliveryOption key={d.id} delivery={d} shipment={shipmentOf(d)} />)}
+              {others.map((d) => <DeliveryOption key={d.id} delivery={d} labels={labels} />)}
             </optgroup>
           )}
         </select>
+        <p className="hint" data-testid="delivery-details">
+          Sent by {shipmentOf(delivery).senderName}, started {formatShort(delivery.createdAt)}. {delivery.status}.
+        </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">

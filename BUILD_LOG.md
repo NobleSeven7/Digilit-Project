@@ -1644,3 +1644,39 @@ Kept on purpose:
   delivery delivered; 3 wrong codes froze the payment; the tidy-up declined
   an expired request and flagged a 3-hour-old parcel. Unit tests and all 16
   browser tests pass without the backend.
+
+## Stage 62: fixes from the UX review (27 Nov 2026)
+
+The eight fixes from the UX and accessibility review, one change each:
+
+1. **Focus never hides behind the phone bars:** `scroll-padding` on phones
+   keeps a field or button reached with Tab (or the keyboard's "Next") clear
+   of the tab bar and the header. Before, the Send deadline and a Matches
+   "Request" button ended up fully hidden (WCAG 2.4.11).
+2. **"Waiting" looks different from "problem":** waiting badges (and the
+   "0 of 5 checks ticked" counter) are plain paper with a dashed outline.
+   Pink stays for problems; the accent red stays for money held and admin
+   to-dos. Dashboard bars for waiting statuses are brown, not red.
+3. **Carry form errors sit under their field**, marked with `aria-invalid`
+   and `aria-describedby` and focused, as on Send; the box by the button
+   names the field.
+4. **Matches, "not available":** each carrier shows only the rule that
+   failed; the checks it passed open on request. On a phone that list is
+   about a third shorter (the whole page 13%).
+5. **Admin disputes:** "Release to carrier" and "Refund sender" are both
+   outline buttons, so neither looks like the expected answer. The "Yes"
+   in the confirm step is solid.
+6. **Carry page:** a carrier with a journey sees "Your Islamabad to Lahore
+   trip: 1 parcel fits" with a "See parcels" button above the form.
+7. **Shorter pickers:** Matches, Delivery and Carry pickers read
+   "Islamabad to Lahore, 5 kg, 27 Nov" (time added only when two match);
+   the rest is in a line under the picker.
+8. **Rough edges from 26 Nov:** the phone header no longer slides in after
+   a page change; under 360px the current-page pill is left out so the
+   header stays on one row; tracker labels may wrap under 360px so they
+   never touch; tab bar tabs are equal width and fit at 320px; the tracker
+   uses the `--ease-out` token instead of plain `ease`.
+
+- **Checked:** 16 of 16 browser tests and 12 unit tests pass; the design
+  check is clean; a keyboard walk on Send, Matches, Admin and Carry at 390px
+  finds no focused element under the tab bar (before: 14, 7, 6, 0).

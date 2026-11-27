@@ -64,7 +64,7 @@ function Tracker({ stops, todo, reached, showCurrent, problem }) {
           }
           return (
             <span key={stop} style={{ left: position(i, count) }}
-              className={`absolute top-1/2 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200 ease-[ease] ${look} ${
+              className={`absolute top-1/2 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200 ease-[var(--ease-out)] ${look} ${
                 i === count - 1 && justFinished ? 'stop-settle' : ''}`}>
               {i <= lastDone ? <CheckIcon size={14} /> : i + 1}
             </span>
@@ -73,7 +73,9 @@ function Tracker({ stops, todo, reached, showCurrent, problem }) {
       </div>
 
       {/* Step names under each marker */}
-      <ol className="relative mx-3.5 mt-1 h-6">
+      {/* Under 360px wide, middle labels may wrap onto two lines ("Picked /
+          up") so neighbours never touch; the row is taller to fit them. */}
+      <ol className="relative mx-3.5 mt-1 h-6 max-[22.5rem]:h-9">
         {stops.map((stop, i) => {
           const done = i <= lastDone
           const isCurrent = i === current
@@ -86,7 +88,8 @@ function Tracker({ stops, todo, reached, showCurrent, problem }) {
           if (isCurrent) colour = problem ? 'font-bold text-fail' : 'font-bold text-hold-ink'
           return (
             <li key={stop} data-step-state={done ? 'done' : isCurrent ? 'current' : 'upcoming'}
-              className={`absolute whitespace-nowrap text-xs sm:text-sm ${colour}`}
+              className={`absolute whitespace-nowrap text-xs sm:text-sm ${colour} ${
+                i > 0 && i < count - 1 ? 'text-center max-[22.5rem]:w-14 max-[22.5rem]:whitespace-normal max-[22.5rem]:leading-tight' : ''}`}
               style={{ left: position(i, count), transform: shift }}>
               {done || !todo ? stop : todo[i]}
               <span className="sr-only">

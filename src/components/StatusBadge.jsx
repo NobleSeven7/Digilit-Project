@@ -5,18 +5,30 @@ import { STATUS, DELIVERY, ESCROW } from '../data/constants.js'
 const GOOD = ['Accepted', STATUS.FOUND, STATUS.MATCHED, STATUS.DELIVERED, DELIVERY.IN_TRANSIT, ESCROW.RELEASED]
 const BAD = ['Not eligible', STATUS.DISPUTED, STATUS.CANCELLED, STATUS.FLAGGED, DELIVERY.DECLINED, ESCROW.FROZEN]
 
-// "good" (green), "bad" (red) or "waiting" (amber). The Dashboard bars use
-// the same families, so a status has one colour everywhere.
+// Things that need attention now, in the accent red (DESIGN.md: money held
+// and items waiting for a person): money held or frozen, and admin to-dos.
+const ATTENTION = [ESCROW.HELD, 'Needs review']
+
+// Four families:
+//   "good"      done or on track: tan with a black outline
+//   "bad"       a problem: oxblood
+//   "attention" money held, or a person must act: the accent red
+//   "waiting"   nothing wrong, just not done yet: plain paper with a dashed
+//               outline (like a button that is not ready), so a normal wait
+//               never looks like an error
+// The Dashboard bars use the same families, so a status has one colour everywhere.
 export function statusTone(status) {
   if (GOOD.includes(status)) return 'good'
   if (BAD.includes(status)) return 'bad'
+  if (ATTENTION.includes(status) || / frozen$/.test(status)) return 'attention'
   return 'waiting'
 }
 
 const COLOURS = {
   good: 'bg-brand-tint text-brand-ink border-brand-ink',
   bad: 'bg-fail-tint text-fail border-fail',
-  waiting: 'bg-hold-tint text-hold-ink border-hold',
+  attention: 'bg-hold-tint text-hold-ink border-hold',
+  waiting: 'border-dashed border-muted bg-surface text-ink',
 }
 
 // Printed flat, like a stamp on the label: no shadow and no press effect, so it
