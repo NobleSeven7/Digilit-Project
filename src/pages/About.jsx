@@ -4,6 +4,7 @@
 import PageHeader from '../components/PageHeader.jsx'
 import { BASE_FEE, FEE_PER_KG, COURIER_FEE } from '../data/constants.js'
 import { formatPKR } from '../lib/format.js'
+import { serverEnabled } from '../lib/server.js'
 
 const TEAM = [
   ['Erhan Javed Khan', 'Project & Coordination Lead'],
@@ -48,12 +49,30 @@ export default function About() {
         </ul>
       </Topic>
 
-      <Topic title="What stays in your browser">
-        <p>
-          Everything you post (parcels, journeys, deliveries, disputes) is saved in this
-          browser only. The site sets <strong>no cookies</strong>, and the fonts come with the site.
-        </p>
-      </Topic>
+      {serverEnabled ? (
+        <Topic title="Your account and shared data">
+          <p>
+            Your account (email, password, name and whether you send or carry) and everything you
+            post (parcels, trips, deliveries and their codes) are <strong>stored on Supabase</strong>,
+            a database service, on its servers in Seoul, so the people you deal with can see them.
+            Passwords are stored scrambled; the team cannot read them.
+          </p>
+          <p>
+            Signed-in people can see trips, parcels and deliveries, with names and cities, because
+            matching needs them. Your email is never shown to anyone. Pickup and delivery codes are
+            visible only to the sender and the carrier of that delivery. Signed-out visitors see
+            nothing. The site sets <strong>no cookies</strong>; your sign-in is kept in this
+            browser&rsquo;s storage until you sign out.
+          </p>
+        </Topic>
+      ) : (
+        <Topic title="What stays in your browser">
+          <p>
+            Everything you post (parcels, journeys, deliveries, disputes) is saved in this
+            browser only. The site sets <strong>no cookies</strong>, and the fonts come with the site.
+          </p>
+        </Topic>
+      )}
 
       <Topic title="Usage statistics">
         <p>
@@ -63,7 +82,8 @@ export default function About() {
           weights, item types and outcomes. It also reports errors, and how long the AI check took.
         </p>
         <p>
-          Each demo person is counted as &ldquo;demo profile 1&rdquo; to &ldquo;10&rdquo;, never by name,
+          Each demo person is counted as &ldquo;demo profile 1&rdquo; to &ldquo;10&rdquo;, never by name
+          (real accounts are not linked to these statistics at all),
           and <strong>nothing you type is sent to PostHog</strong>, not even your item description.
           The screen is not recorded. A random visitor number is kept in this browser&rsquo;s
           storage; &ldquo;Reset demo data&rdquo; does not remove it, but clearing the site&rsquo;s data
@@ -88,8 +108,10 @@ export default function About() {
 
       <Topic title="Removing your data">
         <p>
-          <strong>&ldquo;Reset demo data&rdquo;</strong>, at the bottom of every page, clears everything
-          saved in this browser. To have something removed from the team&rsquo;s Google Sheet,
+          {serverEnabled
+            ? <>To have your account or anything you posted deleted from the database, contact the RaastaShare team through the course. </>
+            : <><strong>&ldquo;Reset demo data&rdquo;</strong>, at the bottom of every page, clears everything saved in this browser. </>}
+          To have something removed from the team&rsquo;s Google Sheet,
           contact the RaastaShare team through the course. The Sheet is used only for this project.
         </p>
       </Topic>

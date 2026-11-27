@@ -181,10 +181,12 @@ function SenderOnly({ senderName, setProfile }) {
   return (
     <div className="mb-6 rounded-lg bg-sunk px-3 py-3" data-testid="sender-only">
       <p>Only <strong>{senderName}</strong> (the sender) can request a carrier for this parcel.</p>
-      <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-sender"
-        onClick={() => setProfile({ role: 'sender', name: senderName })}>
-        Switch to {senderName}
-      </button>
+      {setProfile && (
+        <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-sender"
+          onClick={() => setProfile({ role: 'sender', name: senderName })}>
+          Switch to {senderName}
+        </button>
+      )}
     </div>
   )
 }
