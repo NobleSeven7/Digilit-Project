@@ -1,7 +1,7 @@
 // Dashboard page: the impact numbers from the proposal, calculated live
 // from the data saved in this browser.
 import { STATUS, DELIVERY, COURIER_FEE } from '../data/constants.js'
-import { formatPKR, formatDateTime, isolate } from '../lib/format.js'
+import { formatPKR, formatDateTime, isolate, formatCount } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import StatusBadge, { statusTone } from '../components/StatusBadge.jsx'
 import RouteCodes from '../components/RouteCodes.jsx'
@@ -118,18 +118,22 @@ export default function Dashboard({ state }) {
       </PageHeader>
 
       <div className="grid border-y border-line sm:grid-cols-2 lg:grid-cols-4">
-        <Metric label="Total shipments" value={shipments.length} testId="metric-shipments"
+        <Metric label="Total shipments" value={formatCount(shipments.length)} testId="metric-shipments"
           note="Every request posted by a sender." />
-        <Metric label="Matches" value={matches.length} testId="metric-matches"
-          note={`${completed.length} delivered and paid so far.`} />
+        <Metric label="Matches" value={formatCount(matches.length)} testId="metric-matches"
+          note={`${formatCount(completed.length)} delivered and paid so far.`} />
         <Metric label="Average matching time" testId="metric-time"
           value={timed.length === 0 ? '—'
             : averageMs < 1000 ? `${Math.round(averageMs * 10) / 10} ms` : `${Math.round(averageMs / 100) / 10} s`}
           note={timed.length === 0 ? 'No matches yet, so nothing to measure.'
             : averageMs < 60000 ? 'From posting to ranked results, well inside the 1\u2011minute target.'
               : 'From posting to ranked results. The target is under 1 minute.'} />
-        <Metric label="Cost saved" value={formatPKR(costSaved)} testId="metric-saved"
-          note={`${savedPercent}% less than our ${formatPKR(COURIER_FEE)} courier estimate, over ${completed.length} completed deliveries.`} />
+        {/* No completed delivery yet: a dash, like Average matching time,
+            instead of "PKR 0 … over 0 completed deliveries" */}
+        <Metric label="Cost saved" value={completed.length ? formatPKR(costSaved) : '—'} testId="metric-saved"
+          note={completed.length === 0
+            ? `No completed deliveries yet. Compared with our ${formatPKR(COURIER_FEE)} courier estimate.`
+            : `${savedPercent}% less than our ${formatPKR(COURIER_FEE)} courier estimate, over ${formatCount(completed.length)} completed ${completed.length === 1 ? 'delivery' : 'deliveries'}.`} />
       </div>
 
       {/* minmax(0, 1fr): columns never grow past the screen because of their contents */}
@@ -146,7 +150,7 @@ export default function Dashboard({ state }) {
                     cannot fit side by side (very large text) */}
                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                   <StatusBadge status={row.status} />
-                  <span className="font-bold tabular-nums">{row.count}</span>
+                  <span className="font-bold tabular-nums">{formatCount(row.count)}</span>
                 </div>
                 <div className="mt-1.5 h-3 rounded-full bg-line" aria-hidden="true">
                   <div className={`h-3 rounded-full ${BAR[statusTone(row.status)]}`}

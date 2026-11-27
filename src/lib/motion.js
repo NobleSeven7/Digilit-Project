@@ -75,20 +75,42 @@ export function useHideOnScroll() {
   return [hidden, instant]
 }
 
-// A short side-to-side shake, the familiar "no". Used when a wrong code is
+// A motion token from src/index.css (e.g. '--ease-out'), for motion played
+// from JavaScript, so it uses the same curve as the CSS.
+function token(name, fallback) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
+}
+
+// A short side-to-side shake (a "head-shake no"). Used when a wrong code is
 // entered. Played with element.animate() so it can run again on every wrong
-// try. With reduced motion it does nothing (the red message still appears).
+// try. Three swings that get smaller, 280ms on the --ease-out curve, inside
+// the 300ms motion rule. With reduced motion it does nothing (the red message
+// still appears).
 export function shake(element) {
   if (!element || !element.animate || prefersReducedMotion()) return
   element.animate(
     [
       { transform: 'translateX(0)' },
-      { transform: 'translateX(-8px)' },
-      { transform: 'translateX(7px)' },
-      { transform: 'translateX(-5px)' },
-      { transform: 'translateX(3px)' },
+      { transform: 'translateX(-6px)' },
+      { transform: 'translateX(5px)' },
+      { transform: 'translateX(-3px)' },
       { transform: 'translateX(0)' },
     ],
-    { duration: 400, easing: 'linear' }, // the shrinking steps above already slow it down
+    { duration: 280, easing: token('--ease-out', 'cubic-bezier(0.23, 1, 0.32, 1)') },
   )
+}
+
+// Matches: the ranked carriers rise in once, right after a parcel is posted
+// (the answer to "Post parcel"). Opening Matches any other way shows them in
+// place (DESIGN.md: no animation when changing pages). The Send page marks
+// the new parcel; Matches takes the mark once.
+const JUST_POSTED = 'raastashare:just-posted'
+export function markJustPosted(id) {
+  try { sessionStorage.setItem(JUST_POSTED, id) } catch { /* storage blocked: no wave */ }
+}
+export function wasJustPosted(id) {
+  try { return sessionStorage.getItem(JUST_POSTED) === id } catch { return false }
+}
+export function clearJustPosted() {
+  try { sessionStorage.removeItem(JUST_POSTED) } catch { /* storage blocked */ }
 }

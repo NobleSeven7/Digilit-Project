@@ -11,11 +11,16 @@ export default function RoleNotice({ profile, setProfile, needs, action }) {
         You are signed in as {profile.name}, a {profile.role}. Only a {needs} can {action}.
       </p>
       {/* Real accounts (shared backend) cannot switch: sign in with a {needs} account instead */}
+      {/* The button names the role, so it stays on one line on small phones;
+          who you become is said beside it. */}
       {setProfile ? (
-        <button type="button" className="btn btn-primary mt-3" data-testid="switch-role"
-          onClick={() => setProfile(other)}>
-          Switch to {other.name} ({needs})
-        </button>
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <button type="button" className="btn btn-primary" data-testid="switch-role"
+            onClick={() => setProfile(other)}>
+            Switch to a {needs}
+          </button>
+          <p className="text-sm">You&rsquo;ll be <strong>{other.name}</strong>, a demo {needs}.</p>
+        </div>
       ) : (
         <p className="mt-2">To {action}, sign out and sign in with a {needs} account.</p>
       )}

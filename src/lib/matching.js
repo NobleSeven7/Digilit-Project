@@ -4,6 +4,7 @@
 import {
   VEHICLES, PERISHABLE_MAX_TRIP_HOURS, TIME_BUFFER_HOURS, DELIVERY, tripHours,
 } from '../data/constants.js'
+import { vehicleSubject, onVehicle } from './format.js' // wording only, not the rules
 
 const HOUR_MS = 60 * 60 * 1000 // milliseconds in one hour
 
@@ -52,13 +53,13 @@ function checkCompatibility(shipment, journey) {
   const item = shipment.itemType
 
   if (!vehicle.allowed.includes(item)) {
-    return { pass: false, detail: `${item} is not allowed on a ${journey.vehicleType}` }
+    return { pass: false, detail: `${item} is not allowed ${onVehicle(journey.vehicleType)}` }
   }
   // Motorbike (10 kg) and bus traveller (15 kg) have fixed weight limits.
   if (vehicle.maxKg !== null && shipment.weightKg > vehicle.maxKg) {
     return {
       pass: false,
-      detail: `A ${journey.vehicleType} carries up to ${vehicle.maxKg} kg, but the parcel is ${shipment.weightKg} kg`,
+      detail: `${vehicleSubject(journey.vehicleType)} can take up to ${vehicle.maxKg} kg, but the parcel is ${shipment.weightKg} kg`,
     }
   }
   // A car may carry perishables only on trips under 6 hours.
@@ -71,7 +72,7 @@ function checkCompatibility(shipment, journey) {
       }
     }
   }
-  return { pass: true, detail: `${item} is allowed on a ${journey.vehicleType}` }
+  return { pass: true, detail: `${item} is allowed ${onVehicle(journey.vehicleType)}` }
 }
 
 // ---- Step 2: the match score (out of 100) ------------------------------

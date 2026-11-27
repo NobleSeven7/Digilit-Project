@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RaastaShare design pass</title>
+<!-- Before/after deck for the Digital Literacy presentation (27 Nov 2026).
+     Open this file in a browser. Arrow keys, Space or a click move between
+     slides; P or Ctrl+P prints one slide per page (save as PDF).
+     Everything is in this folder: pictures and the app's own IBM Plex fonts,
+     so it works offline. -->
+<style>
+  @font-face { font-family: "Plex Condensed"; font-weight: 600; src: url("ibm-plex-sans-condensed-latin-600-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Plex Condensed"; font-weight: 700; src: url("ibm-plex-sans-condensed-latin-700-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Plex"; font-weight: 400; src: url("ibm-plex-sans-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Plex"; font-weight: 700; src: url("ibm-plex-sans-latin-700-normal.woff2") format("woff2"); }
+  /* The app's Cargo label colours (src/index.css) */
+  :root {
+    --paper: #E2D3B6; --surface: #F6EFE1; --line: #B9A385; --ink: #1C1A17;
+    --muted: #4E4436; --on-ink: #E9E0CF; --hold: #D7261E;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--ink); }
+  body { font-family: "Plex", sans-serif; color: var(--ink); }
+  .deck { height: 100%; display: grid; place-items: center; }
+  .slide {
+    display: none; width: min(100vw, 177.78vh); aspect-ratio: 16 / 9;
+    background: var(--paper); padding: 4.2% 5% 3.6%; position: relative; overflow: hidden;
+    container-type: inline-size;
+  }
+  .slide.on { display: flex; flex-direction: column; }
+  .kicker { font: 600 1.6cqi "Plex Condensed", sans-serif; color: var(--muted); margin: 0; }
+  h1, h2 { font-family: "Plex Condensed", sans-serif; font-weight: 700; margin: 0; line-height: 1.02; letter-spacing: -0.01em; }
+  h1 { font-size: 6.4cqi; max-width: 70%; }
+  h2 { font-size: 3.9cqi; margin-top: 0.6cqi; }
+  p, li { font-size: 1.75cqi; line-height: 1.45; margin: 0; }
+  .lede { margin-top: 1.4cqi; max-width: 62%; color: var(--muted); }
+  /* The one accent: a short tape-red bar, like the current-page marker */
+  .tape { width: 5cqi; height: 0.6cqi; background: var(--hold); margin-bottom: 1.6cqi; border-radius: 2px; }
+  .body { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1.9fr; gap: 3cqi; margin-top: 2cqi; }
+  .notes { display: flex; flex-direction: column; gap: 1.2cqi; }
+  .notes ul { margin: 0; padding-left: 1.2em; display: grid; gap: 0.8cqi; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6cqi; min-height: 0; }
+  .pair.stack { grid-template-columns: 1fr; }
+  figure { margin: 0; min-height: 0; display: flex; flex-direction: column; }
+  figcaption { font: 600 1.5cqi "Plex Condensed", sans-serif; margin-bottom: 0.6cqi; }
+  figure.after figcaption::before { content: ""; display: inline-block; width: 0.8cqi; height: 0.8cqi; background: var(--hold); border-radius: 50%; margin-right: 0.6cqi; vertical-align: 0.1cqi; }
+  .shot { flex: 1; min-height: 0; background: var(--surface); border: 2px solid var(--ink); border-radius: 4px; overflow: hidden; display: flex; align-items: flex-start; justify-content: flex-start; }
+  .shot img { width: 100%; height: 100%; object-fit: contain; object-position: top left; display: block; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2cqi; margin-top: auto; border-top: 2px solid var(--ink); padding-top: 2cqi; }
+  .stat b { display: block; font: 700 5cqi "Plex Condensed", sans-serif; line-height: 1; }
+  .stat span { font-size: 1.5cqi; color: var(--muted); }
+  .foot { position: absolute; left: 5%; right: 5%; bottom: 1.6%; display: flex; justify-content: space-between; font-size: 1.2cqi; color: var(--muted); }
+  .label { display: inline-block; background: var(--ink); color: var(--on-ink); font: 600 1.4cqi "Plex Condensed", sans-serif; padding: 0.5cqi 1.2cqi; border-radius: 3px; }
+  @media print {
+    @page { size: 13.333in 7.5in; margin: 0; }
+    html, body { background: none; height: auto; }
+    .slide { display: flex !important; flex-direction: column; width: 13.333in; height: 7.5in; page-break-after: always; break-after: page; }
+  }
+</style>
+</head>
+<body>
+<main class="deck">
+
+<section class="slide">
+  <div class="tape"></div>
+  <p class="kicker">RaastaShare · Digital Literacy · 27 November 2026</p>
+  <h1>A design pass: clearer on a phone, same Cargo label look</h1>
+  <p class="lede">We reviewed every page at phone size (390px) and on a desktop (1280px) with twelve design checks, found 21 problems, fixed 17 of them in six small batches, and checked each batch before keeping it.</p>
+  <div class="stats">
+    <div class="stat"><b>21</b><span>problems found, by page and by impact</span></div>
+    <div class="stat"><b>17</b><span>fixed, each shown as before and after first</span></div>
+    <div class="stat"><b>17 of 17</b><span>browser tests passing after every batch</span></div>
+  </div>
+</section>
+
+<section class="slide">
+  <p class="kicker">1 · Dark mode</p>
+  <h2>The next step stands out at night</h2>
+  <div class="body">
+    <div class="notes">
+      <p>The main button was dark brown on a near-black card: about 1.4 to 1, so "Request" barely showed.</p>
+      <ul>
+        <li>In dark mode it is now printed in light kraft with dark text.</li>
+        <li>Light mode is unchanged.</li>
+        <li>Four pairs of near-identical colours were merged, so there are fewer to manage.</li>
+      </ul>
+    </div>
+    <div class="pair">
+      <figure><figcaption>Before</figcaption><div class="shot"><img src="dark-before.png" alt="Dark mode carrier card before: the Request button is dark brown on a near-black card."></div></figure>
+      <figure class="after"><figcaption>After</figcaption><div class="shot"><img src="dark-after.png" alt="Dark mode carrier card after: the Request button is light kraft with dark text."></div></figure>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <p class="kicker">2 · Type</p>
+  <h2>Stamped labels, so bold means something again</h2>
+  <div class="body">
+    <div class="notes">
+      <p>Almost everything was bold, so nothing stood out. We built three versions and the team picked one.</p>
+      <ul>
+        <li>Labels, badges and tab names use the narrow heading font, like text stamped on a shipping label.</li>
+        <li>Bold is kept for names, prices and buttons.</li>
+        <li>No new font: the app already had this one.</li>
+      </ul>
+    </div>
+    <div class="pair">
+      <figure><figcaption>Before</figcaption><div class="shot"><img src="labels-before.png" alt="Send form before: every label in bold."></div></figure>
+      <figure class="after"><figcaption>After</figcaption><div class="shot"><img src="labels-after.png" alt="Send form after: labels in the condensed stamped style."></div></figure>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <p class="kicker">3 · Carry page</p>
+  <h2>One reason first, the rest on request</h2>
+  <div class="body">
+    <div class="notes">
+      <p>A parcel that does not fit a carrier's journey listed every failed rule in a large box. One parcel could fill a phone screen.</p>
+      <ul>
+        <li>Now the first reason shows, and the others sit behind "See 2 more reasons".</li>
+        <li>Wording reads naturally: "a car", "as bus luggage".</li>
+        <li>The matching rules themselves did not change.</li>
+      </ul>
+    </div>
+    <div class="pair">
+      <figure><figcaption>Before</figcaption><div class="shot"><img src="carry-before.png" alt="Carry before: each parcel lists two or three failed rules in large boxes."></div></figure>
+      <figure class="after"><figcaption>After</figcaption><div class="shot"><img src="carry-after.png" alt="Carry after: one reason per parcel and a See more reasons link."></div></figure>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <p class="kicker">4 · Dashboard</p>
+  <h2>Honest numbers when there is nothing yet</h2>
+  <div class="body">
+    <div class="notes">
+      <p>With no deliveries, Cost saved read "PKR 0 … 0% less … over 0 completed deliveries".</p>
+      <ul>
+        <li>Now it shows a dash and "No completed deliveries yet", like the matching time already did.</li>
+        <li>Counts have commas (1,507), and "1 completed delivery" is singular.</li>
+        <li>Only the display changed; the sums are the same.</li>
+      </ul>
+    </div>
+    <div class="pair">
+      <figure><figcaption>Before</figcaption><div class="shot"><img src="dash-before.png" alt="Empty dashboard before: Cost saved PKR 0 over 0 completed deliveries."></div></figure>
+      <figure class="after"><figcaption>After</figcaption><div class="shot"><img src="dash-after.png" alt="Empty dashboard after: Cost saved shows a dash and No completed deliveries yet."></div></figure>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <p class="kicker">5 · Home on a desktop</p>
+  <h2>Headline in three lines, map beside it</h2>
+  <div class="body" style="grid-template-columns: 1fr 2.6fr">
+    <div class="notes">
+      <p>The headline broke into five lines and the map started halfway down the screen.</p>
+      <ul>
+        <li>Now the headline sets in three lines and the route picker is on the first screen.</li>
+        <li>The map lines up with the headline, and was made larger after review.</li>
+        <li>On phones the map now shows finished, because its animation ended before anyone scrolled to it.</li>
+      </ul>
+    </div>
+    <div class="pair stack">
+      <figure><figcaption>Before</figcaption><div class="shot"><img src="home-before.png" alt="Home at 1280px before: five-line headline, map lower down."></div></figure>
+      <figure class="after"><figcaption>After</figcaption><div class="shot"><img src="home-after.png" alt="Home at 1280px after: three-line headline with the map beside it."></div></figure>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <p class="kicker">6 · Motion</p>
+  <h2>Only what changes moves, and never for long</h2>
+  <div class="body" style="grid-template-columns: 1fr 2.6fr">
+    <div class="notes">
+      <p>Opening the Matches page made the carrier cards rise in, every time. Now they rise in only right after you post a parcel, as the answer to "Post parcel".</p>
+      <ul>
+        <li>Every animation is 300ms or less, from five named lengths.</li>
+        <li>The wrong-code shake went from 400ms to 280ms.</li>
+        <li>An automatic check now catches motion that breaks these rules.</li>
+      </ul>
+    </div>
+    <div class="pair stack">
+      <figure><figcaption>Before: opening Matches, frame by frame</figcaption><div class="shot"><img src="wave-before.png" alt="Frames at 0, 60, 140 and 300ms: the cards fade and rise in."></div></figure>
+      <figure class="after"><figcaption>After: the cards are simply there</figcaption><div class="shot"><img src="wave-after.png" alt="Frames at 0, 60, 140 and 300ms: the cards are in place from the start."></div></figure>
+    </div>
+  </div>
+</section>
+
+</main>
+<script>
+  // Arrow keys, Space, Page Up/Down or a click move between slides; P prints.
+  const slides = [...document.querySelectorAll('.slide')]
+  let i = Math.max(0, Math.min(slides.length - 1, (parseInt(location.hash.slice(1), 10) || 1) - 1))
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n))
+    slides.forEach((s, j) => s.classList.toggle('on', j === i))
+    history.replaceState(null, '', '#' + (i + 1))
+  }
+  slides.forEach((s, j) => {
+    const foot = document.createElement('div')
+    foot.className = 'foot'
+    foot.innerHTML = '<span>RaastaShare · student prototype, fictional data</span><span>' + (j + 1) + ' / ' + slides.length + '</span>'
+    s.appendChild(foot)
+  })
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); show(i + 1) }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); show(i - 1) }
+    else if (e.key === 'Home') show(0)
+    else if (e.key === 'End') show(slides.length - 1)
+    else if (e.key === 'p' || e.key === 'P') window.print()
+  })
+  document.addEventListener('click', (e) => show(e.clientX < innerWidth / 3 ? i - 1 : i + 1))
+  show(i)
+</script>
+</body>
+</html>

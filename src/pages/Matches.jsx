@@ -5,8 +5,9 @@ import { STATUS, DELIVERY, FLAG_AFTER_HOURS, TIME_BUFFER_HOURS, COURIER_FEE } fr
 import { findMatches, withSpaceLeft } from '../lib/matching.js'
 import { calculatePrice, calculateSaving } from '../lib/pricing.js'
 import { goTo } from '../lib/navigation.js'
+import { wasJustPosted, clearJustPosted } from '../lib/motion.js'
 import { startDelivery } from '../lib/delivery.js'
-import { formatPKR, formatDateTime, formatShort, pickerLabels, buttonName } from '../lib/format.js'
+import { formatPKR, formatDateTime, formatShort, pickerLabels, buttonName, vehicleLabel } from '../lib/format.js'
 import PageHeader from '../components/PageHeader.jsx'
 import RouteLine from '../components/RouteLine.jsx'
 import { codeOf } from '../components/RouteCodes.jsx'
@@ -19,12 +20,14 @@ import posthog, { posthogEnabled } from '../lib/posthog.js'
 function ScoreBadge({ total }) {
   const rounded = Math.round(total)
   return (
-    <div className="text-right">
+    // Phones: the score wraps under the name, so it lines up on the left with
+    // its bar; wider screens put it on the right of the card.
+    <div className="sm:text-right">
       <p className="font-display text-4xl font-bold leading-none tabular-nums text-brand-ink" data-testid="score">
         {rounded}
         <span className="text-lg text-muted"> / 100</span>
       </p>
-      <div className="ml-auto mt-2 h-2 w-28 rounded-full bg-brand-tint" role="img"
+      <div className="mt-2 h-2 w-28 sm:ml-auto rounded-full bg-brand-tint" role="img"
         aria-label={`Score ${rounded} out of 100`}>
         <div className="h-2 rounded-full bg-brand-ink" style={{ width: `${Math.min(100, total)}%` }} />
       </div>
@@ -36,7 +39,7 @@ function ScoreBadge({ total }) {
 function PassChip({ rule }) {
   return (
     <li data-rule={rule.key} data-pass={rule.pass}
-      className="inline-flex items-center gap-1.5 rounded-full bg-brand-tint px-3 py-1 text-sm font-bold text-brand-ink">
+      className="inline-flex items-center gap-1.5 rounded-full bg-brand-tint px-3 py-1 stamp text-sm text-brand-ink">
       <CheckIcon size={14} />
       {rule.label}
       <span className="sr-only">: Pass</span>
@@ -52,8 +55,8 @@ function PassChip({ rule }) {
 //   is over in 300ms, and every card can be pressed as soon as it shows.
 // - Everything else on the page stays still: the heading, the parcel summary,
 //   "Show all" and the not-available list.
-// It plays the first time a parcel's results are shown in this tab (just
-// after posting); opening them again shows them in place.
+// It plays only right after the parcel is posted (src/lib/motion.js,
+// markJustPosted); opening Matches any other way shows them in place.
 const WAVE = [
   { delay: 0, rise: 12, duration: 280 },   // best match
   { delay: 60, rise: 6, duration: 220 },   // option 2
@@ -75,19 +78,6 @@ function arrival(rank, wave) {
   }
 }
 
-// Which parcels' results have already arrived in this tab (so the wave
-// plays once per parcel). If storage is blocked, the wave simply plays.
-const SEEN_KEY = 'raastashare:results-seen'
-function resultsSeen(id) {
-  try { return JSON.parse(sessionStorage.getItem(SEEN_KEY) || '[]').includes(id) } catch { return false }
-}
-function markResultsSeen(id) {
-  try {
-    const seen = JSON.parse(sessionStorage.getItem(SEEN_KEY) || '[]')
-    if (!seen.includes(id)) sessionStorage.setItem(SEEN_KEY, JSON.stringify([...seen, id]))
-  } catch { /* storage blocked */ }
-}
-
 function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onRequest }) {
   const { journey, rules, eligible, score } = result
   const usedPercent = Math.round((shipment.weightKg / journey.spareKg) * 100)
@@ -106,18 +96,18 @@ function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onReq
         <div className="flex min-w-0 items-start gap-3">
           {/* Vehicle icon */}
           <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand-ink"
-            title={journey.vehicleType}>
+            title={vehicleLabel(journey.vehicleType)}>
             <VehicleIcon type={journey.vehicleType} />
           </span>
           <div className="min-w-0">
             {rank && (
-              <p className="text-sm font-bold text-brand-ink">
+              <p className="stamp text-sm text-brand-ink">
                 {rank === 1 ? 'Best match' : `Option ${rank}`}
               </p>
             )}
             <h3 className="text-xl font-bold">{journey.carrierName}</h3>
             <p className="text-sm text-muted">
-              {journey.vehicleType}, {journey.spareKg} kg spare{journey.postedSpareKg !== undefined ? ' left' : ''}, departs {formatDateTime(journey.departure)}
+              {vehicleLabel(journey.vehicleType)}, {journey.spareKg} kg spare{journey.postedSpareKg !== undefined ? ' left' : ''}, departs {formatDateTime(journey.departure)}
             </p>
           </div>
         </div>
@@ -139,7 +129,7 @@ function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onReq
                                 [&::-webkit-details-marker]:hidden">
               <span className="group-open:hidden">See details</span>
               <span className="hidden group-open:inline">Hide details</span>
-              <ChevronDownIcon size={18} className="transition-transform duration-[250ms] ease-[var(--ease-out)] group-open:rotate-180 motion-reduce:transition-none" />
+              <ChevronDownIcon size={18} className="transition-transform duration-(--dur-base) ease-[var(--ease-out)] group-open:rotate-180 motion-reduce:transition-none" />
             </summary>
             <ul className="mt-2 grid gap-2 sm:grid-cols-2">
               {rules.map((rule) => <RuleCheck key={rule.key} rule={rule} />)}
@@ -165,7 +155,7 @@ function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onReq
                                 [&::-webkit-details-marker]:hidden">
               <span className="group-open:hidden">See the {passedCount} {passedCount === 1 ? 'check' : 'checks'} passed</span>
               <span className="hidden group-open:inline">Hide passed checks</span>
-              <ChevronDownIcon size={18} className="transition-transform duration-[250ms] ease-[var(--ease-out)] group-open:rotate-180 motion-reduce:transition-none" />
+              <ChevronDownIcon size={18} className="transition-transform duration-(--dur-base) ease-[var(--ease-out)] group-open:rotate-180 motion-reduce:transition-none" />
             </summary>
             <ul className="mt-2 grid gap-2 sm:grid-cols-2">
               {rules.filter((rule) => rule.pass).map((rule) => <RuleCheck key={rule.key} rule={rule} />)}
@@ -233,12 +223,11 @@ export default function Matches({ state, save, id, profile, setProfile }) {
   // (or the newest of all, when they have none).
   const shipment = shipments.find((s) => s.id === id) || mine[0] || shipments[0]
 
-  // Does this parcel's wave play? Decided when its results are first shown
-  // (and again when another parcel is picked), then remembered for the tab.
-  const [wave, setWave] = useState(() => ({ id: shipment?.id, on: Boolean(shipment) && !resultsSeen(shipment.id) }))
-  if (shipment && wave.id !== shipment.id) setWave({ id: shipment.id, on: !resultsSeen(shipment.id) })
-  const shipmentId = shipment?.id
-  useEffect(() => { if (shipmentId) markResultsSeen(shipmentId) }, [shipmentId])
+  // Does this parcel's wave play? Only when it was posted a moment ago; any
+  // other parcel picked here shows its results in place.
+  const [wave, setWave] = useState(() => ({ id: shipment?.id, on: Boolean(shipment) && wasJustPosted(shipment.id) }))
+  if (shipment && wave.id !== shipment.id) setWave({ id: shipment.id, on: false })
+  useEffect(() => { clearJustPosted() }, [])
 
   if (!shipment) {
     return (
@@ -394,8 +383,12 @@ export default function Matches({ state, save, id, profile, setProfile }) {
 
       {/* The published score formula (transparency) */}
       {/* Opens smoothly, like "See details" on each card (.rule-details) */}
-      <details className="rule-details card mb-8">
-        <summary className="flex min-h-11 cursor-pointer items-center font-bold active:opacity-70">How the score is calculated</summary>
+      <details className="rule-details group card mb-8">
+        {/* The same turning arrow as "See details", so it reads as something that opens */}
+        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1.5 font-bold active:opacity-70 [&::-webkit-details-marker]:hidden">
+          How the score is calculated
+          <ChevronDownIcon size={18} className="transition-transform duration-(--dur-base) ease-[var(--ease-out)] group-open:rotate-180 motion-reduce:transition-none" />
+        </summary>
         <ul className="mt-3 list-disc space-y-1 pl-5">
           <li>Time buffer: 50 points if the carrier departs at least {TIME_BUFFER_HOURS} hours before your deadline, otherwise 25.</li>
           <li>Capacity fit: 50 × (parcel kg ÷ carrier spare kg). A fuller fit scores higher.</li>

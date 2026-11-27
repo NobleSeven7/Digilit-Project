@@ -23,7 +23,7 @@ export default function RuleCheck({ rule }) {
           icon and uses the full row, so words do not have to break.
           overflow-wrap is only a last resort for a single word wider than that. */}
       <div className="min-w-0 grow basis-[min(100%,12rem)] [overflow-wrap:anywhere]">
-        <p className="font-bold">
+        <p className="stamp">
           {rule.label}: <span className={rule.pass ? 'text-brand-ink' : 'text-fail'}>{rule.pass ? 'Pass' : 'Fail'}</span>
         </p>
         <p className="text-sm text-ink/80">{rule.detail}</p>

@@ -57,7 +57,7 @@ const CITIES = [
 export default function HeroMap() {
   const price = formatPKR(calculatePrice(DEMO_KG))
   return (
-    <svg viewBox="28 26 520 462" className="block w-full" role="img" data-testid="hero-map"
+    <svg viewBox="28 26 520 462" className="block w-full xl:w-[calc(100%+4rem)] xl:max-w-none" role="img" data-testid="hero-map"
       aria-label={`Route map of eight cities. A ${DEMO_KG} kg parcel travels from Islamabad to Lahore for ${price}: matched with Bilal Ahmed, picked up in Islamabad, delivered in Lahore.`}>
       {/* The routes draw themselves one after another */}
       {ROUTES.map((route, index) => (

@@ -64,7 +64,7 @@ function Tracker({ stops, todo, reached, showCurrent, problem }) {
           }
           return (
             <span key={stop} style={{ left: position(i, count) }}
-              className={`absolute top-1/2 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200 ease-[var(--ease-out)] ${look} ${
+              className={`absolute top-1/2 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-bold transition-colors duration-(--dur-short) ease-[var(--ease-out)] ${look} ${
                 i === count - 1 && justFinished ? 'stop-settle' : ''}`}>
               {i <= lastDone ? <CheckIcon size={14} /> : i + 1}
             </span>

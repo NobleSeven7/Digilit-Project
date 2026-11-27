@@ -58,6 +58,23 @@ const CHECKS = [
     fix: 'Use an icon from src/components/Icons.jsx.',
   },
   {
+    // Plain "ease" or "linear" are built-in curves, not the motion tokens.
+    // The AI-check bar is linear on purpose: it measures time.
+    id: 'C3d',
+    rule: 'Motion curves are the --ease-out / --ease-in-out tokens, not plain ease or linear (DESIGN.md > Motion)',
+    applies: (file) => /\.css$/.test(file),
+    pattern: /^(?!.*ai-wait)\s*[^/*]*(?:animation|transition)(?:-timing-function)?\s*:[^;]*\b(?:ease|linear)\b(?![-(])/,
+    fix: 'Use var(--ease-out) or var(--ease-in-out).',
+  },
+  {
+    // Motion played from JavaScript (element.animate) follows the same rules.
+    id: 'C3e',
+    rule: 'Motion in JavaScript lasts 300ms or less and uses the motion tokens (DESIGN.md > Motion)',
+    applies: (file) => /\.js$/.test(file),
+    pattern: /\bduration:\s*(?:[3-9]\d[1-9]|[3-9][1-9]\d|[4-9]\d\d|\d{4,})\b|\beasing:\s*['"](?:ease|ease-in|ease-out|ease-in-out|linear)['"]/,
+    fix: 'Keep it to 300ms or less and read the curve from --ease-out.',
+  },
+  {
     id: 'C4',
     rule: 'No raw hex colours in components; use tokens (DESIGN.md > Color)',
     applies: (file) => /\.jsx$/.test(file),
@@ -97,7 +114,11 @@ const LONG_MOTION_ALLOWED = {
 {
   const file = path.join(SRC, 'index.css')
   // Blank out comments but keep line breaks, so line numbers stay right.
-  const css = fs.readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '))
+  let css = fs.readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '))
+  // Duration tokens (--dur-quick: 150ms ...) are read as their values, so a
+  // motion written with a token is measured like one written in ms.
+  const durations = Object.fromEntries([...css.matchAll(/(--dur-[\w-]+)\s*:\s*(\d+(?:\.\d+)?m?s)/g)].map((m) => [m[1], m[2]]))
+  css = css.replace(/var\((--dur-[\w-]+)\)/g, (whole, name) => (durations[name] ?? whole).padEnd(whole.length))
   const rule = /([^{}]+)\{([^{}]*)\}/g
   let match
   while ((match = rule.exec(css))) {

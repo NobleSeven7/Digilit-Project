@@ -42,13 +42,14 @@ const COLOURS = {
 // stored value stays the same (it is saved in the database and the Sheet).
 const LABELS = {
   [ESCROW.HELD]: 'Held safely by RaastaShare',
+  [STATUS.RETRYING]: 'Unmatched, retrying', // sentence case (stored as "Unmatched – Retrying")
 }
 
 export default function StatusBadge({ status }) {
   const colours = COLOURS[statusTone(status)]
 
   return (
-    <span data-testid="status" className={`inline-flex max-w-full shrink-0 items-center rounded-full border px-3 py-1 text-sm font-bold leading-tight tracking-[0.01em] tabular-nums transition-colors duration-200 ${colours}`}>
+    <span data-testid="status" className={`inline-flex max-w-full shrink-0 items-center rounded-full border px-3 py-1 stamp text-sm leading-tight tabular-nums transition-colors duration-(--dur-short) ease-[var(--ease-out)] ${colours}`}>
       {LABELS[status] ?? status}
     </span>
   )

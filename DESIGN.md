@@ -46,6 +46,11 @@ style and the old instruction not to change the design style.
   from `src/components/Icons.jsx`. **(checked)**
   Why: these are the clearest signs of an AI-made site.
   <!-- 2026-11-23: "Avoid: purple/blue gradients, glowing cards, emoji icons" -->
+- **On desktop (1024px and up) the Home map takes at least half the hero
+  width.** If the headline needs room, make the headline smaller; never shrink
+  the map to fit the text.
+  Why: the map is the page's main picture.
+  <!-- 2026-11-27: "Could you increase the size of the map a little bit?", then confirmed the rule and reason -->
 - **Layouts are left-aligned.** Do not centre whole sections or pages of text.
   Why: the brief named "everything centred" as an AI tell, and labels and
   signs are read from the left.
@@ -57,6 +62,14 @@ style and the old instruction not to change the design style.
   IBM Plex Sans.** Never Inter or a generic system font.
   Why: strong, plain, industrial type, like printing on a shipping label.
   <!-- 2026-11-23: "avoid generic fonts like Inter… strong, plain typography" -->
+- **Small labels are "stamped": the condensed face at 600 (`stamp` in
+  `src/index.css`).** Form labels, status badges, rule chips, tab names and
+  "Best match" use it. Body text stays in the plain face, and bold is kept for
+  names, money and buttons.
+  Why: almost everything was bold, so nothing stood out. Of three versions
+  (quiet labels, stamped labels, bold for actions only), stamped kept the
+  labels strong and reads most like a shipping label, with no new font.
+  <!-- 2026-11-27: design pass, finding 2, "do stamped labels" -->
 - **No small ALL-CAPS labels.** Labels and eyebrows are in sentence case.
   **(checked)**
   Why: tiny tracked-out capitals are a well-known sign of an AI-made site.
@@ -96,13 +109,29 @@ style and the old instruction not to change the design style.
   Why: motion that is short and consistent makes the app feel fast; one
   celebration keeps it special.
   <!-- 2026-11-24: approved the timing findings from the animation audit -->
+- **Motion lengths come from the duration tokens** in `src/index.css`
+  (`--dur-press` 100ms, `--dur-quick` 150ms, `--dur-short` 200ms, `--dur-base`
+  250ms, `--dur-long` 300ms), and motion played from JavaScript (the
+  wrong-code shake) follows the same limits and curves. **(checked)**
+  Why: lengths typed by hand had drifted to seven different values, and the
+  shake (400ms, `linear`) and the theme fade (plain `ease`) broke the rules
+  without the check noticing.
+  <!-- 2026-11-27: design pass, "do all the fixes you mentioned" (findings 3, 4, 6) -->
+- **The Matches wave plays only right after posting a parcel.** Opening
+  Matches any other way shows the ranked carriers in place.
+  Why: it played the first time any parcel was opened in a tab, which made it
+  a page entrance.
+  <!-- 2026-11-27: design pass, finding 13 -->
 - **Named exceptions to the 300ms limit.** Only these may run longer. The
   check lists them in `LONG_MOTION_ALLOWED` (`scripts/check-design.cjs`), and
   a new one is added in both places, with its reason:
   - the success tick and the delivery tracker's "Paid" stop settling (the
     one celebration);
   - the Home intro, once per visit: the hero, the route drawing, the city
-    stops and the parcel's ride;
+    stops and the parcel's ride. Below 1024px wide the map sits under the
+    first screen, so its parts (route, stops, ride) show finished and only the
+    hero rises in;
+    <!-- 2026-11-27: design pass, finding 12 (the map intro ended before anyone scrolled to it) -->
   - Home's price bars and departure-board code, once per visit;
   - Home photos fading in once they have loaded;
   - the bar that shows the AI check's 8-second wait (a timer, not an effect).

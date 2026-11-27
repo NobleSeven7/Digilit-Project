@@ -1731,3 +1731,52 @@ new style.
   pages at phone light, phone dark and desktop; the full journey (post, match,
   accept, both codes, payment released) passes at 1280px and 390px with all
   outside requests blocked.
+
+## Stage 65: design pass with the design skills (27 Nov 2026)
+
+A careful pass over the front end in the "Cargo label" style, run on the
+team's own PC because the design skills live in `.claude/skills/`. Phase 1
+reviewed every page at 390px and 1280px with twelve review skills and found
+21 items. Ahmad approved 17; each batch was shown as before/after pictures and
+kept only after his go-ahead.
+
+- **Dark mode:** the main button is now light kraft with dark text (it was
+  dark brown on a near-black card, about 1.4 to 1). Four pairs of
+  near-identical colour tokens were merged; shadows and selected text use
+  tokens instead of raw values.
+- **Motion rules:** the wrong-code shake is 280ms on `--ease-out` (was 400ms,
+  `linear`); the light/dark fade uses `--ease-in-out` (was plain `ease`). All
+  motion lengths use five duration tokens (`--dur-press` 100ms to `--dur-long`
+  300ms). The Matches wave plays only right after posting a parcel; opening
+  Matches any other way shows the cards in place. `check:design` now reads the
+  duration tokens and catches plain `ease`/`linear` and over-long motion in
+  JavaScript (rules C3d and C3e).
+- **Stamped labels:** almost everything was bold. Three versions were built
+  behind a dev-only picker (quiet labels, stamped labels, bold for actions
+  only); Ahmad picked stamped labels. Form labels, badges, rule chips, tab
+  names and "Best match" use the condensed face at 600 (`stamp` utility). No
+  new font. The picker was deleted afterwards.
+- **Matches and Carry:** Carry shows the first reason a parcel does not fit
+  and puts the rest behind "See N more reasons". Vehicle names read "a car",
+  "as bus luggage", "Van or pickup" in sentences (stored values unchanged).
+  The score lines up left on phones; "How the score is calculated" has an
+  arrow; "Switch to a carrier" no longer wraps at 320px.
+- **Dashboard and Admin:** counts have commas; Cost saved shows "—" and "No
+  completed deliveries yet" when there are none; "Unmatched, retrying" in
+  sentence case (stored value unchanged).
+- **Home:** on desktop the headline sets in 3 lines (was 5) and the map's top
+  lines up with it; after review the map was made larger (about 545px wide at
+  1280px). On phones the map shows finished, since its intro ended below the
+  first screen; the headline still rises in.
+- **Phone tab bar:** labels stay 13px on small phones (were 11px under 360px).
+- **Skipped:** a home-screen icon and a link-preview image (new files, not
+  picked), smooth scrolling for "See parcels" (would break the 300ms rule),
+  gestures (nothing on the site is naturally dragged or swiped), and
+  animate-expo (for React Native apps; this is a web app).
+- **Checked:** after every batch, `check:design`, 17 of 17 unit tests and 17
+  of 17 browser tests pass (run on an offline build: no Make.com address, all
+  outside requests blocked). Final phone pass: no sideways scrolling, small
+  text, input zoom, unnamed controls or contrast failures on any page at
+  390px or 320px, light or dark. The full journey (post, match, both accepts,
+  a wrong code, both codes, payment released) was run at 390px with the
+  motion recorded frame by frame, then Reset demo data was pressed.

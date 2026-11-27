@@ -93,7 +93,7 @@ function ProfileBar({ profile, setProfile }) {
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 safe-x py-2">
         {/* The picker is never wider than the screen (max-w-full): with very
             large text the longest name would otherwise push the page sideways. */}
-        <label htmlFor="profilePicker" className="text-sm font-bold">Signed in as</label>
+        <label htmlFor="profilePicker" className="stamp text-sm">Signed in as</label>
         <select id="profilePicker" data-testid="profile-picker" value={profileKey(profile)}
           onChange={(e) => setProfile(findProfile(e.target.value))}
           className="min-h-11 min-w-0 max-w-full rounded-lg border border-muted/60 bg-surface px-2 py-1 font-bold text-brand-ink">
@@ -187,7 +187,7 @@ export default function Layout({ currentPage, onReset, profile, setProfile, onSi
                 key={item.page}
                 href={`#/${item.page}`}
                 aria-current={currentPage === item.page ? 'page' : undefined}
-                className={`relative flex min-h-11 items-center rounded-lg px-3 font-bold ${
+                className={`relative flex min-h-11 items-center rounded-lg px-3 stamp ${
                   index === menu.own.length ? 'ml-3 before:absolute before:-left-2 before:h-6 before:w-px before:bg-white/35' : ''} ${
                   currentPage === item.page
                     ? 'bg-surface text-brand-ink'
@@ -269,7 +269,7 @@ export default function Layout({ currentPage, onReset, profile, setProfile, onSi
             key={item.page}
             href={`#/${item.page}`}
             aria-current={currentPage === item.page ? 'page' : undefined}
-            className={`flex min-h-14 min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 border-t-4 px-1 pb-1 text-xs font-bold active:bg-brand-tint max-[22.5rem]:px-0 max-[22.5rem]:text-[0.6875rem] ${
+            className={`flex min-h-14 min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 border-t-4 px-1 pb-1 stamp text-xs active:bg-brand-tint max-[22.5rem]:px-0 max-[22.5rem]:tracking-[-0.01em] ${
               index === menu.own.length ? 'shadow-[inset_1px_0_0_var(--color-line)]' : ''} ${
               currentPage === item.page ? 'border-brand-ink text-brand-ink' : 'border-transparent text-muted'
             }`}

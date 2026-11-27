@@ -7,7 +7,8 @@ import { calculatePrice } from '../lib/pricing.js'
 import { startDelivery } from '../lib/delivery.js'
 import { goTo } from '../lib/navigation.js'
 import { sendToWebhook } from '../lib/webhook.js'
-import { dayAt, makeId, formatDateTime, formatDay, formatPKR, isolate } from '../lib/format.js'
+import { dayAt, makeId, formatDateTime, formatDay, formatPKR, isolate, vehicleLabel, vehicleSubject } from '../lib/format.js'
+import { ChevronDownIcon } from '../components/Icons.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import RoleNotice from '../components/RoleNotice.jsx'
 import RouteLine from '../components/RouteLine.jsx'
@@ -62,6 +63,33 @@ function parcelsFor(state, journey) {
     .sort((a, b) => b.shipment.weightKg - a.shipment.weightKg) // biggest fee first
   const others = results.filter((r) => !r.eligible || declined(r))
   return { requests, fits, others, declined }
+}
+
+// Why a parcel is not for this journey: the first failed rule, and the rest
+// behind "See N more reasons" (it opens smoothly, like "See details" on Matches).
+function FailedRules({ rules }) {
+  if (rules.length === 0) return null
+  const [first, ...rest] = rules
+  return (
+    <>
+      <ul className="mt-3 grid gap-2">
+        <RuleCheck rule={first} />
+      </ul>
+      {rest.length > 0 && (
+        <details className="rule-details group mt-2">
+          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-lg font-bold text-brand-ink active:opacity-70
+                              [&::-webkit-details-marker]:hidden">
+            <span className="group-open:hidden">See {rest.length} more {rest.length === 1 ? 'reason' : 'reasons'}</span>
+            <span className="hidden group-open:inline">Hide {rest.length === 1 ? 'the other reason' : 'other reasons'}</span>
+            <ChevronDownIcon size={18} className="transition-transform duration-(--dur-base) ease-[var(--ease-out)] group-open:rotate-180 motion-reduce:transition-none" />
+          </summary>
+          <ul className="mt-2 grid gap-2">
+            {rest.map((rule) => <RuleCheck key={rule.key} rule={rule} />)}
+          </ul>
+        </details>
+      )}
+    </>
+  )
 }
 
 // Under the page title: a carrier who already has a journey sees at once
@@ -144,7 +172,7 @@ function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
         </select>
         {/* The rest of the journey under the picker, where it is never cut off */}
         <p className="hint" data-testid="journey-details">
-          Departs {formatDateTime(journey.departure)}. {journey.vehicleType}, {journey.spareKg} kg spare{journey.postedSpareKg !== undefined ? ' left' : ''}.
+          Departs {formatDateTime(journey.departure)}. {vehicleLabel(journey.vehicleType)}, {journey.spareKg} kg spare{journey.postedSpareKg !== undefined ? ' left' : ''}.
         </p>
       </div>
 
@@ -219,10 +247,10 @@ function JourneyParcels({ state, save, carrierName, journeyId, onPick }) {
                   </div>
                   <StatusBadge status={declined(r) ? DELIVERY.DECLINED : 'Not eligible'} />
                 </div>
-                {/* Only the rules that failed, to keep it short */}
-                <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-                  {r.rules.filter((rule) => !rule.pass).map((rule) => <RuleCheck key={rule.key} rule={rule} />)}
-                </ul>
+                {/* The first rule that failed is enough to say why; any others
+                    open on request, so one parcel never fills a phone screen. */}
+                <FailedRules rules={r.rules.filter((rule) => !rule.pass)} />
+
               </li>
             ))}
           </ul>
@@ -275,7 +303,7 @@ export default function Carrier({ state, save, profile, setProfile }) {
     // Motorbike and bus have fixed limits; for a car or van we stop at 500 kg,
     // the same top value the capacity box allows, so typos are caught.
     const limit = vehicle.maxKg ?? MAX_SPARE_KG
-    if (spare > limit) return fail('spare', `A ${vehicleType} can carry up to ${limit} kg.`)
+    if (spare > limit) return fail('spare', `${vehicleSubject(vehicleType)} can take up to ${limit} kg.`)
     if (new Date(departure) <= new Date()) return fail('departure', 'That time has already passed. Choose a later departure time.')
 
     // Stop the same journey being posted twice (e.g. tapping the button again).
@@ -407,7 +435,7 @@ export default function Carrier({ state, save, profile, setProfile }) {
             <label className="label" htmlFor="vehicleType">Vehicle type</label>
             <select id="vehicleType" className="field" value={vehicleType}
               onChange={(e) => setVehicleType(e.target.value)}>
-              {VEHICLE_TYPES.map((type) => <option key={type}>{type}</option>)}
+              {VEHICLE_TYPES.map((type) => <option key={type} value={type}>{vehicleLabel(type)}</option>)}
             </select>
           </div>
           <div>
@@ -421,7 +449,7 @@ export default function Carrier({ state, save, profile, setProfile }) {
 
         {/* What this vehicle may carry, straight from the compatibility table */}
         <p className="rounded-lg bg-brand-tint px-3 py-2 text-sm">
-          A <strong>{vehicleType}</strong> can carry: {vehicle.allowed.join(', ').toLowerCase()}
+<strong>{vehicleSubject(vehicleType)}</strong> can carry: {vehicle.allowed.join(', ').toLowerCase()}
           {vehicleType === 'Car' ? ` (perishables only on trips under ${PERISHABLE_MAX_TRIP_HOURS} hours)` : ''}.{' '}
           {vehicle.maxKg !== null ? `Weight limit ${vehicle.maxKg} kg.` : 'Weight limit as you declare.'}
         </p>

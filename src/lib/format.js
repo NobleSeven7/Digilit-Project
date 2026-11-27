@@ -1,6 +1,11 @@
 // Small helpers that turn raw values into text people can read.
 
 // 1500 -> "PKR 1,500"
+// A count with thousands separators ("1,507"), the same style as prices.
+export function formatCount(n) {
+  return Math.round(n).toLocaleString('en-PK')
+}
+
 export function formatPKR(amount) {
   return `PKR ${Math.round(amount).toLocaleString('en-PK')}`
 }
@@ -93,3 +98,15 @@ const TRAVEL = {
   'Bus traveller (luggage)': 'by bus, as luggage',
 }
 export const travelBy = (vehicleType) => TRAVEL[vehicleType] || `by ${vehicleType.toLowerCase()}`
+
+// The same vehicles in other places of a sentence. The saved values
+// ("Car", "Bus traveller (luggage)") never change; only what is shown does.
+// - vehicleLabel: on its own or starting a line ("Bus, as luggage, 12 kg spare")
+// - vehicleSubject: starting a sentence ("A car can take up to …")
+// - onVehicle: after an item ("Bulky item is not allowed on a car")
+const LABEL = { 'Van / Pickup': 'Van or pickup', 'Bus traveller (luggage)': 'Bus, as luggage' }
+const SUBJECT = { 'Car': 'A car', 'Motorbike': 'A motorbike', 'Van / Pickup': 'A van or pickup', 'Bus traveller (luggage)': 'Bus luggage' }
+const ON = { 'Car': 'on a car', 'Motorbike': 'on a motorbike', 'Van / Pickup': 'in a van or pickup', 'Bus traveller (luggage)': 'as bus luggage' }
+export const vehicleLabel = (vehicleType) => LABEL[vehicleType] || vehicleType
+export const vehicleSubject = (vehicleType) => SUBJECT[vehicleType] || `A ${vehicleType.toLowerCase()}`
+export const onVehicle = (vehicleType) => ON[vehicleType] || `on a ${vehicleType.toLowerCase()}`
