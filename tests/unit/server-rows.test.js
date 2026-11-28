@@ -71,3 +71,27 @@ test('a new delivery sends its codes; a removed one is listed for removal', () =
   assert.deepEqual(removed.remove.deliveries, ['d-1'])
   assert.equal(hasChanges(changesBetween(EMPTY, EMPTY)), false)
 })
+
+test('messages and ratings are only ever added, and have no "extra" column', () => {
+  const message = { id: 'm-1', deliveryId: 'd-1', authorName: 'Ayesha Khan', authorRole: 'sender', body: 'Hi', createdAt: '2026-11-28T10:00:00.000Z' }
+  const row = toRow('messages', message)
+  assert.equal('extra' in row, false)
+  assert.equal(row.delivery_id, 'd-1')
+  const base = { journeys: [], shipments: [], deliveries: [], messages: [], ratings: [] }
+  const added = changesBetween(base, { ...base, messages: [message] })
+  assert.equal(added.insert.messages.length, 1)
+  // A changed or missing message is never sent as an update or a removal.
+  const changed = changesBetween({ ...base, messages: [message] }, { ...base, messages: [{ ...message, body: 'Edited' }] })
+  assert.equal(changed.update.messages.length, 0)
+  const gone = changesBetween({ ...base, messages: [message] }, base)
+  assert.equal(gone.remove.messages.length, 0)
+  assert.equal(hasChanges(gone), false)
+})
+
+test('states saved before chat and ratings existed still compare', () => {
+  const old = { journeys: [journey], shipments: [shipment], deliveries: [delivery] }
+  assert.equal(hasChanges(changesBetween(old, { ...old, messages: [], ratings: [] })), false)
+  const state = stateFromRows({ journeys: [], shipments: [], deliveries: [], codes: [] })
+  assert.deepEqual(state.messages, [])
+  assert.deepEqual(state.ratings, [])
+})

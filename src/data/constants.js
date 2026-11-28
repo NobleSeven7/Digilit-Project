@@ -91,6 +91,7 @@ export const DELIVERY = {
   DISPUTED: 'Disputed',
   DECLINED: 'Declined by carrier',
   REFUNDED: 'Refunded',
+  CANCELLED: 'Cancelled', // by the sender or carrier, before pickup (money refunded)
 }
 
 // Escrow (simulated payment) states.
@@ -101,6 +102,11 @@ export const ESCROW = {
   FROZEN: 'Frozen',
   REFUNDED: 'Refunded to sender',
 }
+
+// Chat and rating limits (the database has the same limits:
+// database/05-upgrades.sql).
+export const MAX_MESSAGE = 500
+export const MAX_RATING_COMMENT = 200
 
 // Fictional demo users (the proposal simulates accounts instead of a real login).
 export const DEMO_SENDERS = ['Ayesha Khan', 'Omar Farooq', 'Zainab Hussain', 'Faisal Mehmood']

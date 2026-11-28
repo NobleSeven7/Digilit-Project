@@ -95,5 +95,26 @@ export function createSampleData() {
       createdAt: hoursAgo(27), deliveredAt: null },
   ]
 
-  return { shipments, journeys, deliveries }
+  // ---- Ratings left after the finished deliveries ------------------------
+  // Each person on a delivered parcel may rate the other once, 1 to 5 stars.
+  const rating = (deliveryId, raterRole, raterName, ratedName, stars, comment, hours) => ({
+    id: `${deliveryId}-${raterRole}`, deliveryId, raterRole, raterName, ratedName, stars, comment,
+    createdAt: hoursAgo(hours),
+  })
+  const ratings = [
+    rating('d-old1', 'sender', 'Omar Farooq', 'Kamran Akhtar', 5, 'Kept me updated the whole way.', 39),
+    rating('d-old1', 'carrier', 'Kamran Akhtar', 'Omar Farooq', 5, '', 39),
+    rating('d-old2', 'sender', 'Zainab Hussain', 'Rabia Anwar', 4, 'Arrived safely, a little late.', 19),
+    rating('d-old3', 'sender', 'Faisal Mehmood', 'Tariq Jameel', 5, '', 23),
+  ]
+
+  // ---- Chat on the disputed delivery --------------------------------------
+  const messages = [
+    { id: 'm-dispute-1', deliveryId: 'd-dispute', authorName: 'Shahid Nawaz', authorRole: 'carrier',
+      body: 'I have the parcel. The box was already dented when you handed it over.', createdAt: hoursAgo(26) },
+    { id: 'm-dispute-2', deliveryId: 'd-dispute', authorName: 'Zainab Hussain', authorRole: 'sender',
+      body: 'It was fine when I packed it. I have reported it so an admin can check.', createdAt: hoursAgo(25.5) },
+  ]
+
+  return { shipments, journeys, deliveries, messages, ratings }
 }

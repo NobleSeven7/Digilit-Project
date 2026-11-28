@@ -70,8 +70,8 @@ function Metric({ label, value, note, testId }) {
 export default function Dashboard({ state }) {
   const { shipments, journeys, deliveries } = state
 
-  // Matches = carrier requests that were not declined.
-  const matches = deliveries.filter((d) => d.status !== DELIVERY.DECLINED)
+  // Matches = carrier requests that were not declined or cancelled.
+  const matches = deliveries.filter((d) => d.status !== DELIVERY.DECLINED && d.status !== DELIVERY.CANCELLED)
   const completed = deliveries.filter((d) => d.status === DELIVERY.DELIVERED)
 
   // Average matching time: time from posting to match output, where a match was found.

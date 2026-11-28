@@ -27,13 +27,27 @@ const COLUMNS = {
     status: 'status', escrow: 'escrow', disputeReason: 'dispute_reason', expired: 'expired',
     createdAt: 'created_at', deliveredAt: 'delivered_at',
   },
+  // Chat messages and ratings (database/05-upgrades.sql). The owner columns
+  // (author_id, rater_id) are filled in by the server.
+  messages: {
+    id: 'id', deliveryId: 'delivery_id', authorName: 'author_name', authorRole: 'author_role',
+    body: 'body', createdAt: 'created_at',
+  },
+  ratings: {
+    id: 'id', deliveryId: 'delivery_id', raterRole: 'rater_role', raterName: 'rater_name',
+    ratedName: 'rated_name', stars: 'stars', comment: 'comment', createdAt: 'created_at',
+  },
 }
 
 // Kept in the delivery_codes table, never in "extra". The owner columns
 // (sender_id, carrier_id) are never sent: the server fills them in.
 const CODE_FIELDS = ['pickupOtp', 'deliveryOtp']
 
-export const TABLES = ['journeys', 'shipments', 'deliveries']
+export const TABLES = ['journeys', 'shipments', 'deliveries', 'messages', 'ratings']
+
+// Messages and ratings are only ever added, never changed or removed, and
+// their tables have no "extra" column.
+const ADD_ONLY = ['messages', 'ratings']
 
 // One app record -> one row for its table.
 export function toRow(table, record) {
@@ -45,7 +59,7 @@ export function toRow(table, record) {
     if (columns[field]) row[columns[field]] = value === undefined ? null : value
     else if (value !== undefined) extra[field] = value
   }
-  row.extra = extra
+  if (!ADD_ONLY.includes(table)) row.extra = extra
   return row
 }
 
@@ -72,7 +86,7 @@ export function toCodesRow(delivery) {
 
 // All rows from the server -> the app's state. Codes join their delivery;
 // a delivery whose codes this person may not read simply has none.
-export function stateFromRows({ journeys, shipments, deliveries, codes }) {
+export function stateFromRows({ journeys, shipments, deliveries, codes, messages = [], ratings = [] }) {
   const codesById = new Map((codes || []).map((c) => [c.delivery_id, c]))
   const byCreated = (a, b) => String(a.created_at).localeCompare(String(b.created_at))
   return {
@@ -82,6 +96,8 @@ export function stateFromRows({ journeys, shipments, deliveries, codes }) {
       const c = codesById.get(r.id)
       return { ...fromRow('deliveries', r), pickupOtp: c?.pickup_otp ?? null, deliveryOtp: c?.delivery_otp ?? null }
     }),
+    messages: [...messages].sort(byCreated).map((r) => fromRow('messages', r)),
+    ratings: [...ratings].sort(byCreated).map((r) => fromRow('ratings', r)),
   }
 }
 
@@ -92,13 +108,17 @@ export function stateFromRows({ journeys, shipments, deliveries, codes }) {
 export function changesBetween(before, after) {
   const changes = { insert: {}, update: {}, remove: {}, codes: [] }
   for (const table of TABLES) {
-    const old = new Map(before[table].map((r) => [r.id, JSON.stringify(r)]))
-    const now = new Set(after[table].map((r) => r.id))
-    changes.insert[table] = after[table].filter((r) => !old.has(r.id)).map((r) => toRow(table, r))
-    changes.update[table] = after[table]
+    const was = before[table] || []
+    const is = after[table] || []
+    const old = new Map(was.map((r) => [r.id, JSON.stringify(r)]))
+    const now = new Set(is.map((r) => r.id))
+    changes.insert[table] = is.filter((r) => !old.has(r.id)).map((r) => toRow(table, r))
+    const addOnly = ADD_ONLY.includes(table)
+    changes.update[table] = addOnly ? [] : is
       .filter((r) => old.has(r.id) && old.get(r.id) !== JSON.stringify(r))
       .map((r) => toRow(table, r))
-    changes.remove[table] = before[table].map((r) => r.id).filter((id) => !now.has(id))
+    // (A removed delivery takes its messages and ratings with it on the server.)
+    changes.remove[table] = addOnly ? [] : was.map((r) => r.id).filter((id) => !now.has(id))
   }
   const oldDeliveries = new Map(before.deliveries.map((d) => [d.id, d]))
   for (const d of after.deliveries) {

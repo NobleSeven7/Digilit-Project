@@ -154,3 +154,43 @@ export function BarsIcon(props) {
   )
 }
 
+
+// History: a clock with an arrow going back round it.
+export function HistoryIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M4 12a8 8 0 1 0 2.4-5.7" />
+      <path d="M4 4v4h4" />
+      <path d="M12 8v4.5l3 2" />
+    </Svg>
+  )
+}
+
+// A rating star. filled: a solid star (a star that counts), else an outline.
+export function StarIcon({ filled = false, ...props }) {
+  return (
+    <Svg strokeWidth={1.8} {...props}>
+      <path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.8l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"
+        fill={filled ? 'currentColor' : 'none'} />
+    </Svg>
+  )
+}
+
+// Photo proof: a camera.
+export function CameraIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z" />
+      <circle cx="12" cy="13.5" r="3.5" />
+    </Svg>
+  )
+}
+
+// Chat: a speech bubble.
+export function ChatIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M4 5h16v11H10l-4 3.5V16H4z" />
+    </Svg>
+  )
+}

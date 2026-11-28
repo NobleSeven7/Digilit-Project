@@ -84,20 +84,46 @@ export async function signOut() {
 
 // ---- Data ------------------------------------------------------------------
 
-// Everything this person may see, as the app's { journeys, shipments, deliveries }.
+// Chat, ratings, photos and cancelling need database/05-upgrades.sql. Until
+// it has been run, the app works as before and those parts say so.
+export let upgradesReady = true
+
+// Everything this person may see, as the app's
+// { journeys, shipments, deliveries, messages, ratings }.
 export async function loadServerState() {
   const supabase = await getClient()
-  const [journeys, shipments, deliveries, codes] = await Promise.all([
+  const [journeys, shipments, deliveries, codes, messages, ratings] = await Promise.all([
     supabase.from('journeys').select('*'),
     supabase.from('shipments').select('*'),
     supabase.from('deliveries').select('*'),
     supabase.from('delivery_codes').select('*'),
+    supabase.from('messages').select('*'),
+    supabase.from('ratings').select('*'),
   ])
   const failed = [journeys, shipments, deliveries, codes].find((r) => r.error)
   if (failed) throw new Error(plain(failed.error, 'Could not load the latest data from the server.'))
+  upgradesReady = !messages.error && !ratings.error
   return stateFromRows({
     journeys: journeys.data, shipments: shipments.data, deliveries: deliveries.data, codes: codes.data,
+    messages: messages.data || [], ratings: ratings.data || [],
   })
+}
+
+// ---- Live updates ------------------------------------------------------------
+
+// Call back whenever someone changes a trip, parcel, delivery, message or
+// rating this person may see. Several changes close together (one save can
+// touch three tables) bring one call. Returns a function that stops listening.
+export async function watchChanges(callback) {
+  const supabase = await getClient()
+  let timer = null
+  const soon = () => { clearTimeout(timer); timer = setTimeout(callback, 300) }
+  const channel = supabase.channel('raastashare-live')
+  for (const table of ['journeys', 'shipments', 'deliveries', 'messages', 'ratings']) {
+    channel.on('postgres_changes', { event: '*', schema: 'public', table }, soon)
+  }
+  channel.subscribe()
+  return () => { clearTimeout(timer); supabase.removeChannel(channel) }
 }
 
 // Send what changed between two states. Trips and parcels go first, as
@@ -131,6 +157,41 @@ export async function pushChanges(before, after) {
     }
   }
   return null
+}
+
+// Either person cancels before pickup; the server refunds the sender and
+// puts the parcel back into matching. Returns { outcome: 'ok' } or { error }.
+export async function cancelDelivery(deliveryId, reason) {
+  const supabase = await getClient()
+  const { data, error } = await supabase.rpc('cancel_delivery', { delivery: deliveryId, reason })
+  if (error) return { error: plain(error, 'Could not cancel. Try again.') }
+  return data
+}
+
+// ---- Photo proof ---------------------------------------------------------------
+
+// Upload a photo (a JPEG Blob) for a delivery. kind is 'pickup' or 'dropoff'.
+// Returns { path } (where it is kept) or { error: 'a sentence' }.
+export async function uploadPhoto(deliveryId, kind, blob) {
+  const supabase = await getClient()
+  const path = `${deliveryId}/${kind}-${Date.now()}.jpg`
+  const { error } = await supabase.storage.from('parcel-photos')
+    .upload(path, blob, { contentType: 'image/jpeg' })
+  if (error) return { error: plain(error, 'Could not upload the photo. Try again.') }
+  return { path }
+}
+
+// A short-lived link to show a private photo (photos are not public).
+// Each link works for an hour; a new one is made after 50 minutes.
+const photoLinks = new Map() // path -> { url, madeAt }
+export async function photoLink(path) {
+  const kept = photoLinks.get(path)
+  if (kept && Date.now() - kept.madeAt < 50 * 60 * 1000) return kept.url
+  const supabase = await getClient()
+  const { data, error } = await supabase.storage.from('parcel-photos').createSignedUrl(path, 60 * 60)
+  if (error) return null
+  photoLinks.set(path, { url: data.signedUrl, madeAt: Date.now() })
+  return data.signedUrl
 }
 
 // The carrier enters a pickup or delivery code; the server checks it.

@@ -122,11 +122,26 @@ export function canSave() {
 
 // Load saved data. On the very first visit (or if the saved data is damaged),
 // start from the fictional sample data instead.
+// Data saved before chat and ratings existed has no lists for them yet.
+const withLists = (state) => ({ messages: [], ratings: [], ...state })
+
+// The data another tab of this browser has just saved, or null.
+// (The demo can be open in two tabs, one as the sender and one as the
+// carrier; each tab shows the other's changes straight away.)
+export function readSavedState(text) {
+  try {
+    return text ? withLists(JSON.parse(text)) : null
+  } catch {
+    return null
+  }
+}
+export const STORAGE_KEY = KEY
+
 export function loadState() {
   try {
     const saved = localStorage.getItem(KEY)
     if (saved) {
-      const state = flagOldUnmatched(settleExpired(refreshSampleDates(JSON.parse(saved))))
+      const state = flagOldUnmatched(settleExpired(refreshSampleDates(withLists(JSON.parse(saved)))))
       saveState(state)
       return state
     }
