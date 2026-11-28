@@ -15,8 +15,14 @@ import RouteLine from '../components/RouteLine.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import SuccessTick from '../components/SuccessTick.jsx'
 import posthog, { posthogEnabled } from '../lib/posthog.js'
-import { serverEnabled, enterCode } from '../lib/server.js'
+import { serverEnabled, enterCode, cancelDelivery, uploadPhoto, upgradesReady } from '../lib/server.js'
+import { makeId } from '../lib/format.js'
+import { ratingBy } from '../lib/ratings.js'
+import { shrinkToBlob, shrinkToDataUrl } from '../lib/photo.js'
 import ParcelPass from '../components/ParcelPass.jsx'
+import DeliveryChat from '../components/DeliveryChat.jsx'
+import PhotoProof from '../components/PhotoProof.jsx'
+import RatingForm from '../components/RatingForm.jsx'
 
 // Reasons a sender or carrier can give when reporting a problem.
 const PROBLEMS = [
@@ -24,6 +30,16 @@ const PROBLEMS = [
   'The parcel was not delivered',
   'Something else went wrong',
 ]
+
+// Reasons for cancelling before pickup (either person).
+const CANCEL_REASONS = [
+  'Plans changed',
+  'We could not agree a pickup time or place',
+  'Something else',
+]
+
+// The chat closes once a delivery has ended without going ahead.
+const CHAT_CLOSED = [DELIVERY.DECLINED, DELIVERY.CANCELLED, DELIVERY.REFUNDED]
 
 // How many progress stops are complete for each delivery status.
 const STOPS = ['Accepted', 'Picked up', 'Delivered', 'Paid']
@@ -35,6 +51,7 @@ const REACHED = {
   [DELIVERY.IN_TRANSIT]: 2,
   [DELIVERY.DELIVERED]: 4,
   [DELIVERY.DISPUTED]: 2,
+  [DELIVERY.CANCELLED]: 1,
 }
 // Statuses where one step is "in progress" (highlighted on the tracker).
 const STILL_MOVING = [
@@ -153,6 +170,15 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
   // another delivery is picked: the page itself stays open in between.
   const [reportingFor, setReportingFor] = useState(null)
   const [problem, setProblem] = useState('')
+  const [problemDetail, setProblemDetail] = useState('')
+  // "Cancel before pickup" also opens a short form first.
+  const [cancellingFor, setCancellingFor] = useState(null)
+  const [cancelReason, setCancelReason] = useState('')
+  const [photoProblem, setPhotoProblem] = useState('')
+  // The newest data, for saving after waiting (a photo upload): by then
+  // live updates may have brought other people's changes.
+  const latest = useRef(state)
+  latest.current = state
 
   // Is the signed-in demo person the sender or the carrier of a delivery?
   const shipmentOf = (d) => state.shipments.find((s) => s.id === d.shipmentId)
@@ -444,8 +470,9 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
   // ---- Dispute: freeze the escrow and hand over to a human admin --------
   function handleDispute() {
     setReportingFor(null)
+    const detail = problemDetail.trim().slice(0, 200)
     update(
-      { status: DELIVERY.DISPUTED, escrow: ESCROW.FROZEN, disputeReason: problem },
+      { status: DELIVERY.DISPUTED, escrow: ESCROW.FROZEN, disputeReason: detail ? `${problem}: ${detail}` : problem },
       { status: STATUS.DISPUTED },
     )
     setMessage({ ok: false, text: `Problem reported. ${amount} is frozen until an admin reviews it.` })
@@ -454,8 +481,86 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
       `Dispute raised: ${shipment.origin} to ${shipment.destination}`)
   }
 
+  // ---- Cancel before pickup: the money goes back to the sender -----------
+  // Either person, after both accepted and before the parcel is handed over.
+  // The parcel goes back to its carriers, without this one.
+  async function handleCancel() {
+    setCancellingFor(null)
+    const who = isSender ? 'sender' : 'carrier'
+    const refunded = `Cancelled. ${amount} was refunded to ${isolate(shipment.senderName)}, and the parcel is back on the Matches page.`
+    if (serverEnabled) {
+      const result = await cancelDelivery(delivery.id, cancelReason)
+      reload()
+      if (result?.error) { setMessage({ ok: false, text: result.error }); return }
+      setMessage({ ok: true, text: refunded })
+    } else {
+      const rejectedJourneyIds = [...shipment.rejectedJourneyIds, journey.id]
+      const stillOpen = anotherCarrierFits(shipment, state, rejectedJourneyIds)
+      update(
+        { status: DELIVERY.CANCELLED, escrow: ESCROW.REFUNDED, cancelledBy: who, cancelReason },
+        { status: stillOpen ? STATUS.FOUND : STATUS.RETRYING, rejectedJourneyIds },
+      )
+      setMessage({ ok: true, text: refunded })
+    }
+    noteInSyncLog('delivery_cancelled',
+      `Delivery cancelled by the ${who} before pickup: ${shipment.origin} to ${shipment.destination} (${cancelReason})`)
+    if (posthogEnabled) posthog.capture('delivery_cancelled_before_pickup', { shipment_ref: shipment.id, cancelled_by: who, cancel_reason: cancelReason })
+  }
+
+  // ---- Chat ---------------------------------------------------------------
+  function sendMessage(body) {
+    const note = {
+      id: makeId('m'), deliveryId: delivery.id, authorName: profile.name, authorRole: profile.role,
+      body, createdAt: new Date().toISOString(),
+    }
+    save({ ...state, messages: [...state.messages, note] })
+    if (posthogEnabled) posthog.capture('delivery_message_sent', { shipment_ref: shipment.id, author_role: profile.role })
+  }
+
+  // ---- Rating after delivery ------------------------------------------------
+  function rate(stars, comment) {
+    const other = isSender ? journey.carrierName : shipment.senderName
+    const rating = {
+      id: `${delivery.id}-${profile.role}`, deliveryId: delivery.id, raterRole: profile.role,
+      raterName: profile.name, ratedName: other, stars, comment, createdAt: new Date().toISOString(),
+    }
+    save({ ...state, ratings: [...state.ratings, rating] })
+    if (posthogEnabled) posthog.capture('delivery_rated', { shipment_ref: shipment.id, rater_role: profile.role, stars })
+  }
+
+  // ---- Photo proof ------------------------------------------------------------
+  // The photo is made smaller first. In this browser it is kept as data; on
+  // the shared backend it is uploaded to a private folder for this delivery.
+  async function addPhoto(kind, file) {
+    setPhotoProblem('')
+    let value
+    try {
+      if (serverEnabled) {
+        const result = await uploadPhoto(delivery.id, kind, await shrinkToBlob(file))
+        if (result.error) { setPhotoProblem(result.error); return }
+        value = result.path
+      } else {
+        value = await shrinkToDataUrl(file)
+      }
+    } catch {
+      setPhotoProblem('That photo could not be read. Try taking it again, or choose a JPEG or PNG.')
+      return
+    }
+    const field = kind === 'pickup' ? 'pickupPhoto' : 'dropoffPhoto'
+    const now = latest.current
+    save({ ...now, deliveries: now.deliveries.map((d) => (d.id === delivery.id ? { ...d, [field]: value } : d)) })
+    if (posthogEnabled) posthog.capture('delivery_photo_added', { shipment_ref: shipment.id, photo_kind: kind })
+  }
+
   const active = [DELIVERY.AWAITING_PICKUP, DELIVERY.IN_TRANSIT].includes(delivery.status)
   const reporting = reportingFor === delivery.id
+  const cancelling = cancellingFor === delivery.id
+  const takesPart = isSender || isCarrier
+  const notReady = serverEnabled && !upgradesReady
+  const chatMessages = state.messages.filter((m) => m.deliveryId === delivery.id)
+  const people = `${isolate(shipment.senderName)} and ${isolate(journey.carrierName)}`
+  const photosShown = [DELIVERY.AWAITING_PICKUP, DELIVERY.IN_TRANSIT, DELIVERY.DELIVERED,
+    DELIVERY.DISPUTED, DELIVERY.REFUNDED].includes(delivery.status)
 
   return (
     <div>
@@ -622,6 +727,13 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
                   ? `${isolate(shipment.senderName)} paid about ${formatPKR(saving)} less than our ${formatPKR(COURIER_FEE)} courier estimate, and ${isolate(journey.carrierName)} earned ${amount} on a trip that was happening anyway.`
                   : `${isolate(journey.carrierName)} earned ${amount} on a trip that was happening anyway.`}
               </p>
+              {takesPart && (
+                <RatingForm key={`${delivery.id}-${profile.role}-${profile.name}`}
+                  otherName={isolate(isSender ? journey.carrierName : shipment.senderName)}
+                  given={ratingBy(state.ratings, delivery.id, profile.role)}
+                  received={ratingBy(state.ratings, delivery.id, isSender ? 'carrier' : 'sender')}
+                  canRate notReady={notReady} onRate={rate} />
+              )}
               <a href="#/dashboard" className="btn btn-secondary mt-4">See the dashboard</a>
             </section>
           )}
@@ -644,6 +756,19 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
               <a href={`#/matches/${shipment.id}`} className="btn btn-primary mt-4">See next carrier</a>
             </section>
           )}
+          {delivery.status === DELIVERY.CANCELLED && (
+            <section className={`card ${rise}`} data-testid="step-cancelled">
+              <h2 className="text-xl font-bold">Cancelled before pickup</h2>
+              <p className="mt-1">
+                {delivery.cancelledBy === 'carrier' ? isolate(journey.carrierName) : isolate(shipment.senderName)} cancelled
+                {delivery.cancelReason ? ` (${delivery.cancelReason.toLowerCase()})` : ''}.{' '}
+                {amount} was refunded to {isolate(shipment.senderName)}.
+              </p>
+              {isSender && (
+                <a href={`#/matches/${shipment.id}`} className="btn btn-primary mt-4">Choose another carrier</a>
+              )}
+            </section>
+          )}
           {delivery.status === DELIVERY.REFUNDED && (
             <section className={`card ${rise}`}>
               <h2 className="text-xl font-bold">Refunded</h2>
@@ -651,12 +776,58 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
             </section>
           )}
 
-          {/* Report a problem (only while the delivery is under way) */}
-          {active && (isSender || isCarrier) && !reporting && (
-            <button type="button" className="btn btn-danger" data-testid="report-problem"
-              onClick={() => { setProblem(''); setReportingFor(delivery.id) }}>
-              Report a problem
-            </button>
+          {/* Report a problem (only while the delivery is under way), and
+              cancel (only before pickup) */}
+          {active && takesPart && !reporting && !cancelling && (
+            <div className="flex flex-wrap gap-3">
+              <button type="button" className="btn btn-danger" data-testid="report-problem"
+                onClick={() => { setProblem(''); setProblemDetail(''); setReportingFor(delivery.id) }}>
+                Report a problem
+              </button>
+              {delivery.status === DELIVERY.AWAITING_PICKUP && (
+                <button type="button" className="btn btn-secondary" data-testid="cancel-delivery"
+                  onClick={() => { setCancelReason(''); setCancellingFor(delivery.id) }}>
+                  Cancel before pickup
+                </button>
+              )}
+            </div>
+          )}
+          {delivery.status === DELIVERY.AWAITING_PICKUP && cancelling && (
+            <section className="card enter-rise" data-testid="cancel-form">
+              {/* Opened by pressing "Cancel before pickup", so it always rises in. */}
+              <h2 className="text-xl font-bold">Cancel before pickup</h2>
+              <p className="mt-1">
+                {amount} goes back to {isolate(shipment.senderName)}, and the parcel returns to the
+                Matches page{isSender ? ' so you can choose another carrier' : ''}.{' '}
+                {isolate(journey.carrierName)} will not be offered this parcel again.
+              </p>
+              {notReady ? (
+                <p className="mt-3 rounded-lg bg-sunk px-3 py-3">
+                  Cancelling is not switched on yet. The team needs to run the database step for it.
+                </p>
+              ) : (
+                <fieldset className="mt-3 space-y-1">
+                  <legend className="label">Why are you cancelling?</legend>
+                  {CANCEL_REASONS.map((text) => (
+                    <label key={text} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-2 active:bg-sunk hover:bg-sunk">
+                      <input type="radio" name="cancel-reason" className="size-5 shrink-0"
+                        checked={cancelReason === text} onChange={() => setCancelReason(text)} />
+                      <span>{text}</span>
+                    </label>
+                  ))}
+                </fieldset>
+              )}
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button type="button" className="btn btn-primary" disabled={!cancelReason || notReady}
+                  onClick={handleCancel} data-testid="confirm-cancel">
+                  Cancel and refund
+                </button>
+                <button type="button" className="btn btn-secondary" data-testid="cancel-form-close"
+                  onClick={() => setCancellingFor(null)}>
+                  Keep the delivery
+                </button>
+              </div>
+            </section>
           )}
           {active && reporting && (
             <section className="card enter-rise border-fail" data-testid="report-form">
@@ -675,16 +846,38 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
                   </label>
                 ))}
               </fieldset>
+              <label className="label mt-3" htmlFor="problem-detail">Tell the admin more (optional)</label>
+              <textarea id="problem-detail" data-testid="problem-detail" className="field min-h-20" rows={2}
+                maxLength={200} value={problemDetail} onChange={(e) => setProblemDetail(e.target.value)} />
               <div className="mt-4 flex flex-wrap gap-3">
                 <button type="button" className="btn btn-danger" disabled={!problem}
                   onClick={handleDispute} data-testid="confirm-problem">
                   Freeze payment and report
                 </button>
                 <button type="button" className="btn btn-secondary" onClick={() => setReportingFor(null)}>
-                  Cancel
+                  Keep going
                 </button>
               </div>
             </section>
+          )}
+
+          {/* Photo proof (private: the two people and the admin) */}
+          {photosShown && (takesPart || profile.isAdmin) && (
+            <PhotoProof delivery={delivery} isCarrier={isCarrier} notReady={notReady}
+              canAddPickup={[DELIVERY.AWAITING_PICKUP, DELIVERY.IN_TRANSIT].includes(delivery.status)}
+              canAddDropoff={[DELIVERY.IN_TRANSIT, DELIVERY.DELIVERED].includes(delivery.status)}
+              onAdd={addPhoto} problem={photoProblem} />
+          )}
+
+          {/* Messages between the two people on this delivery */}
+          {(takesPart || profile.isAdmin) ? (
+            <DeliveryChat key={`${delivery.id}-${profile.role}-${profile.name}`} messages={chatMessages} me={takesPart ? profile : null} canWrite={takesPart}
+              closed={CHAT_CLOSED.includes(delivery.status)} notReady={notReady}
+              onSend={sendMessage} people={people} />
+          ) : (
+            <p className="text-sm text-muted" data-testid="chat-private">
+              Messages and photos for this delivery are private to {people}.
+            </p>
           )}
         </div>
 

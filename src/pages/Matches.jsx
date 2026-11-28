@@ -15,6 +15,8 @@ import RuleCheck from '../components/RuleCheck.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import { VehicleIcon, CheckIcon, ChevronDownIcon } from '../components/Icons.jsx'
 import posthog, { posthogEnabled } from '../lib/posthog.js'
+import { ratingOf } from '../lib/ratings.js'
+import Stars from '../components/Stars.jsx'
 
 // The score out of 100, with a small bar that fills to the same amount.
 function ScoreBadge({ total }) {
@@ -78,7 +80,7 @@ function arrival(rank, wave) {
   }
 }
 
-function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onRequest }) {
+function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onRequest, rating }) {
   const { journey, rules, eligible, score } = result
   const usedPercent = Math.round((shipment.weightKg / journey.spareKg) * 100)
   const showChips = eligible && !declined // passed everything: keep it compact
@@ -106,6 +108,8 @@ function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onReq
               </p>
             )}
             <h3 className="text-xl font-bold">{journey.carrierName}</h3>
+            {/* Shown, not scored: the ranking stays the four published rules */}
+            {rating && <p className="mt-0.5"><Stars rating={rating} testId="carrier-rating" /></p>}
             <p className="text-sm text-muted">
               {vehicleLabel(journey.vehicleType)}, {journey.spareKg} kg spare{journey.postedSpareKg !== undefined ? ' left' : ''}, departs {formatDateTime(journey.departure)}
             </p>
@@ -115,7 +119,7 @@ function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onReq
         {/* Score out of 100 (eligible carriers only) */}
         {score && <ScoreBadge total={score.total} />}
         {!eligible && <StatusBadge status="Not eligible" />}
-        {declined && <StatusBadge status={DELIVERY.DECLINED} />}
+        {declined && <StatusBadge status={declined === 'cancelled' ? DELIVERY.CANCELLED : DELIVERY.DECLINED} />}
       </div>
 
       {showChips ? (
@@ -249,7 +253,11 @@ export default function Matches({ state, save, id, profile, setProfile }) {
   const declined = eligible.filter((r) => shipment.rejectedJourneyIds.includes(r.journey.id))
 
   const delivery = state.deliveries.find(
-    (d) => d.shipmentId === shipment.id && d.status !== DELIVERY.DECLINED)
+    (d) => d.shipmentId === shipment.id && d.status !== DELIVERY.DECLINED && d.status !== DELIVERY.CANCELLED)
+  // A carrier dropped because the delivery with them was cancelled before
+  // pickup (not because they declined) is labelled "Cancelled".
+  const cancelledWith = new Set(state.deliveries
+    .filter((d) => d.shipmentId === shipment.id && d.status === DELIVERY.CANCELLED).map((d) => d.journeyId))
   // Only this parcel's own sender can request a carrier, and only while the
   // shipment is still open.
   const ownParcel = isMine(shipment)
@@ -263,7 +271,7 @@ export default function Matches({ state, save, id, profile, setProfile }) {
   const isOpen = (list) => opened.includes(`${shipment.id}:${list}`)
   const open = (list) => setOpened([...opened, `${shipment.id}:${list}`])
   const shownOffered = isOpen('eligible') ? offered : offered.slice(0, FIRST_SHOWN)
-  const notAvailable = [...declined.map((r) => ({ ...r, declined: true })), ...ineligible]
+  const notAvailable = [...declined.map((r) => ({ ...r, declined: cancelledWith.has(r.journey.id) ? 'cancelled' : true })), ...ineligible]
   const shownOthers = isOpen('other') ? notAvailable : notAvailable.slice(0, FIRST_SHOWN)
 
   // Sender picks a carrier: create a delivery that both sides must accept.
@@ -371,7 +379,8 @@ export default function Matches({ state, save, id, profile, setProfile }) {
             <ol className="space-y-4" key={shipment.id}>
               {shownOffered.map((result, index) => (
                 <CarrierCard key={result.journey.id} result={result} rank={index + 1} wave={wave.on}
-                  shipment={shipment} canRequest={canRequest} onRequest={handleRequest} />
+                  shipment={shipment} canRequest={canRequest} onRequest={handleRequest}
+                  rating={ratingOf(result.journey.carrierName, state.ratings)} />
               ))}
             </ol>
             {shownOffered.length < offered.length && (
@@ -404,7 +413,8 @@ export default function Matches({ state, save, id, profile, setProfile }) {
           </h2>
           <ul className="space-y-4">
             {shownOthers.map((result) => (
-              <CarrierCard key={result.journey.id} result={result} shipment={shipment} declined={result.declined} />
+              <CarrierCard key={result.journey.id} result={result} shipment={shipment} declined={result.declined}
+                rating={ratingOf(result.journey.carrierName, state.ratings)} />
             ))}
           </ul>
           {shownOthers.length < notAvailable.length && (

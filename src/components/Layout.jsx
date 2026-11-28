@@ -5,8 +5,9 @@ import { useEffect, useRef, useState } from 'react'
 import { getTheme, saveTheme } from '../lib/theme.js'
 import { PROFILES, profileKey, findProfile } from '../lib/profile.js'
 import { PROHIBITED } from '../data/constants.js'
-import { SunIcon, MoonIcon, ParcelIcon, CarIcon, RankIcon, RouteIcon, ShieldIcon, BarsIcon } from './Icons.jsx'
+import { SunIcon, MoonIcon, ParcelIcon, CarIcon, RankIcon, RouteIcon, ShieldIcon, BarsIcon, HistoryIcon } from './Icons.jsx'
 import { withViewTransition, useHideOnScroll } from '../lib/motion.js'
+import { useInstall } from '../lib/install.js'
 
 // "for" says who sees the page in the menu: a sender, a carrier, both, or the
 // team (Admin and Dashboard, set apart after a divider). Every page still opens
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
   { page: 'carrier', label: 'Carry', for: 'carrier', Icon: CarIcon },
   { page: 'matches', label: 'Matches', for: 'sender', Icon: RankIcon },
   { page: 'delivery', label: 'Delivery', for: 'both', Icon: RouteIcon },
+  { page: 'history', label: 'History', for: 'both', Icon: HistoryIcon },
   { page: 'admin', label: 'Admin', for: 'team', Icon: ShieldIcon },
   { page: 'dashboard', label: 'Dashboard', for: 'team', Icon: BarsIcon },
 ]
@@ -152,6 +154,8 @@ export default function Layout({ currentPage, onReset, profile, setProfile, onSi
   const menu = menuFor(profile?.role ?? 'sender')
   // Phones: the header slides away while scrolling down (see .site-header).
   const [headerHidden, headerInstant] = useHideOnScroll()
+  // The browser offers to install the app (Android, desktop Chrome or Edge).
+  const install = useInstall()
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -250,13 +254,21 @@ export default function Layout({ currentPage, onReset, profile, setProfile, onSi
               <a href="#/about" data-testid="about-link" className="font-bold text-brand-ink underline underline-offset-2">About this demo</a>
             </p>
           </div>
-          {/* Shared data is never wiped from one person's browser */}
-          {onReset && (
-            <button type="button" onClick={onReset} data-testid="reset-demo"
-              className="btn btn-secondary shrink-0 self-start text-base sm:self-auto">
-              Reset demo data
-            </button>
-          )}
+          <div className="flex shrink-0 flex-wrap gap-3 self-start sm:self-auto">
+            {install && (
+              <button type="button" onClick={install} data-testid="install-app"
+                className="btn btn-secondary text-base">
+                Install the app
+              </button>
+            )}
+            {/* Shared data is never wiped from one person's browser */}
+            {onReset && (
+              <button type="button" onClick={onReset} data-testid="reset-demo"
+                className="btn btn-secondary text-base">
+                Reset demo data
+              </button>
+            )}
+          </div>
         </div>
       </footer>
 
@@ -269,7 +281,7 @@ export default function Layout({ currentPage, onReset, profile, setProfile, onSi
             key={item.page}
             href={`#/${item.page}`}
             aria-current={currentPage === item.page ? 'page' : undefined}
-            className={`flex min-h-14 min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 border-t-4 px-1 pb-1 stamp text-xs active:bg-brand-tint max-[22.5rem]:px-0 max-[22.5rem]:tracking-[-0.01em] ${
+            className={`flex min-h-14 min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 border-t-4 px-1 pb-1 stamp text-xs active:bg-brand-tint max-[22.5rem]:px-0 max-[22.5rem]:text-[0.6875rem] max-[22.5rem]:tracking-[-0.01em] ${
               index === menu.own.length ? 'shadow-[inset_1px_0_0_var(--color-line)]' : ''} ${
               currentPage === item.page ? 'border-brand-ink text-brand-ink' : 'border-transparent text-muted'
             }`}

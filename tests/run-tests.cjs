@@ -1,7 +1,10 @@
 // Browser tests: the 8 test cases in the project proposal (tests 1 to 8),
 // plus 4 tests for the AI parcel check (tests 9 to 12), 2 for who may do
 // what (tests 13 and 14), 1 for wrong pickup codes (15), 1 for a browser
-// that will not save (16) and 1 for the Home route picker (17).
+// that will not save (16), 1 for the Home route picker (17), and 7 for the
+// upgrades of 28 November: chat (18), cancel before pickup (19), ratings
+// (20), photo proof (21), History (22), live updates between tabs (23) and
+// installing the app (24).
 // The script opens the app in a real (headless) Chromium browser, clicks
 // through it like a user, checks the result and saves a screenshot of each
 // case in the test-screenshots folder.
@@ -67,6 +70,14 @@ async function confirmPickup(page) {
   await page.fill('#pickup-code', code)
   await page.click('[data-testid="pickup-code-submit"]')
   await page.waitForSelector('[data-testid="step-delivery"]')
+}
+
+// Enter the correct delivery code so the delivery is "Delivered".
+async function confirmDelivery(page) {
+  const code = await readCode(page, 'delivery-otp')
+  await page.fill('#delivery-code', code)
+  await page.click('[data-testid="delivery-code-submit"]')
+  await page.waitForSelector('[data-testid="step-done"]')
 }
 
 function check(condition, description) {
@@ -401,6 +412,122 @@ async function main() {
     check(signedIn.startsWith('sender:'), `Still signed in as "${signedIn}"`)
     await shot('test-17-home-route-picker.png')
     return `Same city: button off and "${sameNote}"; Lahore to Karachi opened the Send page on ${from} to ${to}, as a sender`
+  })
+
+  await runTest(page, 18, 'Sender and carrier message each other', 'Both see the messages; another person cannot', async () => {
+    await startDelivery(page) // signed in as the carrier
+    await page.fill('[data-testid="chat-input"]', 'I can collect it at 7:45 at the terminal.')
+    await page.click('[data-testid="chat-send"]')
+    await page.click('[data-testid="switch-to-sender"]')
+    const seen = await page.locator('[data-testid="chat-message"]').count()
+    check(seen === 1, `The sender sees ${seen} messages`)
+    await page.fill('[data-testid="chat-input"]', 'Perfect, see you then.')
+    await page.click('[data-testid="chat-send"]')
+    await shot('test-18-chat.png', page.locator('[data-testid="chat"]'))
+    await page.selectOption('#profilePicker', 'sender:Omar Farooq')
+    check(await page.locator('[data-testid="chat"]').count() === 0, 'Omar can read the messages')
+    check(await page.locator('[data-testid="chat-private"]').isVisible(), 'No note that messages are private')
+    return 'Carrier and sender each sent one; both see 2 messages, Omar sees none'
+  })
+
+  await runTest(page, 19, 'The carrier cancels after both accepted, before pickup', 'Money refunded; the parcel goes back to Matches without that carrier', async () => {
+    await startDelivery(page) // signed in as the carrier
+    const carrier = (await page.inputValue('#profilePicker')).split(':')[1]
+    await page.click('[data-testid="cancel-delivery"]')
+    check(await page.locator('[data-testid="confirm-cancel"]').isDisabled(), 'Cancelling works without a reason')
+    await page.locator('[data-testid="cancel-form"] input[type="radio"]').first().check()
+    await page.click('[data-testid="confirm-cancel"]')
+    await page.waitForSelector('[data-testid="step-cancelled"]')
+    const escrow = (await page.textContent('[data-testid="escrow-status"]')).trim()
+    check(escrow === 'Refunded to sender', `Escrow status is "${escrow}"`)
+    await shot('test-19-cancelled.png')
+    await page.selectOption('#profilePicker', 'sender:Ayesha Khan')
+    await page.click('[data-testid="step-cancelled"] a')
+    const label = (await card(page, carrier).locator('[data-testid="status"]').first().textContent()).trim()
+    check(label === 'Cancelled', `${carrier} is labelled "${label}" on Matches`)
+    const buttons = await page.locator('[data-testid="request-carrier"]').count()
+    check(buttons > 0, 'No other carrier can be requested')
+    return `Escrow: ${escrow}; ${carrier} shown as "${label}"; ${buttons} other carriers can be requested`
+  })
+
+  await runTest(page, 20, 'Sender rates the carrier after delivery', 'The rating shows on the Matches page', async () => {
+    await startDelivery(page)
+    const carrier = (await page.inputValue('#profilePicker')).split(':')[1]
+    await confirmPickup(page)
+    await confirmDelivery(page)
+    // The carrier rates the sender too.
+    await page.click('[data-testid="rating-star-4"]')
+    await page.click('[data-testid="rating-submit"]')
+    await page.selectOption('#profilePicker', 'sender:Ayesha Khan')
+    check(await page.locator('[data-testid="rating-submit"]').isDisabled(), 'A rating can be sent with no stars')
+    await page.click('[data-testid="rating-star-5"]')
+    await page.fill('[data-testid="rating-comment"]', 'On time and careful.')
+    await page.click('[data-testid="rating-submit"]')
+    await page.waitForSelector('[data-testid="rating-given"]')
+    const received = await page.textContent('[data-testid="rating-received"]')
+    check(received.includes('4 of 5'), `The sender sees "${received}"`)
+    await shot('test-20-rating.png', page.locator('[data-testid="rating-section"]'))
+    await postShipment(page)
+    const shown = (await card(page, carrier).locator('[data-testid="carrier-rating"]').textContent()).trim()
+    check(shown === '5 from 1 rating', `Matches shows "${shown}" for ${carrier}`)
+    return `Sender gave 5, carrier gave 4; Matches shows "${shown}" for ${carrier}`
+  })
+
+  await runTest(page, 21, 'The carrier adds a photo at pickup', 'The sender sees the photo', async () => {
+    await startDelivery(page)
+    const photo = await page.screenshot({ type: 'jpeg', clip: { x: 0, y: 0, width: 400, height: 300 } })
+    await page.setInputFiles('[data-testid="photo-input-pickup"]', { name: 'parcel.jpg', mimeType: 'image/jpeg', buffer: photo })
+    await page.waitForSelector('[data-testid="photo-pickup"]')
+    await page.click('[data-testid="switch-to-sender"]')
+    const src = await page.getAttribute('[data-testid="photo-pickup"]', 'src')
+    check(src.startsWith('data:image/jpeg'), 'The sender does not see the photo')
+    check(await page.locator('[data-testid="photo-input-pickup"]').count() === 0, 'The sender can add a photo')
+    await shot('test-21-photo.png', page.locator('[data-testid="photo-proof"]'))
+    return `Photo kept (${Math.round(src.length / 1024)} KB as text); the sender sees it and cannot add one`
+  })
+
+  await runTest(page, 22, 'History after one delivery', 'The sender\'s History lists it with what was paid and saved', async () => {
+    await startDelivery(page)
+    await confirmPickup(page)
+    await confirmDelivery(page)
+    await page.selectOption('#profilePicker', 'sender:Ayesha Khan')
+    await page.goto(APP_URL + '#/history')
+    const items = await page.locator('[data-testid="history-item"]').count()
+    check(items === 1, `History lists ${items} deliveries`)
+    const paid = (await page.textContent('[data-testid="total-money"]')).trim()
+    const saved = (await page.textContent('[data-testid="total-saved"]')).trim()
+    check(paid === 'PKR 500' && saved === 'PKR 500', `Paid ${paid}, saved ${saved}`)
+    check(await page.locator('[data-testid="rate-now"]').isVisible(), 'No prompt to rate the carrier')
+    await shot('test-22-history.png', page, { fullPage: true })
+    return `1 delivery; paid ${paid}, saved ${saved}; "Rate" prompt shown`
+  })
+
+  await runTest(page, 23, 'Two tabs: carrier in one, sender in the other', 'A message in one tab appears in the other without reloading', async () => {
+    await startDelivery(page) // this tab: the carrier
+    const url = page.url()
+    const second = await context.newPage()
+    try {
+      await second.goto(url)
+      await page.fill('[data-testid="chat-input"]', 'Leaving now.')
+      await page.click('[data-testid="chat-send"]')
+      await second.waitForSelector('[data-testid="chat-message"]', { timeout: 3000 })
+      const text = await second.textContent('[data-testid="chat-message"]')
+      check(text.includes('Leaving now.'), `The other tab shows "${text}"`)
+      return 'The message appeared in the other tab without a reload'
+    } finally {
+      await second.close()
+    }
+  })
+
+  await runTest(page, 24, 'Install on a phone', 'The site has an app manifest and a working service worker', async () => {
+    const manifest = await page.evaluate(async () => {
+      const link = document.querySelector('link[rel="manifest"]')
+      return (await fetch(link.href)).json()
+    })
+    check(manifest.name === 'RaastaShare' && manifest.display === 'standalone', 'The manifest is wrong')
+    check(manifest.icons.some((i) => i.sizes === '512x512'), 'No large icon')
+    const scope = await page.evaluate(async () => (await navigator.serviceWorker.ready).scope)
+    return `Manifest "${manifest.name}" (${manifest.icons.length} icons); service worker active for ${scope}`
   })
 
   await browser.close()

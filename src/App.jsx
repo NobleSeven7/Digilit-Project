@@ -1,10 +1,10 @@
 // The top-level component. It owns all the app data and decides which page to show.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRoute } from './lib/navigation.js'
-import { loadState, saveState, resetState, canSave } from './lib/storage.js'
+import { loadState, saveState, resetState, canSave, readSavedState, STORAGE_KEY } from './lib/storage.js'
 import { getProfile, PROFILES, profileKey, saveProfile } from './lib/profile.js'
 import posthog, { posthogEnabled } from './lib/posthog.js'
-import { serverEnabled, currentProfile, onAccountChange, loadServerState, pushChanges, signOut } from './lib/server.js'
+import { serverEnabled, currentProfile, onAccountChange, loadServerState, pushChanges, signOut, watchChanges } from './lib/server.js'
 import Layout from './components/Layout.jsx'
 import SignIn from './components/SignIn.jsx'
 import Home from './pages/Home.jsx'
@@ -15,15 +15,16 @@ import Delivery from './pages/Delivery.jsx'
 import Admin from './pages/Admin.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import About from './pages/About.jsx'
+import History from './pages/History.jsx'
 
 // Nothing loaded yet (shared backend, before the first load).
-const EMPTY = { shipments: [], journeys: [], deliveries: [] }
+const EMPTY = { shipments: [], journeys: [], deliveries: [], messages: [], ratings: [] }
 
 // Pages anyone can open without an account when the shared backend is on.
 const OPEN_PAGES = ['home', 'about']
 
 export default function App() {
-  // "state" holds { shipments, journeys, deliveries }. Without the shared
+  // "state" holds { shipments, journeys, deliveries, messages, ratings }. Without the shared
   // backend it is loaded from localStorage once, when the app starts. With it
   // (src/lib/server.js) it comes from the server after signing in.
   const [state, setState] = useState(serverEnabled ? EMPTY : loadState)
@@ -121,6 +122,34 @@ export default function App() {
     }
   }, [refresh])
 
+  // Live updates. Shared backend: when anyone changes something this person
+  // may see, load the latest at once, so nobody has to refresh. (A notice
+  // about a refused save stays up.) Without the backend: when another tab
+  // of this browser saves (the demo open as sender in one tab and as
+  // carrier in another), show its data here too.
+  const signedInId = profile?.id
+  useEffect(() => {
+    if (!serverEnabled || !signedInId) return undefined
+    let stop = () => {}
+    let cancelled = false
+    watchChanges(() => refresh(true)).then((stopWatching) => {
+      if (cancelled) stopWatching()
+      else stop = stopWatching
+    })
+    return () => { cancelled = true; stop() }
+  }, [signedInId, refresh])
+
+  useEffect(() => {
+    if (serverEnabled) return undefined
+    function onStorage(e) {
+      if (e.key !== STORAGE_KEY) return
+      const fresh = readSavedState(e.newValue)
+      if (fresh) setState(fresh)
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
+
   // Pages call save(newState) whenever something changes. It updates the
   // screen at once, and writes to localStorage, or (shared backend) sends
   // the changes to the server. If the server refuses, the latest server data
@@ -168,6 +197,7 @@ export default function App() {
     delivery: <Delivery {...pageProps} />,
     admin: <Admin {...pageProps} />,
     dashboard: <Dashboard {...pageProps} />,
+    history: <History {...pageProps} />,
     about: <About />,
   }
 

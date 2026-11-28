@@ -53,26 +53,41 @@ export default function About() {
         <Topic title="Your account and shared data">
           <p>
             Your account (email, password, name and whether you send or carry) and everything you
-            post (parcels, trips, deliveries and their codes) are <strong>stored on Supabase</strong>,
+            post (parcels, trips, deliveries and their codes, messages, star ratings and parcel
+            photos) are <strong>stored on Supabase</strong>,
             a database service, on its servers in Seoul, so the people you deal with can see them.
             Passwords are stored scrambled; the team cannot read them.
           </p>
           <p>
             Signed-in people can see trips, parcels and deliveries, with names and cities, because
             matching needs them. Your email is never shown to anyone. Pickup and delivery codes are
-            visible only to the sender of that delivery; the server checks the code the carrier types. Signed-out visitors see
-            nothing. The site sets <strong>no cookies</strong>; your sign-in is kept in this
+            visible only to the sender of that delivery; the server checks the code the carrier types.
+            Messages and parcel photos are visible only to the sender and carrier of that delivery
+            and the admin. Star ratings, with their comments and the names of who rated whom, are
+            visible to everyone signed in, because carriers&rsquo; ratings show on the Matches page.
+            Signed-out visitors see nothing. The site sets <strong>no cookies</strong>; your sign-in is kept in this
             browser&rsquo;s storage until you sign out.
           </p>
         </Topic>
       ) : (
         <Topic title="What stays in your browser">
           <p>
-            Everything you post (parcels, journeys, deliveries, disputes) is saved in this
-            browser only. The site sets <strong>no cookies</strong>, and the fonts come with the site.
+            Everything you post (parcels, journeys, deliveries, disputes, messages, star ratings and
+            parcel photos) is saved in this browser only. The site sets <strong>no cookies</strong>, and the fonts come with the site.
           </p>
         </Topic>
       )}
+
+      <Topic title="Installing the app">
+        <p>
+          You can add RaastaShare to your phone&rsquo;s home screen: press &ldquo;Install the
+          app&rdquo; at the bottom of the page (Android, or Chrome and Edge on a computer), or on an
+          iPhone press Share, then &ldquo;Add to Home Screen&rdquo;. To open without internet, the
+          site <strong>saves its own files (pages, code, fonts and icons) on your device</strong>. It
+          never saves or sends anything you type this way. Clearing the site&rsquo;s data in your
+          browser removes them.
+        </p>
+      </Topic>
 
       <Topic title="Usage statistics">
         <p>

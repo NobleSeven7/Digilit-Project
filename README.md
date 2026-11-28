@@ -141,6 +141,12 @@ it, the app keeps everything in the browser with demo profiles, as before.
    carrier types, and every 5 minutes ends expired requests and flags parcels
    unmatched for 2 hours.
 
+6. Run `database/05-upgrades.sql`: live updates (every open screen shows
+   changes at once), chat and star ratings for each delivery, private photo
+   proof (a storage bucket called `parcel-photos`), and cancelling before
+   pickup with a refund made by the server. Until it is run, those parts say
+   they are not switched on yet; everything else works.
+
 Not yet on the server: the Make.com calls still go from the browser.
 
 ### Optional: connect the live site to Make.com
@@ -171,7 +177,8 @@ shows what was sent.
 | Send | Post a parcel, including the prohibited-items checklist. An optional AI parcel check suggests an item type and spots possibly prohibited items |
 | Carry | Post a journey with vehicle type and spare capacity; see the parcels that fit a journey and offer to carry one |
 | Matches | The sender's view: ranked carriers, with a pass or fail for each of the four rules |
-| Delivery | Each person accepts as themselves, then pickup code, delivery code, escrow release |
+| Delivery | Each person accepts as themselves, then pickup code, delivery code, escrow release. Also: messages between the two, photo proof at pickup and drop-off, cancel before pickup (refund), report a problem, and star ratings once delivered |
+| History | Your own parcels or trips: totals (paid and saved, or earned and kg carried), your star rating, and each delivery |
 | Admin | Possibly prohibited, flagged, unmatched and disputed requests for human review |
 | Dashboard | Total shipments, matches, average matching time, cost saved |
 
@@ -215,7 +222,10 @@ decided while building:
 | Element | Status | Details |
 |---|---|---|
 | User interface and forms | Real | Working React web app |
-| Matching engine | Real | Rule filter and score in `src/lib/matching.js` |
+| Matching engine | Real | Rule filter and score in `src/lib/matching.js`. Star ratings show on the Matches page but do not change the score |
+| Live updates | Real when connected | With Supabase: changes appear on every open screen at once. Without it: two tabs of the same browser keep each other up to date |
+| Chat, ratings, photo proof | Real | Kept with the delivery: in the browser, or on Supabase (photos in a private storage bucket) |
+| Install on a phone | Real | A web app manifest and service worker (`public/`) let the site be added to the home screen and open offline |
 | AI parcel check | Real when connected | The Send page sends the item description to a Make.com webhook, which asks an AI model (Google Gemini) and replies. Without the webhook, or with no answer in 8 seconds, a keyword check labelled "Offline check (not AI)" is used |
 | Data storage | Real | Without the backend: saved in the browser's localStorage so the demo works offline. With Supabase connected: one shared database |
 | Make.com / Google Sheets / email | Real when connected | The app posts to the webhook URL in `.env.local`; the Make.com scenario and Sheet are set up separately |
