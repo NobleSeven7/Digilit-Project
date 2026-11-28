@@ -20,7 +20,7 @@ function CheckCounter({ count, total }) {
   const done = count === total
   return (
     <p data-testid="checklist-count"
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-bold tabular-nums transition-colors duration-(--dur-quick) ease-[var(--ease-out)] ${
+      className={`inline-flex items-center gap-1.5 rounded-control border px-3 py-1 text-sm font-bold tabular-nums transition-colors duration-(--dur-quick) ease-[var(--ease-out)] ${
         done ? 'border-brand bg-brand text-white' : 'border-dashed border-muted bg-surface text-ink'
       }`}>
       {/* At 5 of 5 the tick grows in (.tick-in): a small moment, once per parcel */}
@@ -361,7 +361,7 @@ export default function Sender({ state, save, id, profile, setProfile }) {
               {aiResult && (
                 <div role="status" data-testid="ai-result" data-source={aiResult.source} key={aiResult.reason}
                   data-prohibited={aiResult.prohibited} data-type={aiResult.suggestedType}
-                  className={`enter-pop mt-3 rounded-lg border p-4 ${
+                  className={`enter-pop mt-3 rounded-control border p-4 ${
                     aiResult.prohibited ? 'border-fail bg-fail-tint' : 'border-brand-ink bg-brand-tint'}`}>
                   <p className="text-sm font-bold">
                     {aiResult.source}
@@ -410,7 +410,7 @@ export default function Sender({ state, save, id, profile, setProfile }) {
             <p className="mt-1 text-muted">Tick each line to confirm what is not in your parcel.</p>
             <div className="mt-3 space-y-1">
               {PROHIBITED.map((text, index) => (
-                <label key={text} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-2 active:bg-brand-tint hover:bg-brand-tint">
+                <label key={text} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-control px-2 active:bg-brand-tint hover:bg-brand-tint">
                   <input type="checkbox" className="size-6 shrink-0 accent-brand"
                     checked={ticked[index]} onChange={() => toggle(index)} />
                   <span>{text}</span>
@@ -434,7 +434,7 @@ export default function Sender({ state, save, id, profile, setProfile }) {
           {/* After pressing "Post parcel": say what to fix, naming the field.
               (Problems found while filling in show only under their field.) */}
           {error?.onPost && (
-            <p role="alert" className="rounded-lg bg-fail-tint px-3 py-2 font-bold text-fail">
+            <p role="alert" className="rounded-control bg-fail-tint px-3 py-2 font-bold text-fail">
               {error.field === 'checklist' ? error.text : `Check ${FIELD_NAMES[error.field]}.`}
             </p>
           )}
@@ -446,7 +446,7 @@ export default function Sender({ state, save, id, profile, setProfile }) {
             /* The check suggested another item type: the sender picks one. The
                question unfolds from the spot where "Post parcel" was
                (.grow-from-button), so it reads as that button's answer. */
-            <div role="alert" data-testid="type-question" className="grow-from-button space-y-3 rounded-lg border border-hold bg-hold-tint p-3">
+            <div role="alert" data-testid="type-question" className="grow-from-button space-y-3 rounded-control border border-hold bg-hold-tint p-3">
               <p>
                 The check suggested <strong>{aiResult.suggestedType}</strong>, but the item type
                 is <strong>{itemType}</strong>. Which one should we post?

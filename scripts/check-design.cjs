@@ -48,7 +48,7 @@ const CHECKS = [
     rule: 'No decorative gradients or glow shadows in components (DESIGN.md > Surfaces)',
     applies: (file) => /\.jsx$/.test(file),
     pattern: /bg-gradient|gradient-to-|linear-gradient|radial-gradient|shadow-\[0_0_/,
-    fix: 'Use flat token colours; elevation uses --shadow-rest / --shadow-lift.',
+    fix: 'Use flat token colours; only clickable cards use --shadow-rest.',
   },
   {
     id: 'C3c',
@@ -73,6 +73,15 @@ const CHECKS = [
     applies: (file) => /\.js$/.test(file),
     pattern: /\bduration:\s*(?:[3-9]\d[1-9]|[3-9][1-9]\d|[4-9]\d\d|\d{4,})\b|\beasing:\s*['"](?:ease|ease-in|ease-out|ease-in-out|linear)['"]/,
     fix: 'Keep it to 300ms or less and read the curve from --ease-out.',
+  },
+  {
+    // Two corner sizes only (src/index.css): Tailwind's own sizes are switched
+    // off, so one of them would show square corners without anyone noticing.
+    id: 'C6',
+    rule: 'Corners are rounded-control or rounded-surface (DESIGN.md > Surfaces)',
+    applies: (file) => /\.(jsx|css)$/.test(file),
+    pattern: /\brounded(?:-[trblse]{1,2})?-(?:xs|sm|md|lg|xl|2xl|3xl|4xl|\[[^\]]*\])(?![\w-])/,
+    fix: 'Use rounded-control (buttons, fields, chips, badges) or rounded-surface (cards, bands); rounded-full only for dots, ticks and bars.',
   },
   {
     id: 'C4',

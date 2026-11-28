@@ -72,7 +72,7 @@ export default function SignIn() {
           <fieldset>
             <legend className="label">I want to</legend>
             {[['sender', 'Send parcels (sender)'], ['carrier', 'Carry parcels on my trips (carrier)']].map(([value, text]) => (
-              <label key={value} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-2 hover:bg-brand-tint">
+              <label key={value} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-control px-2 hover:bg-brand-tint">
                 <input type="radio" name="accountRole" className="size-5 shrink-0" value={value}
                   checked={role === value} onChange={() => setRole(value)} />
                 <span>{text}</span>
@@ -82,7 +82,7 @@ export default function SignIn() {
         )}
 
         {error && (
-          <p role="alert" data-testid="sign-in-error" className="rounded-lg bg-fail-tint px-3 py-2 font-bold text-fail">{error}</p>
+          <p role="alert" data-testid="sign-in-error" className="rounded-control bg-fail-tint px-3 py-2 font-bold text-fail">{error}</p>
         )}
 
         <button type="submit" className="btn btn-primary w-full sm:w-auto" disabled={busy} data-testid="sign-in-submit">

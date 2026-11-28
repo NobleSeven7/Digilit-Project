@@ -146,13 +146,14 @@ function PriceRow({ name, note, price, highlight }) {
 // "PKR" at the end of one line and "60" at the start of the next.
 const keepTogether = (text) => text.replace(/ /g, '\u00a0')
 
-// A phone outline. Whatever is inside is its screen.
-function Phone({ label, children }) {
+// A phone-sized screen, shown flat like a print-out on the label: square
+// corners, an ink outline and no shadow (no rounded phone frame, which reads
+// as a template). Whatever is inside is the screen.
+function Screen({ label, children }) {
   return (
-    <div className="relative mx-auto w-full max-w-[20rem] overflow-hidden lg:max-w-[16rem] rounded-[2.75rem] border-[10px] border-ink bg-paper shadow-[var(--shadow-lift)]"
+    <div className="mx-auto w-full max-w-[20rem] overflow-hidden rounded-surface border-2 border-ink bg-paper lg:max-w-[16rem]"
       role="img" aria-label={label}>
-      <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-full bg-ink" aria-hidden="true" />
-      <div className="pt-9" aria-hidden="true">{children}</div>
+      <div className="pt-3" aria-hidden="true">{children}</div>
     </div>
   )
 }
@@ -251,7 +252,7 @@ const STEPS = [
   },
 ]
 
-// One step: the text, then its phone. They are simply there (no scroll
+// One step: the text, then its screen. They are simply there (no scroll
 // reveal or scroll-in animation: DESIGN.md > Motion).
 function StepRow({ step, index }) {
   return (
@@ -264,7 +265,7 @@ function StepRow({ step, index }) {
         <h3 className="mt-3 text-4xl font-bold sm:text-6xl">{step.title}</h3>
         <p className="mt-4 text-lg text-muted">{step.text}</p>
       </div>
-      <Phone label={step.phone}>{step.screen}</Phone>
+      <Screen label={step.phone}>{step.screen}</Screen>
     </li>
   )
 }
@@ -388,7 +389,7 @@ export default function Home({ profile, setProfile }) {
 
       {/* A real photo: the trips already happen, with room to spare.
           Hidden on phones (below sm): it adds length, not information. */}
-      <section className="hidden overflow-hidden rounded-2xl bg-brand text-white sm:grid lg:grid-cols-2" data-testid="photo-terminal">
+      <section className="hidden overflow-hidden rounded-surface bg-brand text-white sm:grid lg:grid-cols-2" data-testid="photo-terminal">
         {[[terminalPrintLight, 'shot-light'], [terminalPrintDark, 'shot-dark']].map(([src, theme]) => (
           <FadeInPhoto key={theme} src={src} width="1280" height="960" loading="lazy"
             alt="Travellers carrying bags outside the Daewoo Express bus terminal in Bahawalpur"
@@ -406,13 +407,13 @@ export default function Home({ profile, setProfile }) {
       </section>
 
       {/* Price comparison from the proposal, on a label-black band */}
-      <section className="rounded-2xl bg-brand px-5 py-9 text-white sm:px-12 sm:py-14">
+      <section className="rounded-surface bg-brand px-5 py-9 text-white sm:px-12 sm:py-14">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-4xl font-bold sm:text-6xl">What it costs</h2>
             <p className="mt-2 text-lg text-on-brand-soft">A {DEMO_KG} kg parcel from Islamabad to Lahore</p>
           </div>
-          <span className="rounded-full bg-hold px-5 py-1.5 font-display text-2xl font-bold text-on-hold"
+          <span className="rounded-control bg-hold px-5 py-1.5 font-display text-2xl font-bold text-on-hold"
             data-testid="saving-badge">
             Save {savingPercent(DEMO_KG)}%
           </span>
@@ -426,7 +427,7 @@ export default function Home({ profile, setProfile }) {
 
       {/* Closing: the same two choices again, as a two-colour split: label
           black for senders, kraft for carriers. One line and one button each. */}
-      <section className="grid overflow-hidden rounded-2xl sm:grid-cols-2" data-testid="closing-split">
+      <section className="grid overflow-hidden rounded-surface sm:grid-cols-2" data-testid="closing-split">
         <div className="flex flex-col items-start justify-between gap-7 bg-brand px-5 py-10 text-white sm:px-10 sm:py-14">
           <h2 className="text-3xl font-bold sm:text-4xl">Sending something? Put it on a trip that is already going.</h2>
           <a href="#/sender" className="btn btn-secondary" onClick={become('sender')}>Post a parcel</a>

@@ -28,10 +28,10 @@ export default function ParcelPass({ kind, code, shipment, journey, codeTestId, 
   return (
     <div className="pass w-full max-w-sm text-ink" data-testid="parcel-pass">
       {/* Top: the trip */}
-      <div className="pass-top rounded-t-2xl bg-brand p-5 text-white">
+      <div className="pass-top rounded-t-surface bg-brand p-5 text-white">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-sm">
           <span className="font-display text-lg font-bold leading-tight">RaastaShare</span>
-          <span className="whitespace-nowrap rounded-full border border-white px-3 py-1 text-sm font-bold leading-tight tracking-[0.01em]">{kind} pass</span>
+          <span className="whitespace-nowrap rounded-control border border-white px-3 py-1 text-sm font-bold leading-tight tracking-[0.01em]">{kind} pass</span>
         </div>
         <RouteCodes origin={shipment.origin} destination={shipment.destination} size="pass" className="mt-4" tone="text-on-brand-soft" />
         {/* Two columns while each has at least 5rem; with very large text (5rem
@@ -45,7 +45,7 @@ export default function ParcelPass({ kind, code, shipment, journey, codeTestId, 
       </div>
       {/* Bottom: the code, below a tear line between the two notches */}
       {/* flex-wrap: with very large text the note moves under the code */}
-      <div className="pass-bottom relative flex flex-wrap items-end justify-between gap-4 rounded-b-2xl border border-t-0 border-line bg-surface p-5">
+      <div className="pass-bottom relative flex flex-wrap items-end justify-between gap-4 rounded-b-surface border border-t-0 border-line bg-surface p-5">
         <span aria-hidden="true" className="absolute inset-x-5 top-0 border-t-2 border-dashed border-line" />
         <div>
           <p className="text-sm leading-tight tracking-[0.01em] text-muted">{kind} code</p>

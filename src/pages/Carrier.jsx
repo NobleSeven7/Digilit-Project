@@ -77,7 +77,7 @@ function FailedRules({ rules }) {
       </ul>
       {rest.length > 0 && (
         <details className="rule-details group mt-2">
-          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-lg font-bold text-brand-ink active:opacity-70
+          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-control font-bold text-brand-ink active:opacity-70
                               [&::-webkit-details-marker]:hidden">
             <span className="group-open:hidden">See {rest.length} more {rest.length === 1 ? 'reason' : 'reasons'}</span>
             <span className="hidden group-open:inline">Hide {rest.length === 1 ? 'the other reason' : 'other reasons'}</span>
@@ -448,7 +448,7 @@ export default function Carrier({ state, save, profile, setProfile }) {
         </div>
 
         {/* What this vehicle may carry, straight from the compatibility table */}
-        <p className="rounded-lg bg-brand-tint px-3 py-2 text-sm">
+        <p className="rounded-control bg-brand-tint px-3 py-2 text-sm">
 <strong>{vehicleSubject(vehicleType)}</strong> can carry: {vehicle.allowed.join(', ').toLowerCase()}
           {vehicleType === 'Car' ? ` (perishables only on trips under ${PERISHABLE_MAX_TRIP_HOURS} hours)` : ''}.{' '}
           {vehicle.maxKg !== null ? `Weight limit ${vehicle.maxKg} kg.` : 'Weight limit as you declare.'}
@@ -457,7 +457,7 @@ export default function Carrier({ state, save, profile, setProfile }) {
         {/* Beside the button: what to fix, naming the field (or the whole
             message when it is not about one field). Read out at once. */}
         {error && (
-          <p role="alert" className="rounded-lg bg-fail-tint px-3 py-2 font-bold text-fail">
+          <p role="alert" className="rounded-control bg-fail-tint px-3 py-2 font-bold text-fail">
             {error.field === 'form' ? error.text : `Check ${FIELD_NAMES[error.field]}.`}
           </p>
         )}

@@ -59,7 +59,7 @@ function ThemeSwitch() {
   return (
     <button type="button" onClick={handleClick} data-testid="theme-switch"
       aria-label={`Switch to ${next} theme`} title={`Switch to ${next} theme`}
-      className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-lg text-white hover:bg-brand-dark active:bg-brand-dark">
+      className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-control text-white hover:bg-brand-dark active:bg-brand-dark">
       {next === 'dark' ? <MoonIcon size={22} /> : <SunIcon size={22} />}
     </button>
   )
@@ -96,7 +96,7 @@ function ProfileBar({ profile, setProfile }) {
         <label htmlFor="profilePicker" className="stamp text-sm">Signed in as</label>
         <select id="profilePicker" data-testid="profile-picker" value={profileKey(profile)}
           onChange={(e) => setProfile(findProfile(e.target.value))}
-          className="min-h-11 min-w-0 max-w-full rounded-lg border border-muted/60 bg-surface px-2 py-1 font-bold text-brand-ink">
+          className="min-h-11 min-w-0 max-w-full rounded-control border border-muted/60 bg-surface px-2 py-1 font-bold text-brand-ink">
           <optgroup label="Senders">
             {PROFILES.filter((p) => p.role === 'sender').map((p) => (
               <option key={profileKey(p)} value={profileKey(p)}>{p.name} (sender)</option>
@@ -173,7 +173,7 @@ export default function Layout({ currentPage, onReset, profile, setProfile, onSi
               the current page too) and the header stays on one line. */}
           <div className="flex shrink-0 items-center gap-1 md:order-last">
             {current && (
-              <span className="rounded-full bg-surface px-3 py-1 text-sm font-bold text-brand-ink max-[22.5rem]:hidden md:hidden">
+              <span className="rounded-control bg-surface px-3 py-1 text-sm font-bold text-brand-ink max-[22.5rem]:hidden md:hidden">
                 {current.label}
               </span>
             )}
@@ -187,7 +187,7 @@ export default function Layout({ currentPage, onReset, profile, setProfile, onSi
                 key={item.page}
                 href={`#/${item.page}`}
                 aria-current={currentPage === item.page ? 'page' : undefined}
-                className={`relative flex min-h-11 items-center rounded-lg px-3 stamp ${
+                className={`relative flex min-h-11 items-center rounded-control px-3 stamp ${
                   index === menu.own.length ? 'ml-3 before:absolute before:-left-2 before:h-6 before:w-px before:bg-white/35' : ''} ${
                   currentPage === item.page
                     ? 'bg-surface text-brand-ink'
