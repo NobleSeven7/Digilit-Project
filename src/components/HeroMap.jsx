@@ -86,11 +86,11 @@ export default function HeroMap() {
 
       {/* The fare tag above the demo road */}
       <g className="stop-enter" style={{ '--i': 10 }}>
-        <rect x="279" y="100" width="164" height="38" rx="4" fill="var(--color-surface)"
+        <rect x="297" y="100" width="164" height="38" rx="4" fill="var(--color-surface)"
           stroke="var(--color-ink)" strokeWidth="2.5" />
         {/* One line, centred in the tag, so the weight and the price always
             keep a gap between them whatever width the phone's font has */}
-        <text x="361" y="127" textAnchor="middle">
+        <text x="379" y="127" textAnchor="middle">
           <tspan fontFamily="var(--font-body)" fontSize="17" fill="var(--color-muted)">{DEMO_KG} kg</tspan>
           <tspan dx="9" fontFamily="var(--font-display)" fontWeight="700" fontSize="23"
             fill="var(--color-brand-ink)">{price}</tspan>

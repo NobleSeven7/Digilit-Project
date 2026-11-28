@@ -48,7 +48,7 @@ const CHECKS = [
     rule: 'No decorative gradients or glow shadows in components (DESIGN.md > Surfaces)',
     applies: (file) => /\.jsx$/.test(file),
     pattern: /bg-gradient|gradient-to-|linear-gradient|radial-gradient|shadow-\[0_0_/,
-    fix: 'Use flat token colours; only clickable cards use --shadow-rest.',
+    fix: 'Use flat token colours; elevation uses --shadow-rest / --shadow-lift.',
   },
   {
     id: 'C3c',

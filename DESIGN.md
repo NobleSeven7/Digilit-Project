@@ -55,11 +55,11 @@ style and the old instruction not to change the design style.
   Why: four names for two sizes, plus pill badges and a 44px phone frame,
   made the corners look random and templated.
   <!-- 2026-11-28: AI-slop audit, "Go ahead with all" -->
-- **Screens are shown flat**, on a card with an ink outline and no shadow,
-  not inside a rounded phone frame. The only soft shadow is `--shadow-rest`
-  on cards you can click (and the parcel pass's own edge shadow).
-  Why: device mockups with big soft shadows are a stock template look.
-  <!-- 2026-11-28: AI-slop audit, "Go ahead with all" -->
+- **The phone outline on Home keeps its round corners and shadow**
+  (`rounded-phone`, `--shadow-lift`). It is the one exception to the corner
+  rule above.
+  Why: it reads as a phone; the flat version was tried and turned down.
+  <!-- 2026-11-28: "keep the home screen as the phone" -->
 - **On desktop (1024px and up) the Home map takes at least half the hero
   width.** If the headline needs room, make the headline smaller; never shrink
   the map to fit the text.

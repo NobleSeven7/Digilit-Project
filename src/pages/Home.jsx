@@ -146,14 +146,14 @@ function PriceRow({ name, note, price, highlight }) {
 // "PKR" at the end of one line and "60" at the start of the next.
 const keepTogether = (text) => text.replace(/ /g, '\u00a0')
 
-// A phone-sized screen, shown flat like a print-out on the label: square
-// corners, an ink outline and no shadow (no rounded phone frame, which reads
-// as a template). Whatever is inside is the screen.
-function Screen({ label, children }) {
+// A phone outline. Whatever is inside is its screen. Its round corners are
+// the one exception to the square label corners (rounded-phone).
+function Phone({ label, children }) {
   return (
-    <div className="mx-auto w-full max-w-[20rem] overflow-hidden rounded-surface border-2 border-ink bg-paper lg:max-w-[16rem]"
+    <div className="relative mx-auto w-full max-w-[20rem] overflow-hidden lg:max-w-[16rem] rounded-phone border-[10px] border-ink bg-paper shadow-[var(--shadow-lift)]"
       role="img" aria-label={label}>
-      <div className="pt-3" aria-hidden="true">{children}</div>
+      <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-full bg-ink" aria-hidden="true" />
+      <div className="pt-9" aria-hidden="true">{children}</div>
     </div>
   )
 }
@@ -252,7 +252,7 @@ const STEPS = [
   },
 ]
 
-// One step: the text, then its screen. They are simply there (no scroll
+// One step: the text, then its phone. They are simply there (no scroll
 // reveal or scroll-in animation: DESIGN.md > Motion).
 function StepRow({ step, index }) {
   return (
@@ -265,7 +265,7 @@ function StepRow({ step, index }) {
         <h3 className="mt-3 text-4xl font-bold sm:text-6xl">{step.title}</h3>
         <p className="mt-4 text-lg text-muted">{step.text}</p>
       </div>
-      <Screen label={step.phone}>{step.screen}</Screen>
+      <Phone label={step.phone}>{step.screen}</Phone>
     </li>
   )
 }
