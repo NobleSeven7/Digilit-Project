@@ -91,7 +91,7 @@ function DeliveryOption({ delivery: d, labels }) {
 // money). Anyone else signed in sees a one-tap switch to the carrier instead.
 function CarrierOnly({ carrierName, setProfile }) {
   return (
-    <div className="mt-4 rounded-lg bg-sunk px-3 py-3">
+    <div className="mt-4 rounded-control bg-sunk px-3 py-3">
       <p>Only <strong>{carrierName}</strong> (the carrier) enters this code.</p>
       {setProfile && (
         <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-carrier"
@@ -502,7 +502,7 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
 
           {/* Whose turn it is */}
           {next && (
-            <p data-testid="next-step" className="rounded-lg border-l-4 border-hold bg-surface px-4 py-3 font-bold">
+            <p data-testid="next-step" className="rounded-control border-l-4 border-hold bg-surface px-4 py-3 font-bold">
               {next}
             </p>
           )}
@@ -510,7 +510,7 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
           {/* Result of the last action */}
           {message && (
             <p role="alert" data-testid="delivery-message" key={message.text}
-              className={`rounded-lg px-4 py-3 font-bold fade-in-quick ${message.booked ? 'flex items-center gap-3' : ''} ${
+              className={`rounded-control px-4 py-3 font-bold fade-in-quick ${message.booked ? 'flex items-center gap-3' : ''} ${
                 message.ok ? 'bg-brand-tint text-brand-ink' : 'bg-fail-tint text-fail'}`}>
               {/* Booked: the message appears quickly (150ms) so it does not hold
                   the tick back; the tick grows in, its check draws, and phones
@@ -532,7 +532,7 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
               </p>
               <div className="mt-4 space-y-3">
                 {/* The sender's row: only the sender can accept here */}
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-sunk px-3 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-control bg-sunk px-3 py-3">
                   <p><strong>{shipment.senderName}</strong> (sender)</p>
                   {delivery.senderAccepted ? <AcceptedBadge animate={justAccepted('sender')} />
                     : isSender ? (
@@ -548,7 +548,7 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
                     )}
                 </div>
                 {/* The carrier's row: only the carrier can accept or decline here */}
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-sunk px-3 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-control bg-sunk px-3 py-3">
                   <p><strong>{journey.carrierName}</strong> (carrier)</p>
                   {delivery.carrierAccepted ? <AcceptedBadge animate={justAccepted('carrier')} />
                     : isCarrier ? (
@@ -668,7 +668,7 @@ export default function Delivery({ state, save, id, profile, setProfile, reload 
               <fieldset className="mt-3 space-y-1">
                 <legend className="label">What went wrong?</legend>
                 {PROBLEMS.map((text) => (
-                  <label key={text} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-2 active:bg-fail-tint hover:bg-fail-tint">
+                  <label key={text} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-control px-2 active:bg-fail-tint hover:bg-fail-tint">
                     <input type="radio" name="problem" className="size-5 shrink-0 accent-fail"
                       checked={problem === text} onChange={() => setProblem(text)} />
                     <span>{text}</span>

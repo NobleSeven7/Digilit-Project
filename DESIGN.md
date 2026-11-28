@@ -46,6 +46,20 @@ style and the old instruction not to change the design style.
   from `src/components/Icons.jsx`. **(checked)**
   Why: these are the clearest signs of an AI-made site.
   <!-- 2026-11-23: "Avoid: purple/blue gradients, glowing cards, emoji icons" -->
+- **Two corner sizes, both nearly square:** `rounded-control` (3px) for
+  buttons, fields, chips and badges, and `rounded-surface` (4px) for cards,
+  bands and the parcel pass. Badges are square stamps, not round pills.
+  `rounded-full` is only for things that really are round: dots, ticks and
+  bars. Tailwind's own sizes (`rounded-lg`, `rounded-2xl`…) are switched off.
+  **(checked)**
+  Why: four names for two sizes, plus pill badges and a 44px phone frame,
+  made the corners look random and templated.
+  <!-- 2026-11-28: AI-slop audit, "Go ahead with all" -->
+- **The phone outline on Home keeps its round corners and shadow**
+  (`rounded-phone`, `--shadow-lift`). It is the one exception to the corner
+  rule above.
+  Why: it reads as a phone; the flat version was tried and turned down.
+  <!-- 2026-11-28: "keep the home screen as the phone" -->
 - **On desktop (1024px and up) the Home map takes at least half the hero
   width.** If the headline needs room, make the headline smaller; never shrink
   the map to fit the text.
@@ -60,6 +74,8 @@ style and the old instruction not to change the design style.
 
 - **Headings use IBM Plex Sans Condensed (`font-display`); everything else uses
   IBM Plex Sans.** Never Inter or a generic system font.
+  `font-sans` is mapped to IBM Plex Sans, so it can never bring back the
+  system font.
   Why: strong, plain, industrial type, like printing on a shipping label.
   <!-- 2026-11-23: "avoid generic fonts like Inter… strong, plain typography" -->
 - **Small labels are "stamped": the condensed face at 600 (`stamp` in

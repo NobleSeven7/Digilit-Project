@@ -49,7 +49,7 @@ export default function StatusBadge({ status }) {
   const colours = COLOURS[statusTone(status)]
 
   return (
-    <span data-testid="status" className={`inline-flex max-w-full shrink-0 items-center rounded-full border px-3 py-1 stamp text-sm leading-tight tabular-nums transition-colors duration-(--dur-short) ease-[var(--ease-out)] ${colours}`}>
+    <span data-testid="status" className={`inline-flex max-w-full shrink-0 items-center rounded-control border px-3 py-1 stamp text-sm leading-tight tabular-nums transition-colors duration-(--dur-short) ease-[var(--ease-out)] ${colours}`}>
       {LABELS[status] ?? status}
     </span>
   )

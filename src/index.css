@@ -84,11 +84,16 @@
   --color-fail: var(--oxblood-800);        /* failed rule, dispute (darker than the accent) */
   --color-fail-tint: var(--oxblood-100);
 
-  /* Corners: nearly square, like a printed label. */
-  --radius-md: 3px;
-  --radius-lg: 3px;
-  --radius-xl: 4px;
-  --radius-2xl: 4px;
+  /* Corners: nearly square, like a printed label. Only two sizes, named
+     for what they are on: "control" for buttons, fields, chips and badges,
+     "surface" for cards, bands and the parcel pass. Tailwind's own sizes
+     (rounded-control, rounded-surface ...) are switched off, so they can't creep back
+     (npm run check:design flags them). rounded-full is kept for things that
+     really are round: dots, ticks and bars. */
+  --radius-*: initial;
+  --radius-control: 3px;
+  --radius-surface: 4px;
+  --radius-phone: 2.75rem; /* only the phone outline on Home */
 
   /* Small print a little larger than Tailwind's defaults (14px and 12px). */
   --text-sm: 0.9375rem;
@@ -117,6 +122,8 @@
      The condensed cut is for headings, the normal cut for everything else. */
   --font-display: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
   --font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
+  /* Tailwind's font-sans would otherwise be the system font. */
+  --font-sans: var(--font-body);
 }
 
 /* ---- Base styles ---------------------------------------------------- */
@@ -301,7 +308,7 @@ h1[tabindex="-1"]:focus { outline: none; }
 /* ---- Reusable building blocks (used all over the pages) ------------- */
 @layer components {
   .card {
-    @apply rounded-xl border p-4 sm:p-5;
+    @apply rounded-surface border p-4 sm:p-5;
     border-color: var(--card-border);
     background-color: var(--card-bg);
   }
@@ -320,7 +327,7 @@ h1[tabindex="-1"]:focus { outline: none; }
   @media (prefers-reduced-motion: reduce) { .card-link { transition: border-color var(--dur-quick) var(--ease-out); } }
 
   .btn {
-    @apply inline-flex min-h-12 cursor-pointer items-center justify-center rounded-lg
+    @apply inline-flex min-h-12 cursor-pointer items-center justify-center rounded-control
            px-5 py-2.5 text-center font-bold;
     /* Colour changes softly; a press shrinks the button a touch, so it feels
        like it answers the finger. */
@@ -361,7 +368,7 @@ h1[tabindex="-1"]:focus { outline: none; }
      three versions.) */
   .label { @apply stamp mb-1 block text-[1.0625rem]; }
   .field {
-    @apply block min-h-12 w-full rounded-lg border border-muted/60 px-3 py-2
+    @apply block min-h-12 w-full rounded-control border border-muted/60 px-3 py-2
            text-ink placeholder:text-muted;
     background-color: var(--field-bg);
   }
