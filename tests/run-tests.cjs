@@ -1,7 +1,7 @@
 // Browser tests: the 8 test cases in the project proposal (tests 1 to 8),
 // plus 4 tests for the AI parcel check (tests 9 to 12), 2 for who may do
 // what (tests 13 and 14), 1 for wrong pickup codes (15), 1 for a browser
-// that will not save (16) and 1 for the Home route picker (17).
+// that will not save (16) and 2 for the Home route finder (17 and 18).
 // The script opens the app in a real (headless) Chromium browser, clicks
 // through it like a user, checks the result and saves a screenshot of each
 // case in the test-screenshots folder.
@@ -382,7 +382,7 @@ async function main() {
     }
   })
 
-  await runTest(page, 17, 'Home: the "Where is it going?" picker', 'The same city twice cannot be sent; two cities open the Send page with that route chosen', async () => {
+  await runTest(page, 17, 'Home: the route finder', 'The same city twice cannot be sent; two cities open the Send page with that route chosen', async () => {
     // Start as a carrier, to check the picker also switches you to a sender.
     await page.selectOption('#profilePicker', 'carrier:Bilal Ahmed')
     await page.goto(APP_URL + '#/home')
@@ -401,6 +401,41 @@ async function main() {
     check(signedIn.startsWith('sender:'), `Still signed in as "${signedIn}"`)
     await shot('test-17-home-route-picker.png')
     return `Same city: button off and "${sameNote}"; Lahore to Karachi opened the Send page on ${from} to ${to}, as a sender`
+  })
+
+  await runTest(page, 18, 'Home: the map, fare and link follow the route finder', 'A reversed route and one without Islamabad each move the map, fare and link; two quick changes leave the last one', async () => {
+    await page.goto(APP_URL + '#/home')
+    const shown = () => page.evaluate(() => ({
+      map: document.querySelector('[data-testid="hero-map"]').dataset.route,
+      fare: document.querySelector('[data-testid="map-fare"]')?.textContent,
+      link: document.querySelector('[data-testid="picker-go"]')?.getAttribute('href'),
+      roads: document.querySelectorAll('[data-testid="map-road"]').length,
+    }))
+    // Reversed: Lahore to Islamabad
+    await page.selectOption('[data-testid="picker-from"]', 'Lahore')
+    await page.selectOption('[data-testid="picker-to"]', 'Islamabad')
+    let s = await shown()
+    check(s.map === 'LHE-ISB' && s.link === '#/sender/LHE-ISB' && s.fare.startsWith('LHE–ISB'), `Reversed route shows ${JSON.stringify(s)}`)
+    // Neither end is Islamabad: Multan to Quetta. The fare is the app's own price for 5 kg.
+    await page.selectOption('[data-testid="picker-from"]', 'Multan')
+    await page.selectOption('[data-testid="picker-to"]', 'Quetta')
+    s = await shown()
+    check(s.map === 'MUX-UET' && s.link === '#/sender/MUX-UET' && s.fare.includes('PKR 500'), `Multan to Quetta shows ${JSON.stringify(s)}`)
+    // Two changes straight after each other: the last one wins, one road drawn
+    await page.evaluate(() => {
+      const to = document.querySelector('[data-testid="picker-to"]')
+      const setValue = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set
+      for (const city of ['Karachi', 'Peshawar']) { setValue.call(to, city); to.dispatchEvent(new Event('change', { bubbles: true })) }
+    })
+    s = await shown()
+    check(s.map === 'MUX-PEW' && s.link === '#/sender/MUX-PEW' && s.roads === 1, `After two quick changes: ${JSON.stringify(s)}`)
+    await page.click('[data-testid="picker-go"]')
+    await page.waitForSelector('#origin')
+    const from = await page.inputValue('#origin')
+    const to = await page.inputValue('#destination')
+    check(from === 'Multan' && to === 'Peshawar', `Find a carrier opened the Send page on ${from} to ${to}`)
+    await shot('test-18-home-route-follows.png')
+    return `Map, fare and link showed LHE-ISB, then MUX-UET (PKR 500), then MUX-PEW after two quick changes; Send page opened on ${from} to ${to}`
   })
 
   await browser.close()

@@ -1780,3 +1780,40 @@ kept only after his go-ahead.
   390px or 320px, light or dark. The full journey (post, match, both accepts,
   a wrong code, both codes, payment released) was run at 390px with the
   motion recorded frame by frame, then Reset demo data was pressed.
+
+## Stage 66: Home page rules and redesign (28 Nov 2026)
+
+Ahmad asked for a "Home page" section in DESIGN.md, then for the Home page to
+follow it, in one PR.
+
+- **DESIGN.md:** new "Home page" section (hero, map, motion on Home,
+  walkthrough, surfaces and copy). None of it is marked "(checked)": the
+  design check does not test these rules.
+- **Route finder:** visible From and To labels, on a flat surface instead of
+  the grainy page. The button is "Find a carrier" and opens the Send page with
+  the two cities chosen. The chosen cities live in Home, so the map, the fare
+  and the link always show the same route. "Post a journey" is now a quiet
+  link under the finder; the Sender/Carrier split in the hero is gone (the
+  closing section still offers both).
+- **Map:** any pair of the eight cities can be drawn. The road is the shortest
+  way along the lines (`roadBetween` in `HeroMap.jsx`). The chosen road is
+  heavy ink with its two end cities large; the other lines and names are thin
+  and muted. The fare tag shows the route codes and the app's own price. The
+  "Carrier matched / Picked up / Delivered" notes moved to the walkthrough.
+- **Motion:** a route change redraws only the new road (`.route-change-line`,
+  `--dur-long`, `--ease-in-out`); the fare and link change at once. Each road
+  is a new element, so a quick second change replaces the first. A change
+  during the intro ends the intro. Reduced motion: no redraw.
+- **How it works:** one phone that keeps its size, three step buttons (a tab
+  list: arrow keys, Home, End, Enter, Space). The screens are small live
+  pieces of the app (parcel summary, the real ranked match, the pickup pass)
+  instead of shrunk screenshots, which were deleted. Changing step fades the
+  screen in (`.step-swap`, 200ms; none with reduced motion).
+- **Copy:** shorter hero sentence; "Save 50%" now says "our estimate";
+  "Payments are simulated in this student prototype" in the trust strip and
+  the Accept step. The footer disclosure is unchanged.
+- **Hero fit:** at 1365 × 688 the button's bottom is at 636px (was 693px, cut
+  off), from a smaller desktop headline and the shorter sentence.
+- **Checked:** `check:design` passes, 17 of 17 unit tests, 18 of 18 browser
+  tests (new test 18: the map, fare and link follow the finder). Before and
+  after screenshots in `/mnt/project-files/home-redesign/`.
