@@ -46,6 +46,20 @@ style and the old instruction not to change the design style.
   from `src/components/Icons.jsx`. **(checked)**
   Why: these are the clearest signs of an AI-made site.
   <!-- 2026-11-23: "Avoid: purple/blue gradients, glowing cards, emoji icons" -->
+- **Two corner sizes, both nearly square:** `rounded-control` (3px) for
+  buttons, fields, chips and badges, and `rounded-surface` (4px) for cards,
+  bands and the parcel pass. Badges are square stamps, not round pills.
+  `rounded-full` is only for things that really are round: dots, ticks and
+  bars. Tailwind's own sizes (`rounded-lg`, `rounded-2xl`…) are switched off.
+  **(checked)**
+  Why: four names for two sizes, plus pill badges and a 44px phone frame,
+  made the corners look random and templated.
+  <!-- 2026-11-28: AI-slop audit, "Go ahead with all" -->
+- **The phone outline on Home keeps its round corners and shadow**
+  (`rounded-phone`, `--shadow-lift`). It is the one exception to the corner
+  rule above.
+  Why: it reads as a phone; the flat version was tried and turned down.
+  <!-- 2026-11-28: "keep the home screen as the phone" -->
 - **On desktop (1024px and up) the Home map takes at least half the hero
   width.** If the headline needs room, make the headline smaller; never shrink
   the map to fit the text.
@@ -60,6 +74,8 @@ style and the old instruction not to change the design style.
 
 - **Headings use IBM Plex Sans Condensed (`font-display`); everything else uses
   IBM Plex Sans.** Never Inter or a generic system font.
+  `font-sans` is mapped to IBM Plex Sans, so it can never bring back the
+  system font.
   Why: strong, plain, industrial type, like printing on a shipping label.
   <!-- 2026-11-23: "avoid generic fonts like Inter… strong, plain typography" -->
 - **Small labels are "stamped": the condensed face at 600 (`stamp` in
@@ -149,3 +165,109 @@ style and the old instruction not to change the design style.
   `'carrier'`, `'both'` or `'team'`.
   Why: the two roles have different jobs, and mixing their pages confused both.
   <!-- 2026-11-22: "why not make it separate?" then "Let's go with your suggestion" -->
+
+## Home page
+
+These rules are for Home only. The Home rules above still apply: the map
+takes at least half the hero from 1024px up, the phone outline keeps
+`rounded-phone` and `--shadow-lift`, and the Home intro is a named motion
+exception.
+<!-- 2026-11-28: Home page standards brief, "edit DESIGN.md only"; then "move the three shipment milestones off the hero map and into the walkthrough" -->
+
+### Hero
+
+- **The hero's first job is finding a carrier.** In this order: a short
+  headline, one sentence that explains the service, a route finder with
+  visible "From" and "To" labels, the fare for the chosen route, and one
+  primary button, "Find a carrier", which opens the Send page with those
+  two cities chosen. Carriers get a secondary "Post a
+  journey" link, never a second primary button.
+  Why: most visitors arrive with a parcel; one clear action beats two equal
+  choices.
+- **At 1365 × 688 and default zoom, the whole "Find a carrier" button is on
+  the first screen.** Make the headline or the sentence shorter before
+  making the map smaller.
+  Why: a common laptop size; a button cut off at the fold looks broken.
+- **At 390px wide, the route finder and its button come before the map.**
+  Why: on a phone the task comes first and the picture second.
+- **With larger text (browser zoom or a bigger default font) the page simply
+  scrolls.** Never fix the hero to the screen height or hide overflow to
+  keep the button on screen.
+  Why: people who enlarge text must be able to reach everything.
+
+### Map
+
+- **The map, the fare and the "Find a carrier" link always show the same two
+  cities.** Changing From or To updates all three.
+  Why: a map showing one route next to a search for another is confusing.
+- **The chosen route stands out through a heavier line, labelled end cities
+  and stronger contrast, using the ink and paper tokens.** The rest of the
+  network stays quiet: thinner, lighter lines (`--color-route-2`,
+  `--color-route-3`) and smaller city names. No new colours; the red
+  `--color-hold` stays for the parcel only.
+  Why: the eye should find the chosen route first; the network is context.
+- **The shipment's milestones (matched, picked up, delivered) are told in the
+  walkthrough below, not as notes on the map.**
+  Why: the map shows where; the walkthrough shows what happens.
+- **Every price says where it comes from.** Prices the app calculates (base
+  fee plus a fee per kg, `src/lib/pricing.js`) are shown as plain prices.
+  The courier price, and any saving worked out from it, is labelled "our
+  estimate" (see Copy above).
+  Why: the app's own fee is exact; the comparison is not measured.
+
+### Motion on Home
+
+- **The intro and a route change are two different things.** The intro plays
+  once per visit, as set out in the Motion exceptions above. A route change
+  is ordinary UI motion: it lasts `--dur-long` (300ms) and uses
+  `--ease-in-out` (something moving) or `--ease-out` (something appearing).
+  Why: the intro is a one-time welcome; a route change answers the person
+  and must feel instant.
+- **On a route change, the selection, fare and link update at once; only the
+  drawing animates.** A new change stops any animation still running and
+  starts from the current picture, so fast changes never queue up. A change
+  made during the intro ends the intro and shows the new route.
+  With reduced motion, the new route simply appears.
+  Why: the data must never wait for an animation.
+- **A route-change animation gets its own CSS class, not one that starts with
+  a name in `LONG_MOTION_ALLOWED`** (such as `.route-draw`).
+  Why: the duration check skips those names, so it would not catch a long
+  route change.
+- **The no-page-animation and no-scroll-reveal rules still apply on Home.**
+
+### Walkthrough ("How it works")
+
+- **On desktop, one phone with three step buttons.** The phone stays in place
+  and keeps its size; choosing a step changes only what is on its screen.
+  The step buttons work with Tab, Enter and Space and show which step is
+  chosen.
+  Why: one steady picture is easier to follow than three phones down the
+  page.
+- **Each screen shows the smallest readable piece of the real app that
+  explains that step**: the parcel summary, the carrier match, the pickup
+  pass. Not a whole page shrunk down. They are built from the app's own
+  parts and tokens, so they follow light and dark mode.
+  Why: a whole page at phone-frame size is too small to read.
+- **Each milestone sits with the step it explains:** "Carrier matched" with
+  Accept, "Picked up" and "Delivered" with Verify.
+- **Changing step is a short transition** (`--dur-short`, `--ease-out`), and
+  with reduced motion the new screen simply appears.
+- **The pickup pass and its code stay large in the "Verify" step.**
+  Why: the code is the idea that replaces phone calls.
+- **On phones, the step buttons sit right next to the phone,** so the screen
+  is in view when a step is chosen.
+- **Any depth effect (a tilt or shadow shift) is small and optional.** The
+  walkthrough reads the same without it, and with reduced motion it is off.
+
+### Surfaces and copy on Home
+
+- **Broad page areas show the kraft grain (`--paper-grain`); forms, dense text
+  and the parcel pass sit on quiet, flat surfaces (`--color-surface`).**
+  Why: texture gives the page its paper feel, but grain under small text and
+  form fields makes them harder to read.
+- **Home keeps the house style:** IBM Plex type, square controls
+  (`rounded-control`), the colour meanings above and the three token layers
+  with dark mode.
+- **Where Home first explains how payment is protected, it also says that
+  payments are simulated in this student prototype.**
+  Why: the site is public, and no real money moves.

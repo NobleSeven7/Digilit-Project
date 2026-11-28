@@ -1,10 +1,10 @@
 // Browser tests: the 8 test cases in the project proposal (tests 1 to 8),
 // plus 4 tests for the AI parcel check (tests 9 to 12), 2 for who may do
 // what (tests 13 and 14), 1 for wrong pickup codes (15), 1 for a browser
-// that will not save (16), 1 for the Home route picker (17), and 7 for the
-// upgrades of 28 November: chat (18), cancel before pickup (19), ratings
-// (20), photo proof (21), History (22), live updates between tabs (23) and
-// installing the app (24).
+// that will not save (16), 2 for the Home route finder (17 and 18), and 7
+// for the upgrades of 28 November: chat (19), cancel before pickup (20),
+// ratings (21), photo proof (22), History (23), live updates between tabs
+// (24) and installing the app (25).
 // The script opens the app in a real (headless) Chromium browser, clicks
 // through it like a user, checks the result and saves a screenshot of each
 // case in the test-screenshots folder.
@@ -393,7 +393,7 @@ async function main() {
     }
   })
 
-  await runTest(page, 17, 'Home: the "Where is it going?" picker', 'The same city twice cannot be sent; two cities open the Send page with that route chosen', async () => {
+  await runTest(page, 17, 'Home: the route finder', 'The same city twice cannot be sent; two cities open the Send page with that route chosen', async () => {
     // Start as a carrier, to check the picker also switches you to a sender.
     await page.selectOption('#profilePicker', 'carrier:Bilal Ahmed')
     await page.goto(APP_URL + '#/home')
@@ -414,7 +414,42 @@ async function main() {
     return `Same city: button off and "${sameNote}"; Lahore to Karachi opened the Send page on ${from} to ${to}, as a sender`
   })
 
-  await runTest(page, 18, 'Sender and carrier message each other', 'Both see the messages; another person cannot', async () => {
+  await runTest(page, 18, 'Home: the map, fare and link follow the route finder', 'A reversed route and one without Islamabad each move the map, fare and link; two quick changes leave the last one', async () => {
+    await page.goto(APP_URL + '#/home')
+    const shown = () => page.evaluate(() => ({
+      map: document.querySelector('[data-testid="hero-map"]').dataset.route,
+      fare: document.querySelector('[data-testid="map-fare"]')?.textContent,
+      link: document.querySelector('[data-testid="picker-go"]')?.getAttribute('href'),
+      roads: document.querySelectorAll('[data-testid="map-road"]').length,
+    }))
+    // Reversed: Lahore to Islamabad
+    await page.selectOption('[data-testid="picker-from"]', 'Lahore')
+    await page.selectOption('[data-testid="picker-to"]', 'Islamabad')
+    let s = await shown()
+    check(s.map === 'LHE-ISB' && s.link === '#/sender/LHE-ISB' && s.fare.startsWith('LHE–ISB'), `Reversed route shows ${JSON.stringify(s)}`)
+    // Neither end is Islamabad: Multan to Quetta. The fare is the app's own price for 5 kg.
+    await page.selectOption('[data-testid="picker-from"]', 'Multan')
+    await page.selectOption('[data-testid="picker-to"]', 'Quetta')
+    s = await shown()
+    check(s.map === 'MUX-UET' && s.link === '#/sender/MUX-UET' && s.fare.includes('PKR 500'), `Multan to Quetta shows ${JSON.stringify(s)}`)
+    // Two changes straight after each other: the last one wins, one road drawn
+    await page.evaluate(() => {
+      const to = document.querySelector('[data-testid="picker-to"]')
+      const setValue = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set
+      for (const city of ['Karachi', 'Peshawar']) { setValue.call(to, city); to.dispatchEvent(new Event('change', { bubbles: true })) }
+    })
+    s = await shown()
+    check(s.map === 'MUX-PEW' && s.link === '#/sender/MUX-PEW' && s.roads === 1, `After two quick changes: ${JSON.stringify(s)}`)
+    await page.click('[data-testid="picker-go"]')
+    await page.waitForSelector('#origin')
+    const from = await page.inputValue('#origin')
+    const to = await page.inputValue('#destination')
+    check(from === 'Multan' && to === 'Peshawar', `Find a carrier opened the Send page on ${from} to ${to}`)
+    await shot('test-18-home-route-follows.png')
+    return `Map, fare and link showed LHE-ISB, then MUX-UET (PKR 500), then MUX-PEW after two quick changes; Send page opened on ${from} to ${to}`
+  })
+
+  await runTest(page, 19, 'Sender and carrier message each other', 'Both see the messages; another person cannot', async () => {
     await startDelivery(page) // signed in as the carrier
     await page.fill('[data-testid="chat-input"]', 'I can collect it at 7:45 at the terminal.')
     await page.click('[data-testid="chat-send"]')
@@ -423,14 +458,14 @@ async function main() {
     check(seen === 1, `The sender sees ${seen} messages`)
     await page.fill('[data-testid="chat-input"]', 'Perfect, see you then.')
     await page.click('[data-testid="chat-send"]')
-    await shot('test-18-chat.png', page.locator('[data-testid="chat"]'))
+    await shot('test-19-chat.png', page.locator('[data-testid="chat"]'))
     await page.selectOption('#profilePicker', 'sender:Omar Farooq')
     check(await page.locator('[data-testid="chat"]').count() === 0, 'Omar can read the messages')
     check(await page.locator('[data-testid="chat-private"]').isVisible(), 'No note that messages are private')
     return 'Carrier and sender each sent one; both see 2 messages, Omar sees none'
   })
 
-  await runTest(page, 19, 'The carrier cancels after both accepted, before pickup', 'Money refunded; the parcel goes back to Matches without that carrier', async () => {
+  await runTest(page, 20, 'The carrier cancels after both accepted, before pickup', 'Money refunded; the parcel goes back to Matches without that carrier', async () => {
     await startDelivery(page) // signed in as the carrier
     const carrier = (await page.inputValue('#profilePicker')).split(':')[1]
     await page.click('[data-testid="cancel-delivery"]')
@@ -440,7 +475,7 @@ async function main() {
     await page.waitForSelector('[data-testid="step-cancelled"]')
     const escrow = (await page.textContent('[data-testid="escrow-status"]')).trim()
     check(escrow === 'Refunded to sender', `Escrow status is "${escrow}"`)
-    await shot('test-19-cancelled.png')
+    await shot('test-20-cancelled.png')
     await page.selectOption('#profilePicker', 'sender:Ayesha Khan')
     await page.click('[data-testid="step-cancelled"] a')
     const label = (await card(page, carrier).locator('[data-testid="status"]').first().textContent()).trim()
@@ -450,7 +485,7 @@ async function main() {
     return `Escrow: ${escrow}; ${carrier} shown as "${label}"; ${buttons} other carriers can be requested`
   })
 
-  await runTest(page, 20, 'Sender rates the carrier after delivery', 'The rating shows on the Matches page', async () => {
+  await runTest(page, 21, 'Sender rates the carrier after delivery', 'The rating shows on the Matches page', async () => {
     await startDelivery(page)
     const carrier = (await page.inputValue('#profilePicker')).split(':')[1]
     await confirmPickup(page)
@@ -466,14 +501,14 @@ async function main() {
     await page.waitForSelector('[data-testid="rating-given"]')
     const received = await page.textContent('[data-testid="rating-received"]')
     check(received.includes('4 of 5'), `The sender sees "${received}"`)
-    await shot('test-20-rating.png', page.locator('[data-testid="rating-section"]'))
+    await shot('test-21-rating.png', page.locator('[data-testid="rating-section"]'))
     await postShipment(page)
     const shown = (await card(page, carrier).locator('[data-testid="carrier-rating"]').textContent()).trim()
     check(shown === '5 from 1 rating', `Matches shows "${shown}" for ${carrier}`)
     return `Sender gave 5, carrier gave 4; Matches shows "${shown}" for ${carrier}`
   })
 
-  await runTest(page, 21, 'The carrier adds a photo at pickup', 'The sender sees the photo', async () => {
+  await runTest(page, 22, 'The carrier adds a photo at pickup', 'The sender sees the photo', async () => {
     await startDelivery(page)
     const photo = await page.screenshot({ type: 'jpeg', clip: { x: 0, y: 0, width: 400, height: 300 } })
     await page.setInputFiles('[data-testid="photo-input-pickup"]', { name: 'parcel.jpg', mimeType: 'image/jpeg', buffer: photo })
@@ -482,11 +517,11 @@ async function main() {
     const src = await page.getAttribute('[data-testid="photo-pickup"]', 'src')
     check(src.startsWith('data:image/jpeg'), 'The sender does not see the photo')
     check(await page.locator('[data-testid="photo-input-pickup"]').count() === 0, 'The sender can add a photo')
-    await shot('test-21-photo.png', page.locator('[data-testid="photo-proof"]'))
+    await shot('test-22-photo.png', page.locator('[data-testid="photo-proof"]'))
     return `Photo kept (${Math.round(src.length / 1024)} KB as text); the sender sees it and cannot add one`
   })
 
-  await runTest(page, 22, 'History after one delivery', 'The sender\'s History lists it with what was paid and saved', async () => {
+  await runTest(page, 23, 'History after one delivery', 'The sender\'s History lists it with what was paid and saved', async () => {
     await startDelivery(page)
     await confirmPickup(page)
     await confirmDelivery(page)
@@ -498,11 +533,11 @@ async function main() {
     const saved = (await page.textContent('[data-testid="total-saved"]')).trim()
     check(paid === 'PKR 500' && saved === 'PKR 500', `Paid ${paid}, saved ${saved}`)
     check(await page.locator('[data-testid="rate-now"]').isVisible(), 'No prompt to rate the carrier')
-    await shot('test-22-history.png', page, { fullPage: true })
+    await shot('test-23-history.png', page, { fullPage: true })
     return `1 delivery; paid ${paid}, saved ${saved}; "Rate" prompt shown`
   })
 
-  await runTest(page, 23, 'Two tabs: carrier in one, sender in the other', 'A message in one tab appears in the other without reloading', async () => {
+  await runTest(page, 24, 'Two tabs: carrier in one, sender in the other', 'A message in one tab appears in the other without reloading', async () => {
     await startDelivery(page) // this tab: the carrier
     const url = page.url()
     const second = await context.newPage()
@@ -519,7 +554,7 @@ async function main() {
     }
   })
 
-  await runTest(page, 24, 'Install on a phone', 'The site has an app manifest and a working service worker', async () => {
+  await runTest(page, 25, 'Install on a phone', 'The site has an app manifest and a working service worker', async () => {
     const manifest = await page.evaluate(async () => {
       const link = document.querySelector('link[rel="manifest"]')
       return (await fetch(link.href)).json()

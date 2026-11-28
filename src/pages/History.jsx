@@ -88,7 +88,7 @@ export default function History({ state, profile }) {
       </div>
 
       {waiting.length > 0 && (
-        <p className="mt-6 rounded-lg bg-sunk px-4 py-3">
+        <p className="mt-6 rounded-surface bg-sunk px-4 py-3">
           {waiting.length === 1 ? 'One parcel is' : `${formatCount(waiting.length)} parcels are`} still
           waiting for a carrier.{' '}
           <a href={`#/matches/${waiting[waiting.length - 1].id}`} className="font-bold text-brand-ink underline underline-offset-2">

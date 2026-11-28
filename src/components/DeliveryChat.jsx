@@ -28,7 +28,7 @@ export default function DeliveryChat({ messages, me, canWrite, closed, notReady,
       </p>
 
       {notReady ? (
-        <p className="mt-3 rounded-lg bg-sunk px-3 py-3" data-testid="chat-not-ready">
+        <p className="mt-3 rounded-surface bg-sunk px-3 py-3" data-testid="chat-not-ready">
           Chat is not switched on yet. The team needs to run the database step for it.
         </p>
       ) : (
@@ -41,7 +41,7 @@ export default function DeliveryChat({ messages, me, canWrite, closed, notReady,
                 const mine = me && m.authorName === me.name && m.authorRole === me.role
                 return (
                   <li key={m.id} data-testid="chat-message"
-                    className={`max-w-[85%] rounded-lg px-3 py-2 ${mine ? 'ml-auto bg-brand-tint' : 'bg-sunk'}`}>
+                    className={`max-w-[85%] rounded-surface px-3 py-2 ${mine ? 'ml-auto bg-brand-tint' : 'bg-sunk'}`}>
                     <p className="text-sm">
                       <strong>{mine ? 'You' : m.authorName}</strong>
                       <span className="text-muted"> ({m.authorRole}), {formatShort(m.createdAt)}</span>

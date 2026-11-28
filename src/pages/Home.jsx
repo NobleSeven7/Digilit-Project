@@ -1,9 +1,11 @@
 // Home page: choose whether you are sending a parcel or carrying one.
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { BASE_FEE, FEE_PER_KG, COURIER_FEE, CITIES, CITY_CODES, tripHours } from '../data/constants.js'
 import { calculatePrice, savingPercent } from '../lib/pricing.js'
 import { formatPKR } from '../lib/format.js'
-import { ArrowRightIcon } from '../components/Icons.jsx'
+import { ArrowRightIcon, CheckIcon } from '../components/Icons.jsx'
+import RouteCodes from '../components/RouteCodes.jsx'
+import { findMatches } from '../lib/matching.js'
 import ParcelPass from '../components/ParcelPass.jsx'
 import { createSampleData } from '../data/sampleData.js'
 import HeroMap from '../components/HeroMap.jsx'
@@ -12,12 +14,6 @@ import { firstWithRole } from '../lib/profile.js'
 // production build, where import.meta.env.DEV is false.
 import { HOME_FIXTURES } from '../dev/homeFixtures.js'
 import DataToggle from '../dev/DataToggle.jsx'
-// Screenshots of the real pages, in a light and a dark copy
-// (taken from this app at phone width; retake them if those pages change).
-import sendLight from '../assets/home/step-send-light.webp'
-import sendDark from '../assets/home/step-send-dark.webp'
-import matchLight from '../assets/home/step-match-light.webp'
-import matchDark from '../assets/home/step-match-dark.webp'
 // Photo from Wikimedia Commons (credit under the photo and in the README),
 // printed as a halftone in label black on kraft (light) and the reverse (dark).
 import terminalPrintLight from '../assets/home/photo-daewoo-terminal-halftone-light.png'
@@ -26,25 +22,6 @@ import terminalPrintDark from '../assets/home/photo-daewoo-terminal-halftone-dar
 // The demo case from the proposal.
 const DEMO_KG = 5
 
-// One half of the "who are you?" split: the role, one line on what you do
-// there, and an arrow. The two halves sit side by side between thin rules
-// (no boxes; they stack when there is not room for both). Pressing one darkens it at once (feedback on press, colour only,
-// 100ms, so it works the same with a finger or a mouse; it stays with reduced
-// motion, since nothing moves).
-function ChoiceRow({ href, testId, title, text, onClick }) {
-  return (
-    <a href={href} data-testid={testId} onClick={onClick}
-      className="flex min-h-32 min-w-0 flex-col justify-between gap-3 bg-paper px-4 py-4 text-ink no-underline transition-colors
-                 duration-(--dur-press) ease-[var(--ease-out)] hover:bg-surface active:bg-sunk">
-      <span className="min-w-0">
-        <span className="block font-display text-2xl font-bold text-brand-ink sm:text-3xl">{title}</span>
-        <span className="mt-1 block text-sm text-muted">{text}</span>
-      </span>
-      <span className="text-brand-ink"><ArrowRightIcon size={22} /></span>
-    </a>
-  )
-}
-
 // The trust strip under the hero: three things the app really does, each
 // checked in the code (matching.js runs four rules; Delivery.jsx makes a
 // pickup and a delivery code and holds the fee until the second one).
@@ -52,7 +29,7 @@ function ChoiceRow({ href, testId, title, text, onClick }) {
 const TRUST = [
   { fact: 'Four checks on every carrier', detail: 'Route, timing, space and vehicle, before anyone is ranked.' },
   { fact: 'A code at each end', detail: 'The carrier enters a pickup code, then a delivery code.' },
-  { fact: 'Money held until delivery', detail: 'The fee is released only when the delivery code is entered.' },
+  { fact: 'Money held until delivery', detail: 'The fee is released only when the delivery code is entered. Payments are simulated in this student prototype.' },
 ]
 
 function TrustStrip({ items }) {
@@ -146,10 +123,12 @@ function PriceRow({ name, note, price, highlight }) {
 // "PKR" at the end of one line and "60" at the start of the next.
 const keepTogether = (text) => text.replace(/ /g, '\u00a0')
 
-// A phone outline. Whatever is inside is its screen.
+// A phone outline. Whatever is inside is its screen. It keeps one size
+// (a fixed shape), so changing step never makes it jump. Its round corners are
+// the one exception to the square label corners (rounded-phone).
 function Phone({ label, children }) {
   return (
-    <div className="relative mx-auto w-full max-w-[20rem] overflow-hidden lg:max-w-[16rem] rounded-[2.75rem] border-[10px] border-ink bg-paper shadow-[var(--shadow-lift)]"
+    <div className="relative mx-auto min-h-[31rem] w-full max-w-[20rem] overflow-hidden rounded-phone border-[10px] border-ink bg-paper shadow-[var(--shadow-lift)]"
       role="img" aria-label={label}>
       <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-full bg-ink" aria-hidden="true" />
       <div className="pt-9" aria-hidden="true">{children}</div>
@@ -157,58 +136,49 @@ function Phone({ label, children }) {
   )
 }
 
-// A screenshot in both themes; CSS shows the one that matches (.shot-light / .shot-dark).
-function Shot({ light, dark }) {
-  return (
-    <>
-      <img src={light} alt="" width="390" height="720" loading="lazy" className="shot-light block h-auto w-full" />
-      <img src={dark} alt="" width="390" height="720" loading="lazy" className="shot-dark block h-auto w-full" />
-    </>
-  )
-}
-
-// The hero's route picker (a "where to?" box, as on booking sites): choose
+// The hero's route finder (a "where to?" box, as on booking sites): choose
 // two cities and go straight to the Send page with that route filled in
-// (#/sender/ISB-KHI, the same address the route list uses). The price line
-// under it is the demo 5 kg parcel; the price does not depend on the route.
-function RoutePicker({ onGo }) {
-  const [from, setFrom] = useState(HUB)
-  const [to, setTo] = useState('Lahore')
+// (#/sender/ISB-KHI, the same address the route list uses). The chosen
+// cities live in Home, so the map, the fare and the link always agree.
+// The fare comes from the app's own pricing (calculatePrice); it depends on
+// the weight, not the route. The courier price is our estimate.
+// It sits on a flat surface, not the grainy page (DESIGN.md > Home page).
+function RouteFinder({ from, to, onChange, onGo }) {
   const same = from === to
   const time = roadTime(tripHours(from, to))
-  const pick = (setter) => (event) => setter(event.target.value)
+  const id = useId()
   return (
-    <div className="hero-enter mt-6 max-w-md border-t border-line pt-4 [--d:110ms]" data-testid="route-picker">
-      <p className="font-bold text-ink">Where is it going?</p>
-      <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-        <label className="min-w-0">
-          <span className="sr-only">From</span>
-          <select className="field" value={from} onChange={pick(setFrom)} data-testid="picker-from">
+    <div className="hero-enter mt-5 max-w-md rounded-surface border border-line bg-surface p-4 [--d:110ms]" data-testid="route-picker">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-2">
+        <div className="min-w-0">
+          <label className="label" htmlFor={`${id}-from`}>From</label>
+          <select id={`${id}-from`} className="field" value={from} data-testid="picker-from"
+            onChange={(event) => onChange(event.target.value, to)}>
             {CITIES.map((city) => <option key={city}>{city}</option>)}
           </select>
-        </label>
-        <span aria-hidden="true" className="text-brand-ink"><ArrowRightIcon size={20} /></span>
-        <label className="min-w-0">
-          <span className="sr-only">To</span>
-          <select className="field" value={to} onChange={pick(setTo)} data-testid="picker-to">
+        </div>
+        <span aria-hidden="true" className="pb-3 text-brand-ink"><ArrowRightIcon size={20} /></span>
+        <div className="min-w-0">
+          <label className="label" htmlFor={`${id}-to`}>To</label>
+          <select id={`${id}-to`} className="field" value={to} data-testid="picker-to"
+            onChange={(event) => onChange(from, event.target.value)}>
             {CITIES.map((city) => <option key={city}>{city}</option>)}
           </select>
-        </label>
+        </div>
       </div>
       <p className="mt-3 text-sm text-muted" data-testid="hero-fact" aria-live="polite">
         {same ? 'Choose two different cities.' : (
           <>
-            <span className="font-bold text-ink">
-              {DEMO_KG} kg: {formatPKR(calculatePrice(DEMO_KG))} instead of about {formatPKR(COURIER_FEE)} by courier
-            </span>{' '}(our estimate){time && `, ${time} by road`}.
+            <span className="font-bold text-ink" data-testid="hero-fare">{DEMO_KG} kg: {formatPKR(calculatePrice(DEMO_KG))}</span>
+            {time && `, ${time} by road`}. By courier, about {keepTogether(formatPKR(COURIER_FEE))} (our estimate).
           </>
         )}
       </p>
       {same
-        ? <button type="button" className="btn btn-primary mt-3 w-full" disabled>See carriers on this route</button>
+        ? <button type="button" className="btn btn-primary mt-3 w-full" disabled>Find a carrier</button>
         : <a href={`#/sender/${CITY_CODES[from]}-${CITY_CODES[to]}`} onClick={onGo} data-testid="picker-go"
             className="btn btn-primary mt-3 w-full gap-2 no-underline">
-            See carriers on this route <ArrowRightIcon size={20} />
+            Find a carrier <ArrowRightIcon size={20} />
           </a>}
     </div>
   )
@@ -221,51 +191,161 @@ const SAMPLE = createSampleData()
 const PASS_PARCEL = SAMPLE.shipments.find((s) => s.id === 's-demo')
 const PASS_JOURNEY = SAMPLE.journeys.find((j) => j.id === 'j-bilal')
 
+// The demo parcel's real match result, from the app's own matching rules:
+// the carriers who pass all four checks, best score first.
+const MATCH = findMatches(PASS_PARCEL, SAMPLE.journeys).eligible
+
+// A milestone in the demo trip: a filled tick, what happened, and a detail.
+function Milestone({ title, detail }) {
+  return (
+    <li className="flex items-start gap-3">
+      <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-brand-ink text-surface" aria-hidden="true">
+        <CheckIcon size={14} />
+      </span>
+      <span className="min-w-0">
+        <span className="block font-bold text-ink">{title}</span>
+        <span className="block text-sm text-muted">{detail}</span>
+      </span>
+    </li>
+  )
+}
+
+// Step 1 on the phone: the parcel as the sender posts it.
+function ParcelSummary() {
+  return (
+    <div className="space-y-3 px-3 pb-4">
+      <p className="stamp text-ink">Your parcel</p>
+      <div className="rounded-surface border border-line bg-surface p-3">
+        <RouteCodes origin={PASS_PARCEL.origin} destination={PASS_PARCEL.destination} size="sm" />
+        <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+          <div><dt className="text-muted">Item</dt><dd className="font-bold">{PASS_PARCEL.itemType}</dd></div>
+          <div><dt className="text-muted">Weight</dt><dd className="font-bold">{PASS_PARCEL.weightKg} kg</dd></div>
+          <div className="col-span-2"><dt className="text-muted">Fee</dt>
+            <dd className="font-bold">{formatPKR(calculatePrice(PASS_PARCEL.weightKg))}</dd></div>
+        </dl>
+      </div>
+      <p className="flex items-center gap-2 text-sm text-ink">
+        <span className="text-brand-ink"><CheckIcon size={16} /></span> Checked against four rules
+      </p>
+    </div>
+  )
+}
+
+// Step 2 on the phone: the best carriers, ranked by score.
+function CarrierMatch() {
+  return (
+    <div className="space-y-2 px-3 pb-4">
+      <p className="stamp text-ink">{MATCH.length} carriers passed</p>
+      {MATCH.map(({ journey, score }, index) => (
+        <div key={journey.id} className={`rounded-surface border bg-surface p-3 ${index === 0 ? 'border-ink' : 'border-line'}`}>
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="min-w-0 truncate font-bold">{journey.carrierName}</p>
+            <p className="shrink-0 font-display text-xl font-bold tabular-nums">{Math.round(score.total)}<span className="text-sm text-muted">/100</span></p>
+          </div>
+          <p className="text-sm text-muted">{journey.vehicleType}, {journey.spareKg} kg spare</p>
+          {index === 0 && <p className="stamp mt-1 text-sm text-brand-ink">Best match</p>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // The three steps of a delivery, in order (from the proposal: Submit, Accept,
-// Verify), each beside the screen it happens on.
+// Verify). Each has the small piece of the real app that explains it, and
+// the trip's milestones sit with the step they belong to.
 const STEPS = [
   {
     label: 'Submit',
     title: 'Post the parcel',
     text: 'Say what it is, where it is going and when it must leave. Every carrier on that route is checked against four rules straight away.',
-    phone: 'A phone showing the Post a parcel form',
-    screen: <Shot light={sendLight} dark={sendDark} />,
+    phone: 'A phone showing a posted 5 kg parcel from Islamabad to Lahore, fee PKR 500',
+    screen: <ParcelSummary />,
+    milestones: [],
   },
   {
     label: 'Accept',
     title: 'Pick a carrier',
-    text: 'Carriers who pass all four rules are ranked by a score out of 100. Once both sides accept, the fee is held safely by RaastaShare.',
-    phone: 'A phone showing three carriers ranked by score, Bilal Ahmed first with 75 out of 100',
-    screen: <Shot light={matchLight} dark={matchDark} />,
+    text: 'Carriers who pass all four rules are ranked by a score out of 100. Once both sides accept, the fee is held safely by RaastaShare. Payments are simulated in this student prototype.',
+    phone: `A phone showing ${MATCH.length} carriers ranked by score, ${MATCH[0]?.journey.carrierName} first`,
+    screen: <CarrierMatch />,
+    milestones: [{ title: 'Carrier matched', detail: `${MATCH[0]?.journey.carrierName}, best of ${MATCH.length}` }],
   },
   {
     label: 'Verify',
     title: 'Codes, not phone calls',
     text: 'The parcel gets a pass. The carrier enters the pickup code at the door and the delivery code at the other end. Only then is the money released.',
-    phone: 'A phone showing a RaastaShare pickup pass from Islamabad to Lahore',
+    phone: 'A phone showing a RaastaShare pickup pass from Islamabad to Lahore, code 4827',
     screen: (
       <div className="px-2 pb-3">
         <ParcelPass kind="Pickup" code="4827" shipment={PASS_PARCEL} journey={PASS_JOURNEY} note="Example pass" />
       </div>
     ),
+    milestones: [
+      { title: 'Picked up', detail: 'Code checked at the door' },
+      { title: 'Delivered in Lahore', detail: `${formatPKR(calculatePrice(DEMO_KG))} paid to the carrier` },
+    ],
   },
 ]
 
-// One step: the text, then its phone. They are simply there (no scroll
-// reveal or scroll-in animation: DESIGN.md > Motion).
-function StepRow({ step, index }) {
+// "How it works": one phone that stays in place, and three step buttons
+// (a tab list: Tab reaches the chosen step, the arrow keys move between
+// steps, and Enter or Space choose one). Changing step swaps only the
+// phone's screen, with a short fade (.step-swap); the text and milestones
+// change with it. On phones the buttons sit right above the phone.
+function Walkthrough() {
+  const [current, setCurrent] = useState(0)
+  const tabs = useRef([])
+  const id = useId()
+  const step = STEPS[current]
+  const onKeyDown = (event) => {
+    const move = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key]
+    let next = move === undefined ? null : (current + move + STEPS.length) % STEPS.length
+    if (event.key === 'Home') next = 0
+    if (event.key === 'End') next = STEPS.length - 1
+    if (next === null) return
+    event.preventDefault()
+    setCurrent(next)
+    tabs.current[next]?.focus()
+  }
   return (
-    <li className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
-      <div className={`max-w-md ${index % 2 ? 'lg:order-2' : 'lg:justify-self-end'}`}>
-        {/* Step number and name in normal case (tiny ALL CAPS labels read as templated) */}
-        <p className="font-display text-2xl font-bold text-brand-ink">
-          <span className="tabular-nums text-muted">0{index + 1}</span> {step.label}
-        </p>
-        <h3 className="mt-3 text-4xl font-bold sm:text-6xl">{step.title}</h3>
-        <p className="mt-4 text-lg text-muted">{step.text}</p>
+    <div className="mt-8 grid gap-6 lg:mt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-16" data-testid="walkthrough">
+      <div className="contents lg:block">
+        <div role="tablist" aria-label="Steps" onKeyDown={onKeyDown}
+          className="order-1 grid grid-cols-3 gap-px border-y border-line bg-line lg:grid-cols-1">
+          {STEPS.map((s, index) => {
+            const chosen = index === current
+            return (
+              <button key={s.label} type="button" role="tab" id={`${id}-tab-${index}`} aria-selected={chosen}
+                aria-controls={`${id}-panel`} tabIndex={chosen ? 0 : -1} data-testid="step-tab"
+                ref={(el) => { tabs.current[index] = el }} onClick={() => setCurrent(index)}
+                className={`flex min-h-14 min-w-0 cursor-pointer flex-col items-start justify-center gap-0.5 px-3 py-2 text-left lg:justify-start transition-colors
+                            duration-(--dur-press) ease-[var(--ease-out)] lg:flex-row lg:items-baseline lg:gap-3 lg:px-4 lg:py-4
+                            ${chosen ? 'bg-surface text-ink shadow-[inset_0_4px_0_var(--color-hold)] lg:shadow-[inset_4px_0_0_var(--color-hold)]' : 'bg-paper text-muted hover:bg-surface active:bg-sunk'}`}>
+                <span className="font-display text-lg font-bold tabular-nums">0{index + 1}</span>
+                <span className="min-w-0">
+                  <span className="block font-display text-lg font-bold lg:text-2xl">{s.label}</span>
+                  <span className="hidden text-sm lg:block">{s.title}</span>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+        <div className="order-3 lg:mt-8" data-testid="step-text">
+          <h3 className="text-3xl font-bold sm:text-5xl">{step.title}</h3>
+          <p className="mt-3 max-w-md text-lg text-muted">{step.text}</p>
+          {step.milestones.length > 0 && (
+            <ul className="mt-5 max-w-md space-y-3" data-testid="step-milestones">
+              {step.milestones.map((m) => <Milestone key={m.title} {...m} />)}
+            </ul>
+          )}
+        </div>
       </div>
-      <Phone label={step.phone}>{step.screen}</Phone>
-    </li>
+      <div role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-tab-${current}`} className="order-2 lg:order-none">
+        <Phone label={step.phone}>
+          <div key={current} className="step-swap">{step.screen}</div>
+        </Phone>
+      </div>
+    </div>
   )
 }
 
@@ -308,6 +388,11 @@ export default function Home({ profile, setProfile }) {
   const routes = fixture.routes ?? ROUTES
 
   const [skipIntro] = useState(introSeen)
+  // The route chosen in the hero. The map, the fare and the "Find a carrier"
+  // link all read these two, so they always show the same cities.
+  // A change replaces both at once, so the last change always wins.
+  const [route, setRoute] = useState({ from: HUB, to: 'Lahore', changed: false })
+  const chooseRoute = (from, to) => setRoute({ from, to, changed: true })
   useEffect(() => {
     try { sessionStorage.setItem(INTRO_KEY, '1') } catch { /* storage blocked */ }
   }, [])
@@ -320,42 +405,37 @@ export default function Home({ profile, setProfile }) {
   }
 
   return (
-    <div className={`space-y-16 sm:space-y-24 ${skipIntro ? 'intro-done' : ''}`}>
+    <div className={`space-y-16 sm:space-y-24 ${skipIntro || route.changed ? 'intro-done' : ''}`}>
       {/* Hero: the headline on the left, the route map as the main picture,
           then the trust strip directly under it */}
       <div>
       {/* Desktop: the text column is the wider one, so the headline sets in
           three lines (not five), and the map's top lines up with it. */}
-      <section className="grid items-center gap-8 pt-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-8 lg:pt-6">
+      <section className="grid items-center gap-8 pt-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-8 lg:pt-2">
         <div>
           {/* Each size is also capped by the screen width (vw), so with very large
               text "someone" still fits on one line; at normal text sizes the caps
               are above the sizes used, so nothing changes. break-word is a last
               resort for anything still too wide. */}
           <h1 className="hero-enter text-balance text-[min(3.4rem,15vw)] font-bold leading-none tracking-[-0.02em] [overflow-wrap:break-word]
-                         sm:text-[min(4.5rem,11.5vw)] lg:text-[min(4rem,5.6vw)]">
+                         sm:text-[min(4.5rem,11.5vw)] lg:text-[min(3.5rem,4.9vw)]">
             Send it with someone already going that way
           </h1>
-          <p className="hero-enter mt-5 max-w-md text-lg text-muted [--d:60ms] sm:text-xl sm:leading-normal">
-            RaastaShare matches your parcel with a carrier: someone already travelling
-            the same intercity route, with spare space. RaastaShare holds the payment safely until delivery is confirmed.
+          <p className="hero-enter mt-4 max-w-md text-lg text-muted [--d:60ms] sm:leading-normal">
+            RaastaShare matches your parcel with a traveller on the same intercity route who has space to spare.
           </p>
-          <RoutePicker onGo={become('sender')} />
-
-          {/* The two profile choices, split side by side (simulated accounts:
-              no login needed). Same links and profile switch as before. */}
-          {/* Side by side while each half has at least 10rem; with large text
-              (10rem grows with it) the halves stack. The 1px gap over a line-coloured
-              background draws the rule between them, across or down. */}
-          <div className="hero-enter mt-7 grid max-w-md grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-px border-y border-line bg-line [--d:150ms]">
-            <ChoiceRow href="#/sender" testId="choose-sender" onClick={become('sender')}
-              title="Sender" text="Post a parcel and pick who takes it" />
-            <ChoiceRow href="#/carrier" testId="choose-carrier" onClick={become('carrier')}
-              title="Carrier" text="Post a journey and earn from spare space" />
-          </div>
+          <RouteFinder from={route.from} to={route.to} onChange={chooseRoute} onGo={become('sender')} />
+          {/* Carriers: a quieter link, not a second main button */}
+          <p className="hero-enter mt-4 max-w-md text-muted [--d:150ms]">
+            Travelling anyway?{' '}
+            <a href="#/carrier" data-testid="choose-carrier" onClick={become('carrier')}
+              className="inline-flex items-center gap-1 font-bold text-brand-ink underline underline-offset-4">
+              Post a journey <ArrowRightIcon size={18} />
+            </a>
+          </p>
         </div>
 
-        <HeroMap />
+        <HeroMap from={route.from} to={route.to} kg={DEMO_KG} changed={route.changed} />
       </section>
       <TrustStrip items={trust} />
       </div>
@@ -366,9 +446,7 @@ export default function Home({ profile, setProfile }) {
         <p className="mt-2 max-w-2xl text-lg text-muted">
           Three steps, where we estimate phone calls and bargaining take about eight. A match takes under a minute.
         </p>
-        <ol className="mt-10 space-y-16 sm:mt-14 sm:space-y-24" data-testid="steps">
-          {STEPS.map((step, index) => <StepRow key={step.label} step={step} index={index} />)}
-        </ol>
+        <Walkthrough />
       </section>
 
       {/* Routes we cover: one list, no cards. Each route opens the Send page,
@@ -388,7 +466,7 @@ export default function Home({ profile, setProfile }) {
 
       {/* A real photo: the trips already happen, with room to spare.
           Hidden on phones (below sm): it adds length, not information. */}
-      <section className="hidden overflow-hidden rounded-2xl bg-brand text-white sm:grid lg:grid-cols-2" data-testid="photo-terminal">
+      <section className="hidden overflow-hidden rounded-surface bg-brand text-white sm:grid lg:grid-cols-2" data-testid="photo-terminal">
         {[[terminalPrintLight, 'shot-light'], [terminalPrintDark, 'shot-dark']].map(([src, theme]) => (
           <FadeInPhoto key={theme} src={src} width="1280" height="960" loading="lazy"
             alt="Travellers carrying bags outside the Daewoo Express bus terminal in Bahawalpur"
@@ -406,15 +484,15 @@ export default function Home({ profile, setProfile }) {
       </section>
 
       {/* Price comparison from the proposal, on a label-black band */}
-      <section className="rounded-2xl bg-brand px-5 py-9 text-white sm:px-12 sm:py-14">
+      <section className="rounded-surface bg-brand px-5 py-9 text-white sm:px-12 sm:py-14">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-4xl font-bold sm:text-6xl">What it costs</h2>
             <p className="mt-2 text-lg text-on-brand-soft">A {DEMO_KG} kg parcel from Islamabad to Lahore</p>
           </div>
-          <span className="rounded-full bg-hold px-5 py-1.5 font-display text-2xl font-bold text-on-hold"
+          <span className="rounded-control bg-hold px-5 py-1.5 font-display text-2xl font-bold text-on-hold"
             data-testid="saving-badge">
-            Save {savingPercent(DEMO_KG)}%
+            Save {savingPercent(DEMO_KG)}%<span className="ml-2 text-lg font-semibold">our estimate</span>
           </span>
         </div>
         <ul className="mt-9 space-y-9">
@@ -426,7 +504,7 @@ export default function Home({ profile, setProfile }) {
 
       {/* Closing: the same two choices again, as a two-colour split: label
           black for senders, kraft for carriers. One line and one button each. */}
-      <section className="grid overflow-hidden rounded-2xl sm:grid-cols-2" data-testid="closing-split">
+      <section className="grid overflow-hidden rounded-surface sm:grid-cols-2" data-testid="closing-split">
         <div className="flex flex-col items-start justify-between gap-7 bg-brand px-5 py-10 text-white sm:px-10 sm:py-14">
           <h2 className="text-3xl font-bold sm:text-4xl">Sending something? Put it on a trip that is already going.</h2>
           <a href="#/sender" className="btn btn-secondary" onClick={become('sender')}>Post a parcel</a>

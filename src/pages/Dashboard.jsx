@@ -40,7 +40,7 @@ function CapacityMeter({ value }) {
         {/* Value (the bar stops at 100%, even if more was used) */}
         <div className="h-4 rounded-full bg-brand-ink" style={{ width: `${Math.min(100, value)}%` }} />
         {/* Target band, drawn on top so a full bar never hides it */}
-        <div className="absolute inset-y-[-4px] rounded-md border-2 border-dashed border-brand-ink/70"
+        <div className="absolute inset-y-[-4px] rounded-control border-2 border-dashed border-brand-ink/70"
           style={{ left: `${TARGET_LOW}%`, width: `${TARGET_HIGH - TARGET_LOW}%` }} />
       </div>
       {/* gap-x-3 is only a minimum (justify-between spreads them anyway): with

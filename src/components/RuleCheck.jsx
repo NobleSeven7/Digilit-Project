@@ -8,7 +8,7 @@ export default function RuleCheck({ rule }) {
     <li
       data-rule={rule.key}
       data-pass={rule.pass}
-      className={`flex flex-wrap gap-x-3 gap-y-1 rounded-lg px-3 py-2 ${rule.pass ? 'bg-brand-tint' : 'bg-fail-tint'}`}
+      className={`flex flex-wrap gap-x-3 gap-y-1 rounded-control px-3 py-2 ${rule.pass ? 'bg-brand-tint' : 'bg-fail-tint'}`}
     >
       <span
         aria-hidden="true"

@@ -28,10 +28,10 @@ function Slot({ kind, title, value, canAdd, busy, onPick }) {
       {value ? (
         src
           ? <img src={src} alt={`The parcel ${title.toLowerCase()}`} data-testid={`photo-${kind}`}
-              className="mt-2 aspect-[4/3] w-full rounded-lg border border-line bg-sunk object-cover" />
-          : <div className="mt-2 aspect-[4/3] w-full rounded-lg bg-sunk" aria-label="Loading photo" />
+              className="mt-2 aspect-[4/3] w-full rounded-surface border border-line bg-sunk object-cover" />
+          : <div className="mt-2 aspect-[4/3] w-full rounded-surface bg-sunk" aria-label="Loading photo" />
       ) : (
-        <div className="mt-2 flex aspect-[4/3] w-full items-center justify-center rounded-lg border border-dashed border-muted bg-surface p-3 text-center text-sm text-muted">
+        <div className="mt-2 flex aspect-[4/3] w-full items-center justify-center rounded-surface border border-dashed border-muted bg-surface p-3 text-center text-sm text-muted">
           {canAdd ? 'No photo yet' : 'No photo'}
         </div>
       )}
@@ -66,7 +66,7 @@ export default function PhotoProof({ delivery, isCarrier, canAddPickup, canAddDr
           : 'The carrier can add a photo of the parcel at pickup and at drop-off. Only the two of you and the admin can see them.'}
       </p>
       {notReady ? (
-        <p className="mt-3 rounded-lg bg-sunk px-3 py-3">
+        <p className="mt-3 rounded-surface bg-sunk px-3 py-3">
           Photos are not switched on yet. The team needs to run the database step for them.
         </p>
       ) : (

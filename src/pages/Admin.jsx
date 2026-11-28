@@ -39,7 +39,7 @@ function ConfirmButton({ label, question, yesLabel, onConfirm, className, testId
     )
   }
   return (
-    <div role="group" aria-label={question} className="fade-in-quick w-full rounded-lg border border-hold bg-hold-tint p-3">
+    <div role="group" aria-label={question} className="fade-in-quick w-full rounded-control border border-hold bg-hold-tint p-3">
       <p className="font-bold">{question}</p>
       <div className="mt-3 flex flex-wrap gap-3">
         {/* The "yes" is the main action here, so a plain outline button becomes solid */}

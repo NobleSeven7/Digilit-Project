@@ -75,6 +75,15 @@ const CHECKS = [
     fix: 'Keep it to 300ms or less and read the curve from --ease-out.',
   },
   {
+    // Two corner sizes only (src/index.css): Tailwind's own sizes are switched
+    // off, so one of them would show square corners without anyone noticing.
+    id: 'C6',
+    rule: 'Corners are rounded-control or rounded-surface (DESIGN.md > Surfaces)',
+    applies: (file) => /\.(jsx|css)$/.test(file),
+    pattern: /\brounded(?:-[trblse]{1,2})?-(?:xs|sm|md|lg|xl|2xl|3xl|4xl|\[[^\]]*\])(?![\w-])/,
+    fix: 'Use rounded-control (buttons, fields, chips, badges) or rounded-surface (cards, bands); rounded-full only for dots, ticks and bars.',
+  },
+  {
     id: 'C4',
     rule: 'No raw hex colours in components; use tokens (DESIGN.md > Color)',
     applies: (file) => /\.jsx$/.test(file),

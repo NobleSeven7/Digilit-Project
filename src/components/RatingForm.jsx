@@ -12,7 +12,7 @@ export default function RatingForm({ otherName, given, received, canRate, notRea
   const [comment, setComment] = useState('')
 
   return (
-    <section className="mt-4 rounded-lg bg-surface px-4 py-4" data-testid="rating-section">
+    <section className="mt-4 rounded-surface bg-surface px-4 py-4" data-testid="rating-section">
       {given ? (
         <div data-testid="rating-given">
           <p className="font-bold">You rated {otherName}</p>
@@ -34,7 +34,7 @@ export default function RatingForm({ otherName, given, received, canRate, notRea
                 <button key={n} type="button" role="radio" aria-checked={stars === n}
                   aria-label={`${n} ${n === 1 ? 'star' : 'stars'}, ${WORDS[n].toLowerCase()}`}
                   data-testid={`rating-star-${n}`} onClick={() => setStars(n)}
-                  className="flex size-11 items-center justify-center rounded-lg text-brand-ink active:bg-brand-tint">
+                  className="flex size-11 items-center justify-center rounded-control text-brand-ink active:bg-brand-tint">
                   <StarIcon size={30} filled={n <= stars} />
                 </button>
               ))}

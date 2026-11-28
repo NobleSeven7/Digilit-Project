@@ -41,7 +41,7 @@ function ScoreBadge({ total }) {
 function PassChip({ rule }) {
   return (
     <li data-rule={rule.key} data-pass={rule.pass}
-      className="inline-flex items-center gap-1.5 rounded-full bg-brand-tint px-3 py-1 stamp text-sm text-brand-ink">
+      className="inline-flex items-center gap-1.5 rounded-control bg-brand-tint px-3 py-1 stamp text-sm text-brand-ink">
       <CheckIcon size={14} />
       {rule.label}
       <span className="sr-only">: Pass</span>
@@ -96,8 +96,8 @@ function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onReq
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
-          {/* Vehicle icon */}
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand-ink"
+          {/* Vehicle icon, in a square box like a handling symbol on a label */}
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-control border-2 border-ink text-ink"
             title={vehicleLabel(journey.vehicleType)}>
             <VehicleIcon type={journey.vehicleType} />
           </span>
@@ -129,7 +129,7 @@ function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onReq
             {rules.map((rule) => <PassChip key={rule.key} rule={rule} />)}
           </ul>
           <details className="rule-details group mt-3">
-            <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-lg font-bold text-brand-ink active:opacity-70
+            <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-control font-bold text-brand-ink active:opacity-70
                                 [&::-webkit-details-marker]:hidden">
               <span className="group-open:hidden">See details</span>
               <span className="hidden group-open:inline">Hide details</span>
@@ -155,7 +155,7 @@ function CarrierCard({ result, rank, wave, shipment, declined, canRequest, onReq
             </ul>
           )}
           <details className="rule-details group mt-2">
-            <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-lg font-bold text-brand-ink active:opacity-70
+            <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-control font-bold text-brand-ink active:opacity-70
                                 [&::-webkit-details-marker]:hidden">
               <span className="group-open:hidden">See the {passedCount} {passedCount === 1 ? 'check' : 'checks'} passed</span>
               <span className="hidden group-open:inline">Hide passed checks</span>
@@ -188,7 +188,7 @@ function ShipmentOption({ shipment: s, labels }) {
 // (the same idea as "Only the carrier enters this code" on the Delivery page).
 function SenderOnly({ senderName, setProfile }) {
   return (
-    <div className="mb-6 rounded-lg bg-sunk px-3 py-3" data-testid="sender-only">
+    <div className="mb-6 rounded-control bg-sunk px-3 py-3" data-testid="sender-only">
       <p>Only <strong>{senderName}</strong> (the sender) can request a carrier for this parcel.</p>
       {setProfile && (
         <button type="button" className="btn btn-secondary mt-3" data-testid="switch-to-sender"
@@ -325,7 +325,7 @@ export default function Matches({ state, save, id, profile, setProfile }) {
             first screen. Wider screens keep the full route line. */}
         <p className="font-display text-2xl font-bold sm:hidden">
           {codeOf(shipment.origin)} → {codeOf(shipment.destination)}{' '}
-          <span className="font-sans text-base font-normal text-muted">{shipment.origin} to {shipment.destination}</span>
+          <span className="font-body text-base font-normal text-muted">{shipment.origin} to {shipment.destination}</span>
         </p>
         <div className="hidden sm:block">
           <RouteLine origin={shipment.origin} destination={shipment.destination} />
