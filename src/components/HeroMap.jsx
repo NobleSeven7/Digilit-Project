@@ -1,112 +1,157 @@
-// The Home page's main picture: the eight cities drawn as a route map, in
-// shades of the brand green. The Islamabad to Lahore route (the demo case)
-// is drawn as a road, and a parcel rides along it once when the page opens.
+// The Home page's main picture: the eight cities drawn as a route map. The
+// route chosen in the hero's route finder (from, to) is drawn as a heavy
+// road with its two end cities labelled; the rest of the network stays quiet
+// (thin, light lines and smaller names). A parcel rides the chosen road once
+// when the page first opens.
 //
 // It is a diagram, not a real map: the cities are in roughly the right
 // places, and the lines are straightened like a metro map.
 import { calculatePrice } from '../lib/pricing.js'
 import { formatPKR } from '../lib/format.js'
+import { codeOf } from './RouteCodes.jsx'
 
-const DEMO_KG = 5
-
-// Status notes around the map, telling the demo trip the way the app would:
-// matched, picked up, delivered. Each appears when that moment happens in the
-// intro (the parcel sets off at 2.1s and arrives at about 4.7s), so the map
-// reads as one short story. On a return visit, or with reduced motion, they
-// are simply there (they use .stop-enter, like the city names).
-// done: a filled tick; otherwise an outlined ring.
-function Note({ x, y, width, title, detail, delay, done }) {
-  return (
-    <g className="stop-enter" style={{ animationDelay: delay }}>
-      <rect x={x} y={y} width={width} height="54" rx="4" fill="var(--color-surface)"
-        stroke="var(--color-line)" strokeWidth="2" />
-      <circle cx={x + 22} cy={y + 27} r="10" fill={done ? 'var(--color-brand-ink)' : 'var(--color-surface)'}
-        stroke="var(--color-brand-ink)" strokeWidth="2.5" />
-      {done && <path d={`M${x + 17} ${y + 27.5} l3.5 3.5 l6.5 -7`} fill="none" stroke="var(--color-surface)"
-        strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />}
-      <text x={x + 42} y={y + 23} fontFamily="var(--font-body)" fontWeight="700" fontSize="16" fill="var(--color-ink)">{title}</text>
-      <text x={x + 42} y={y + 43} fontFamily="var(--font-body)" fontSize="14" fill="var(--color-muted)">{detail}</text>
-    </g>
-  )
+// The points on the map. Eight cities, plus one junction south of Lahore
+// where the Faisalabad line joins the main line.
+const POINTS = {
+  Peshawar: [60, 80],
+  Islamabad: [220, 80],
+  Rawalpindi: [220, 150],
+  Lahore: [440, 160],
+  Faisalabad: [290, 290],
+  Multan: [340, 340],
+  Quetta: [70, 340],
+  Karachi: [130, 440],
+  junction: [440, 240],
 }
 
-// The routes, back to front. Each is a path of straight and 45-degree stretches.
-const ROUTES = [
-  { d: 'M70 340 V380 L130 440', colour: 'var(--color-route-3)' },            // Quetta - Karachi
-  { d: 'M70 340 H340', colour: 'var(--color-route-3)' },                     // Quetta - Multan
-  { d: 'M290 290 H390 L440 240', colour: 'var(--color-route-2)' },           // Faisalabad - Lahore
-  { d: 'M220 80 V220 L340 340', colour: 'var(--color-route-2)' },            // Islamabad - Rawalpindi - Faisalabad - Multan
-  { d: 'M60 80 H220 L300 160 H440 V240 L240 440 H130', colour: 'var(--color-brand-ink)' }, // Peshawar ... Karachi
+// The lines between neighbouring points. "via" lists the bends in between,
+// so every stretch is straight or at 45 degrees.
+const LINKS = [
+  { a: 'Peshawar', b: 'Islamabad', via: [] },
+  { a: 'Islamabad', b: 'Lahore', via: [[300, 160]] },
+  { a: 'Islamabad', b: 'Rawalpindi', via: [] },
+  { a: 'Rawalpindi', b: 'Faisalabad', via: [[220, 220]] },
+  { a: 'Faisalabad', b: 'Multan', via: [] },
+  { a: 'Faisalabad', b: 'junction', via: [[390, 290]] },
+  { a: 'Lahore', b: 'junction', via: [] },
+  { a: 'junction', b: 'Multan', via: [] },
+  { a: 'Multan', b: 'Karachi', via: [[240, 440]] },
+  { a: 'Quetta', b: 'Multan', via: [] },
+  { a: 'Quetta', b: 'Karachi', via: [[70, 380]] },
 ]
 
-// The demo route, drawn on top as a road with a dashed centre line.
-const DEMO_ROAD = 'M220 80 L300 160 H440'
+// One link's points from "start" to the other end, bends included.
+function linkPoints(link, start) {
+  const points = [POINTS[link.a], ...link.via, POINTS[link.b]]
+  return start === link.a ? points : points.reverse()
+}
+const length = (points) => points.slice(1).reduce((sum, [x, y], i) => sum + Math.hypot(x - points[i][0], y - points[i][1]), 0)
+const toPath = (points) => points.map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`).join(' ')
 
-// The cities. "label" says where the name goes; "big" marks the larger stops.
+// The shortest way along the lines from one city to another (Dijkstra's
+// method over nine points: small enough to work out on every change).
+// Returns the road as an SVG path, or null for the same city twice.
+export function roadBetween(from, to) {
+  if (from === to || !POINTS[from] || !POINTS[to]) return null
+  const best = { [from]: { cost: 0, points: [POINTS[from]] } }
+  const done = new Set()
+  for (;;) {
+    const here = Object.keys(best).filter((p) => !done.has(p)).sort((a, b) => best[a].cost - best[b].cost)[0]
+    if (!here) return null
+    if (here === to) return toPath(best[here].points)
+    done.add(here)
+    for (const link of LINKS.filter((l) => l.a === here || l.b === here)) {
+      const next = link.a === here ? link.b : link.a
+      const step = linkPoints(link, here)
+      const cost = best[here].cost + length(step)
+      if (!best[next] || cost < best[next].cost) best[next] = { cost, points: [...best[here].points, ...step.slice(1)] }
+    }
+  }
+}
+
+// Where each city's name goes.
 const CITIES = [
-  { name: 'Peshawar', x: 60, y: 80, label: { x: 44, y: 56, anchor: 'start' } },
-  { name: 'Islamabad', x: 220, y: 80, big: true, label: { x: 220, y: 52, anchor: 'middle' } },
-  { name: 'Rawalpindi', x: 220, y: 150, label: { x: 200, y: 157, anchor: 'end' } },
-  { name: 'Lahore', x: 440, y: 160, big: true, label: { x: 458, y: 166, anchor: 'start' } },
-  { name: 'Faisalabad', x: 290, y: 290, label: { x: 274, y: 297, anchor: 'end' } },
-  { name: 'Multan', x: 340, y: 340, big: true, label: { x: 360, y: 346, anchor: 'start' } },
-  { name: 'Quetta', x: 70, y: 340, label: { x: 54, y: 316, anchor: 'start' } },
-  { name: 'Karachi', x: 130, y: 440, label: { x: 130, y: 476, anchor: 'middle' } },
+  { name: 'Peshawar', label: { x: 44, y: 56, anchor: 'start' } },
+  { name: 'Islamabad', label: { x: 220, y: 52, anchor: 'middle' } },
+  { name: 'Rawalpindi', label: { x: 200, y: 157, anchor: 'end' } },
+  { name: 'Lahore', label: { x: 458, y: 166, anchor: 'start' } },
+  { name: 'Faisalabad', label: { x: 274, y: 297, anchor: 'end' } },
+  { name: 'Multan', label: { x: 360, y: 346, anchor: 'start' } },
+  { name: 'Quetta', label: { x: 54, y: 316, anchor: 'start' } },
+  { name: 'Karachi', label: { x: 130, y: 476, anchor: 'middle' } },
 ]
 
-export default function HeroMap() {
-  const price = formatPKR(calculatePrice(DEMO_KG))
+// kg: the example parcel's weight. changed: true once the person has picked
+// a route themselves; the chosen road then redraws quickly (.route-change)
+// instead of joining the once-per-visit intro.
+export default function HeroMap({ from, to, kg, changed }) {
+  const price = formatPKR(calculatePrice(kg))
+  const road = roadBetween(from, to)
+  const ends = road ? [from, to] : []
   return (
     <svg viewBox="28 26 520 462" className="block w-full xl:w-[calc(100%+4rem)] xl:max-w-none" role="img" data-testid="hero-map"
-      aria-label={`Route map of eight cities. A ${DEMO_KG} kg parcel travels from Islamabad to Lahore for ${price}: matched with Bilal Ahmed, picked up in Islamabad, delivered in Lahore.`}>
-      {/* The routes draw themselves one after another */}
-      {ROUTES.map((route, index) => (
-        <path key={route.d} d={route.d} pathLength="1" className="route-draw" style={{ '--i': index }}
-          fill="none" stroke={route.colour} strokeWidth="13" strokeLinecap="round" strokeLinejoin="round" />
+      data-route={road ? `${codeOf(from)}-${codeOf(to)}` : ''}
+      aria-label={road
+        ? `Route map of eight cities, with ${from} to ${to} highlighted. A ${kg} kg parcel costs ${price}.`
+        : 'Route map of eight cities.'}>
+      {/* The whole network, quiet: thin, light lines */}
+      {LINKS.map((link, index) => (
+        <path key={`${link.a}-${link.b}`} d={toPath(linkPoints(link, link.a))} pathLength="1" className="route-draw"
+          style={{ '--i': index % 5 }} fill="none" stroke="var(--color-route-3)" strokeWidth="7"
+          strokeLinecap="round" strokeLinejoin="round" />
       ))}
 
-      {/* The demo route as a road */}
-      <path d={DEMO_ROAD} pathLength="1" className="route-draw" style={{ '--i': 5 }}
-        fill="none" stroke="var(--color-brand-dark)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
-      <path d={DEMO_ROAD} className="stop-enter" style={{ '--i': 6 }}
-        fill="none" stroke="white" strokeWidth="2" strokeDasharray="7 7" opacity="0.8" />
+      {/* The chosen route as a road with a dashed centre line. "key" makes a
+          new route a new drawing, so a quick second change replaces the
+          first one's animation instead of waiting for it. */}
+      {road && (
+        <g key={road} className={changed ? 'route-change' : ''} data-testid="map-road">
+          <path d={road} pathLength="1" className={changed ? 'route-change-line' : 'route-draw'} style={{ '--i': 5 }}
+            fill="none" stroke="var(--color-ink)" strokeWidth="20" strokeLinecap="round" strokeLinejoin="round" />
+          <path d={road} className={changed ? '' : 'stop-enter'} style={{ '--i': 6 }}
+            fill="none" stroke="var(--color-paper)" strokeWidth="2" strokeDasharray="7 7" opacity="0.8" />
+        </g>
+      )}
 
-      {/* Stops and city names */}
-      {CITIES.map((city, index) => (
-        <g key={city.name} className="stop-enter" style={{ '--i': index }}>
-          <circle cx={city.x} cy={city.y} r={city.big ? 12 : 8} fill="var(--color-surface)"
-            stroke="var(--color-ink)" strokeWidth={city.big ? 5 : 4} />
-          <text x={city.label.x} y={city.label.y} textAnchor={city.label.anchor}
-            fontFamily="var(--font-display)" fontWeight="600" fontSize={city.big ? 27 : 22}
-            fill="var(--color-ink)" stroke="var(--color-paper)" strokeWidth="5" paintOrder="stroke">
-            {city.name}
+      {/* Stops and city names: the two ends large and dark, the rest small
+          and muted */}
+      {CITIES.map((city, index) => {
+        const [x, y] = POINTS[city.name]
+        const end = ends.includes(city.name)
+        return (
+          <g key={city.name} className="stop-enter" style={{ '--i': index }} data-end={end || undefined}>
+            <circle cx={x} cy={y} r={end ? 12 : 7} fill="var(--color-surface)"
+              stroke={end ? 'var(--color-ink)' : 'var(--color-route-2)'} strokeWidth={end ? 5 : 3} />
+            <text x={city.label.x} y={city.label.y} textAnchor={city.label.anchor}
+              fontFamily="var(--font-display)" fontWeight={end ? 700 : 600} fontSize={end ? 28 : 20}
+              fill={end ? 'var(--color-ink)' : 'var(--color-muted)'} stroke="var(--color-paper)" strokeWidth="5" paintOrder="stroke">
+              {city.name}
+            </text>
+          </g>
+        )
+      })}
+
+      {/* The fare tag, top right: the chosen route and its price */}
+      {road && (
+        <g className="stop-enter" style={{ '--i': 10 }} data-testid="map-fare">
+          <rect x="300" y="34" width="240" height="40" rx="4" fill="var(--color-surface)"
+            stroke="var(--color-ink)" strokeWidth="2.5" />
+          <text x="420" y="62" textAnchor="middle">
+            <tspan fontFamily="var(--font-display)" fontWeight="600" fontSize="18" fill="var(--color-muted)">
+              {codeOf(from)}–{codeOf(to)}, {kg} kg
+            </tspan>
+            <tspan dx="8" fontFamily="var(--font-display)" fontWeight="700" fontSize="23"
+              fill="var(--color-ink)">{price}</tspan>
           </text>
         </g>
-      ))}
+      )}
 
-      {/* The fare tag above the demo road */}
-      <g className="stop-enter" style={{ '--i': 10 }}>
-        <rect x="297" y="100" width="164" height="38" rx="4" fill="var(--color-surface)"
-          stroke="var(--color-ink)" strokeWidth="2.5" />
-        {/* One line, centred in the tag, so the weight and the price always
-            keep a gap between them whatever width the phone's font has */}
-        <text x="379" y="127" textAnchor="middle">
-          <tspan fontFamily="var(--font-body)" fontSize="17" fill="var(--color-muted)">{DEMO_KG} kg</tspan>
-          <tspan dx="9" fontFamily="var(--font-display)" fontWeight="700" fontSize="23"
-            fill="var(--color-brand-ink)">{price}</tspan>
-        </text>
-      </g>
-
-      {/* Status notes: the demo trip as it happens */}
-      <Note x={344} y={34} width={196} delay="1500ms" done
-        title="Carrier matched" detail="Bilal Ahmed, best of 3" />
-      <Note x={36} y={178} width={150} delay="2100ms" done
-        title="Picked up" detail="Code checked" />
-      <Note x={336} y={410} width={206} delay="4600ms" done
-        title="Delivered in Lahore" detail={`${price} paid to carrier`} />
-
-      {/* The parcel riding the road */}
-      <circle className="map-parcel" r="9" fill="var(--color-hold)" stroke="var(--color-surface)" strokeWidth="3.5" />
+      {/* The parcel: rides the road once in the intro, then rests at the
+          destination. On a route change it simply sits at the new end. */}
+      {road && (
+        <circle key={`parcel-${road}`} className="map-parcel" r="9" fill="var(--color-hold)"
+          stroke="var(--color-surface)" strokeWidth="3.5" style={{ offsetPath: `path("${road}")` }} />
+      )}
     </svg>
   )
 }

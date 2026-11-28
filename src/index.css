@@ -507,6 +507,30 @@ h1[tabindex="-1"]:focus { outline: none; }
   from { offset-distance: 0%; }
 }
 
+/* A route chosen in the hero's route finder: only the new road draws
+   itself, in --dur-long on the moving curve. The fare, the link and the
+   city names have already changed. The road is a new element on every
+   change (a React key), so a quick second change starts fresh instead of
+   waiting. Ordinary UI motion, so it is NOT in LONG_MOTION_ALLOWED and its
+   name must not start with one that is (DESIGN.md > Home page). */
+.route-change-line {
+  stroke-dasharray: 1;
+  animation: route-change var(--dur-long) var(--ease-in-out) backwards;
+}
+@keyframes route-change {
+  from { stroke-dashoffset: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .route-change-line { animation: none; }
+}
+
+/* Home, "How it works": a new step's screen fades in on the phone. With
+   reduced motion it simply appears. */
+.step-swap { animation: enter-fade var(--dur-short) var(--ease-out) both; }
+@media (prefers-reduced-motion: reduce) {
+  .step-swap { animation: none; }
+}
+
 /* People who ask for less motion get the finished picture straight away. */
 /* The trust strip under the hero joins the intro as its last, quietest
    beat: it fades in and rises 6px (less than the hero's 10px), over 200ms,
